@@ -1,0 +1,6 @@
+1장 주피터 노트북 사용법
+	- shift + enter : 실행
+	- esc + (hot key setting)
+		- dd : 셀 삭제
+		- b : 포커스된 셀 아래에 셀 추가
+	- help() 또는 shift + tab, tab로 도움말 기능 사용
