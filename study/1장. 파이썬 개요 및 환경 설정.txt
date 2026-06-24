@@ -17,7 +17,7 @@
 CODE 상태에서 #[내용] 기입
 
 (3) 라인넘버 설정
-view > toggle line number (shift + l ; on/off 가능)
+view > toggle line number (shift + L ; on/off 가능)
 
 # 3. esc + (hot key setting)
 - dd : 셀 삭제
