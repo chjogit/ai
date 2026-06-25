@@ -177,7 +177,7 @@ print(a,b) => 20, 30
 	print("{}님 나이는 {}세 입니다.".format(name, age))
 	print("{0}님 나이는 {1}세 입니다.".format(name, age)) #format() 내의 각각 인덱스의 0번째, 1번째가 들어감.
 	print("{1}님 나이는 {0}세 입니다.".format(age, name))
-	print("{0}세 {1:4}님 반갑습니다. {1}님 어서오세요".format(age, name)) # 1번째를 4칸을 확보하여 출력함.
+	print("{0}세 {1:4}님 반갑습니다. {1}님 어서오세요".format(age, name)) ;1번째를 4칸을 확보하여 출력함.
 
 	ex 2)
 	name = input("이름을 입력해주세요.")

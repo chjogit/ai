@@ -37,3 +37,89 @@
 	0   1   0   1     0     1   0
 	1   0   0   1     0     0   1
 	1   1   1   1     1     0   0
+
+6. 문자열
+
+- 문자 슬라이싱 : 변수.[from:stop:step]
+
+- len (문자 변수) : 문자 수 (길이 반환)
+- upper () : 소문자를 대문자로
+- lower () : 대문자로 소문자로
+- title () : 각 어절의 첫글자를 대문자로 
+- capitalize () : 문자열의 첫글자만 대문자로
+
+- count('특정 문자열') : 특정 문자의 개수
+- find('특정 문자열') : '특정 문자열'이 왼쪽부터 시작하여 몇번째에 있는지 (='특정 문자열'의 인덱스 파악; 없을 경우 -1)
+- rfind('특정 문자열') : '특정 문자열'이 오른쪽부터 시작하여 몇번째에 있는지 (='특정 문자열'의 역순 인덱스 파악; 없을 경우 -1)
+    cf. index('특정 문자열') : find() ('특정 문자열'이 없을 경우 error ; 자주 사용되지 않음)
+
+- startswith ('특정 문자열') : '특정 문자열'으로 시작하는지 식별하여 논리값을 반환
+- endswith ('특정 문자열') : '특정 문자열'으로 끝나는지 식별하여 논리값을 반환
+
+- strip() : 좌우 공백 제거 (lstrip - 왼쪽 공백 제거, rstrip - 오른쪽 공백 제거)
+
+- split() : 공백을 기준으로 나누어 리스트로 반환 (split('구분자') - 구분자를 기준으로)
+	ex)
+	names = "박길동 홍길동 최길동 유길동"
+	name_list = names.split()
+	print("space 기준으로 분리한 list :",name_list)
+
+- isdigit() : 문자열이 숫자 문자열인지 식별하여 논리값을 반환
+- islower() : 문자열이 모두 소문자인지 식별하여 논리값을 반환
+- isupper() : 문자열이 모두 대문자인지 식별하여 논리값을 반환
+
+- replace(old, new) : 문자열 안의 old 문자를 new 문자로 변경한 값을 반환
+- ''join() : 정리가 흩어진 문자열을 ''내의 구분자를 사용하여 정리
+	ex)
+	sbj = "A - B - C"
+	temp.replace(' - ','#')
+	sbj = temp.split(' - ')
+	' # '.join(sbj)
+
+7. 시간, 날짜 다루기
+
+7.1 시간과 날짜
+
+- datetime : 객체끼리 (-) 연산 가능
+- 특정 시점을 갖는 datetime 변수
+	ex)
+	dday = datetime(2026, 11, 19, 18, 0, 0)
+- 현 시각 및 날짜를 저장하는 datetime 변수 생성 
+	ex)
+	now = datetime.now()
+	print(now.ctime())
+	print(now.strftime("%Y-%m-%d %p %I:%M"))
+	print("{:%Y-%m-%d %H:%M}".format(now))
+	diff = dday - now >>> 147 days, 3:09:24.265955
+
+7.2 날짜
+
+- date : 객체끼리 (-) 연산 가능
+- 특정한 날짜를 갖는 date 변수 생성
+	ex)
+	firstday = date(2026, 6, 22)
+	print(firstday.ctime())
+	print(firstday.strftime("%Y-%m-%d %p %I:%M"))
+	print("{:%Y-%m-%d}".format(firstday))
+- 금일 날짜를 저장하는 date 변수(객체) 생성
+	ex)
+	today1 = date.today()
+	today2 = datetime.now().date()
+	today1 == today2
+	print(today1.ctime())
+	print(today1.strftime("%Y-%m-%d %p %I:%M"))
+	print("{:%Y-%m-%d}".format(today1))
+	today1 - firstday >>> 3 days
+
+7.3 시간
+- time 객체끼리 (-) 연산 불가
+- 특정 시간을 갖는 time 변수 생성
+	ex)
+	t = time(15,14)
+	print(t.strftime("%p %I:%M"))
+	print("{:%H:%M}".format(t))
+- 현 시각을 저장하는 time 변수 생성
+	ex)
+	nowtime = datetime.now().time()
+	print(nowtime.strftime("%p %I:%M:%S"))
+	print("{:%H:%M}".format(nowtime)) >>> PM 03:18:42 / 15:18
