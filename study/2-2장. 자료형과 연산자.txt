@@ -72,9 +72,9 @@
 - ''join() : 정리가 흩어진 문자열을 ''내의 구분자를 사용하여 정리
 	ex)
 	sbj = "A - B - C"
-	temp.replace(' - ','#')
-	sbj = temp.split(' - ')
-	' # '.join(sbj)
+	temp.replace(' - ','#') >>> A # B # C
+	sbj = temp.split(' - ') >>> ABC
+	' # '.join(sbj) >>> A # B # C
 
 7. 시간, 날짜 다루기
 
