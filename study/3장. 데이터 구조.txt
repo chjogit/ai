@@ -103,3 +103,158 @@
 - 데이터 구조의 복제
 	기존 list = 복제 list ; 복제 x, 할당(동일 id 사용) : 복제 list 변경 시 기존 list의 항목도 변경됨
 	기존 list = 복제 list.copy() ; 복제 o (새로운 id 사용) : 복제 list 변경 시 기존 list의 항목은 고정됨
+
+2. 튜플
+
+- 리스트 []와 유사하지만, 읽기 전용 데이터 구조
+- 수정이 필요없는 데이터에서 사용
+- 수정이 불가하여, 튜플은 데이터 수정, 추가, 삭제 함수 및 문법 사용 불가 ; 제공되는 함수가 적음
+- () 이용하여 생성, tuple() 함수 사용 가능
+	- 파이썬은 여러개의 값을 전달할 때 튜플 타입으로 전달
+	- 매개변수로 list를 사용할 수 있는 위치엔 튜플을 사용할 수 있음
+
+- item이 하나인 튜플
+	ex)
+	city = ('서울') # 요소가 하나 있는 튜플(X)
+	print(type(city)) >>><class 'str'>
+	
+	city = ('서울',) # 요소가 하나 있는 튜플(O)
+	print(type(city)) >>><class 'tuple'>
+
+3. 딕셔너리
+
+- {} 이용하여 생성. 키(key)-값(value)으로 구성된 자료 구조
+- 키 : 유일한 값 (중복X) / 값 : 중복 허용
+- 인덱스를 이용한 참조는 지원하지 않음
+
+3.1 딕셔너리 만들기
+
+- dic = {'key1' : 'value1', 'key2 : value2'} 에서,
+	- len(dic) ; item의 개수 : 2
+	- dic.get('key1') >>> 'value1'
+
+- get을 사용하는 이유 : 기존 딕셔너리 - 키 목록에 없는 데이터 참조할 경우 에러 발생
+	ex) 
+	print(my_favorite['people']) >>> error 발생
+	
+	print(my_favorite.get('people')) # 없는 키를 get함수로 참조시 None
+	print(my_favorite.get('people', '-')) # 없는 키를 get함수로 참조시 '-'
+
+3.2 item 수정, 추가, 제거
+
+- '딕셔너리 변수명' = {'key1' : 'value1', 'key2 : value2'} 에서,
+	- 한 item씩 추가 : '딕셔너리 변수명'["추가할 key"] = "추가할 value"
+	- 여러 item을 추가 : '딕셔너리 변수명'.update({'추가할 key1' : '추가할 value1', '추가할 key2' : '추가할 value2'})
+	
+	- 한 item씩 수정 : '딕셔너리 변수명'["수정할 key"] = "수정할 value"
+	- 여러 item을 수정 : '딕셔너리 변수명'.update({'key1' : '수정할 value1', 'key2' : '수정할 value2'})
+
+	- item 제거 방법 1 :  del 변수['삭제할 key'] - 없는 key일 경우 에러
+	- item 제거 방법 2 : 변수.pop('삭제할 key') - 해당 key값을 반환하고 제거 (없는 key일 경우 에러)
+
+3.3 출력하기
+
+- for문 이용
+	ex) 튜플에서,
+	my_tuple = ('홍길동', 30, '01099999999') # {0:'홍길동', 1:30, 2:'0109999999'}
+	for data in my_tuple:
+    		print(data, end='\t') >>> 홍길동	30	01099999999	
+	print() # 개행
+	for idx in range(len(my_tuple)): #[0,1,2]
+   		 print("{}번째 : {}\t".format(idx, my_tuple[idx]), end="") >>> 0번째 : 홍길동	1번째 : 30	2번째 : 01099999999	
+	print() # 개행
+		for idx, value in enumerate(my_tuple): # (0,홍길동),(1,30),(2,'01099999999')
+    	print(f"{idx}번째 : {value}\t", end="") >>> 0번째 : 홍길동	1번째 : 30	2번째 : 01099999999	
+
+- key만 출력
+	ex)
+	my_dic = {'이름':'홍길동', '나이':30, '전화':'01099999999'}
+	for key in my_dic:
+		print(data, end='\t')
+	print()
+	for idx, key in enumerate(my_dic):
+		print(f"{idx}:{value}\t", end="")
+
+	print(my_dic.keys()) - 키 목록
+	print(my_dic.values()) - 값 목록
+	print(my_dic.items()) - 키-값 목록
+
+- 키-값 출력
+	ex)
+	for key, value in my_dic.items(): # 키-값
+		print(f"{key}:{value}\t", end="")
+
+- 값만 출력
+	for value in my_dic.values(): # 값만
+		print(value, end='\t')
+
+- 순서 색인
+	ex)
+	list(enumerate(my_dic.items()))
+	for idx, (key, value) in enumerate(my_dic.items()):
+		print(f"{idx}번째. {key}:{value}")
+
+- in 연산자
+	- list, tuple, set에서의 in연산자 : 요소가 있는지 여부 반환
+		t = (10,20,30)
+		40 in t >>> False
+
+3.4 복제하기
+
+- list의 copy와 동일하게 작동
+
+4. 셋
+
+- 중복을 허용하지 않는 집함 (순서 없음)
+- {} 또는 set() 함수를 이용하여 셋 생성
+- 추가 : add(), update()
+- 삭제 : remove()
+- 셋 연산자 : & (교집합), | (합집합), - (차집합)
+
+4.1 셋 만들기
+
+- '셋 변수명' = {'item a', 'item b' ...}
+	- {} (빈 중괄호)는 딕셔너리로 인식함
+- 딕셔너리를 셋으로 전환 시 key만 적용됨
+
+4.2 data 추가
+
+- add() : 기본자료형(숫자, 문자, bool), 튜플 데이터 하나 추가. 리스트, 딕셔너리, 셋 유형은 add 함수의 매개 변수로 사용 불가
+- update() : 리스트, 딕셔너리, 셋 추가 시, 데이터 구조 내의 item이 하나씩 추가됨
+	- 딕셔너리의 경우 key만 추가
+
+4.3 data 삭제
+
+- remove() : 순서가 없는 셋 특성상 유일하게 사용 가능
+	- 지워진 data를 remove할 경우 에러 발생 >> if문 사용하여 에러 방지
+- 1과 True/ 0과 False가 같은 값 ; 주의 필요
+
+4.4 연산자
+
+- & (교집합), | (합집합), - (차집합)
+
+5. enumerate
+
+- 반복자 또는 순서 객체로 반복문을 처리할 때 사용하는 함수
+- list, tuple, set을 for문에 적용 시 사용
+
+* zip 함수
+	ex)
+	names = ['길동', '길자','순자']
+	tels = ['010-0000-0000', '010-1111-1111', '010-2222-2222']
+	adds = ['강남', '인천', '판교']
+	
+	1. range(len(names)) + format 사용 시
+	for idx in range(len(names)): # range(len(names)) = [0, 1, 2]
+		print ("{}. 이름 : {}, 연락처 : {}, 지역 : {}". format(idx+1, names[idx], tels[idx], adds[idx]))
+	>>>
+	1. 이름 : 길동, 연락처 : 010-0000-0000, 지역 : 강남
+	2. 이름 : 길자, 연락처 : 010-1111-1111, 지역 : 인천
+	3. 이름 : 순자, 연락처 : 010-2222-2222, 지역 : 판교
+
+	2. zip 사용 시
+	list(zip(names, tels, adds))
+	>>>
+	[('길동', '010-0000-0000', '강남'),
+ 	('길자', '010-1111-1111', '인천'),
+ 	('순자', '010-2222-2222', '판교')]
