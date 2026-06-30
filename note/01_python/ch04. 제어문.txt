@@ -1,0 +1,20 @@
+4장. 제어문
+
+1. 조건문(if/elif/else) : 들여쓰기(블록), 콜론(블록의 시작)
+- 조건식은 반드시 True/False로 판별될 수 있어야함
+
+2. 반복문
+- for-in문 : for 임시 변수 in 나열 가능한 자료/else(생략가능)
+	나열 가능한 자료가 없을 경우 for문 종료
+- while문 : while 조건/else(생략가능)
+	조건이 False가 될 경우 while문 종료
+- 난수 : import random, randint(),choice(),sample()
+- break : 반복문 진행 중, break 시 break를 포함하는 반복문을 종료
+- continue : 반복문 내에서 continue 시 이후의 문장을 건너뜀
+
+3. 중첩 루프
+
+4. 중첩 루프 탈출
+
+- 중첩 루프 탈출 방법 1 : flag 변수 활용
+- 중첩 루프 탈출 방법 2 : Exception(예외처리) 활용 <7/7 수업 예정>

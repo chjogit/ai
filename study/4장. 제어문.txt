@@ -1,0 +1,97 @@
+4장. 제어문
+
+- 조건문 : if문
+- 반복문 : for문, while문 모두 중첩 가능
+
+1. 조건문(if)
+
+- if 조건 1 :
+	조건 1이 참일 경우 수행할 명령어들(if문 구절 단독 사용 가능, 들여쓰기 필수)
+- elif 조건 2 :
+	조건 1이 거짓이고, 조건 2가 참일 경우 수행할 명령어들(필요한 만큼 추가 사용 가능)
+- else :
+	모든 조건이 거짓일 경우 수행할 명령어들(단독으로 사용 불가; if 구절 필수)
+
+	ex)
+	score = int(input('Enter your score > '))
+	if 90 <= score <= 100:
+		print('참 잘했어요')
+	elif 0 <= score < 90:
+		print('분발해야합니다')
+	else:
+		print('유효한 점수가 아닙니다')
+
+- 위의 예시를 아래의 예시로 함축 가능
+	print("참 잘했어요" if 90 <= score <= 100 else \
+	'분발해야합니다' if 0 <= score < 90 else \
+	'유효한 점수가 아닙니다')
+
+2. 반복문
+
+2.1 for-in문
+
+- for 임시 변수 in 나열 가능한 자료 :
+	반복할 문장들
+- else:
+	나열 가능한 자료를 다 소요하여 for 구문을 모두 수행한 후, 마지막으로 실행할 문장들
+	- for문 안의 break를 수행할 경우, else 구문을 수행하지 않음 (else는 선택사항)
+
+	ex)
+	for i in range(1, 10):
+		if i==5:
+	break
+		print(i, end="\t")
+	else:
+		print('\nDone')
+	print('END')
+
+	ex) 1~100 중 짝수들의 합을 출력하시오
+	tot = 0 # 누적 변수 생성
+
+	for i in range(1,101):
+		if i%2==0:
+		tot += i
+	else:
+		print(f"{tot}")
+
+2.2 while문
+
+- while 조건 :
+	조건이 참일 경우 반복할 문장
+- else:
+	조건이 거짓일 경우 한번 실행할 문장(else 구문 생략 가능)
+
+* 난수
+
+import random
+random.random()) - 0부터 1 미만의 난수
+random.randint(a,b)) - a ~ b의 정수 난수
+random.choice(range(a,b+1))) - a~b의 정수 난수
+random.choices(["A", "B"], weights=[0.a, 0.b])) - A,B 중 하나, 단 각각의 확률은 a:b로 설정
+random.choices(["A", "B", "C"], k=n)) - n개 복원 추출 ; 추출 결과 "C", "C" 식으로 중복 가능
+random.choices(range(a,b), k=n)) - a부터 b 미만의 정수 중 중복 가능한 n개의 샘플을 수집
+random.sample(range(a,b), n)) - a부터 b 미만의 정수 중 중복되지 않은 n개의 샘플을 수집
+
+	ex)1~45 까지의 로또 번호 6 개를 추출하여 정렬된 로또번호를 출력하는 프로그램을 구현하시오
+
+	lst = []
+	while len(lst)<6 :
+		cnt += 1
+		numb = random.randint(1,45)
+			if numb not in lst: ; 'numb'가 [lst]에 없다면 아래 함수 수행 (if ~ not in ~)
+        		lst.append(numb)
+	print(sorted(lst))
+
+2.3 break, continue
+
+- break : 반복문 진행 중, break 시 break를 포함하는 반복문을 종료
+- continue : 반복문 내에서 continue 시 이후의 문장을 건너뜀
+
+3. 중첩 루프
+
+- 반복문 내의 반복문
+
+4. 중첩 루프 탈출
+
+- 중첩 루프 탈출 방법 1 : flag 변수 활용
+- 중첩 루프 탈출 방법 2 : Exception(예외처리) 활용 <7/7 수업 예정>

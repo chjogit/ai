@@ -20,19 +20,20 @@
 	1.7 item 삭제 : pop(), pop(idx), del lst[idx], remove(데이터)
 	1.8 복제(깊은복사) : 복제할변수 = 원본데이터.copy()
 
-2. 튜플 리스트와 유사하나 수정불가
+2. 튜플 : 리스트와 유사하나 수정불가
 	- () 이용하여 생성, tuple() 함수 사용 가능, 읽기 전용 데이터 구조
 	- 수정이 불가하여, 수정, 추가, 삭제 함수 및 문법 사용 불가
+	- ,가 없을 경우 스칼라 데이터로 인식
 
 3. 딕셔너리 : 키(key)-값(value)으로 구성된 자료 구조
 	- 인덱스를 이용한 참조는 지원하지 않음
 	1. 딕셔너리 생성 : {}
 		- dic.get('key1')
-	2. 수정, 추가 : update(), 제거 : del 변수/pop()
+	2. 수정, 추가 : update(), 제거 : del 변수[key]/pop(key) ; key 값이 없으면 에러 발생
 	3. 출력 : for문 (key만, 값만, 키-값 출력 가능)
-		print(my_dic.keys()) - 키 목록
-		print(my_dic.values()) - 값 목록
-		print(my_dic.items()) - 키-값 목록
+		printdic.keys()) - 키 목록
+		print(dic.values()) - 값 목록
+		print(dic.items()) - 키-값 목록
 	- list, tuple, set에서의 in연산자 : 요소가 있는지 여부 반환	
 	4. 복제 : 복제할변수 = 원본데이터.copy()
 
