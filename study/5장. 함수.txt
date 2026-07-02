@@ -102,3 +102,174 @@
 
 - 순서인수 : 함수에 정의(입력)된 순서대로 전달하는 방식
 - 키워드인수 : 인수의 이름을 명시하는 방식
+
+3.4 튜플 매개변수를 이용한 가변인수 설정
+
+- 함수 정의 ex1)
+	def [함수명](a, b, c, ...):
+		return 반환 값
+
+- 함수 정의 ex2)
+	# args앞의 * : 매개변수들(인수들)이 args 튜플로 전달
+	def add(*args):
+	"전달받은 매개변수들의 합을 return. 매개변수가 없을 경우 0을 return"
+		tot = 0 # 누적변수
+    		for num in args:
+       			tot += num # tot = tot + num	
+		return tot
+		
+- 튜플 매개변수와 일반 매개변수가 같이 있을 때
+	ex)
+	def concat(*subject, sep):
+		return sep.join(subject)
+	concat('python', 'web', 'Oracle', 'MySQL', 'DL', 'ML', 'LLM', 'flask/django', ' - ') >>> error
+
+- 해결책1 : 호출시 파라미터 이름을 지정
+	concat('python', 'web', 'Oracle', 'MySQL', 'DL', 'ML', 'LLM', 'flask/django', sep=' - ')
+	>>> 'python - web - Oracle - MySQL - DL - ML - LLM - flask/django'
+
+- 해결책2 : 기본값을 갖는 매개변수 활용
+	def concat(*subject, sep=" "):
+		return sep.join(subject)
+	concat('python', 'web', 'Oracle', 'MySQL', 'DL', 'ML', 'LLM', 'flask/django', sep=' - ')
+	>>> 'python - web - Oracle - MySQL - DL - ML - LLM - flask/django'
+
+- 해결책3 : sep을 순서인수로 맨앞에 정의
+	def concat(sep, *subject):
+		return sep.join(subject)
+	concat('#', "국어", "영어", "수학") >>> '국어#영어#수학'
+
+3.5 딕셔너리 매개변수
+- 여러 개의 키워드인수를 딕셔너리 형태로 받아서 가변 키워드 인수로 처리
+
+	ex)
+	def func(**args):
+		print(args)
+		print(type(args))
+		for key, value in args.items():
+			print("{}:{}".format(key, value))
+		print("color :", args.get('color', 'black'))
+		print('width :', args.get('width', 1))
+		print('point :', args['point'])
+
+	func(color="red", width=2, point="O", name='선그래프')
+	>>>	{'color': 'red', 'width': 2, 'point': 'O', 'name': '선그래프'}
+		<class 'dict'>
+		color:red
+		width:2
+		point:O
+		name:선그래프
+		color : red
+		width : 2
+		point : O
+
+3.6 함수 정의시 매개변수의 순서
+- 순서인수 > 튜플인수(*) > 키워드인수(기본값) > 딕셔너리인수(**)
+
+	ex)
+	def func2(a, b, c, *d, e=10, **f):
+		print("순서인수 a =", a)
+		print("순서인수 b =", b)
+		print("순서인수 c =", c)
+		print("튜플인수 d =", d)
+		print("키워드인수 e =", e)
+		print("딕셔너리인수 f =", f)
+
+	func2('a', 'b', 'c', 1, 2, 3, e=20, shape="rect", width=20, height=10)
+	>>> 	순서인수 a = a
+		순서인수 b = b
+		순서인수 c = c
+		튜플인수 d = (1, 2, 3)
+		키워드인수 e = 20
+		딕셔너리인수 f = {'shape': 'rect', 'width': 20, 'height': 10}
+
+3.7 인수의 언패킹
+
+- 튜플인수 언패킹
+	- 패킹 : 함수 정의 시 매개변수 앞 * (튜플 매개변수)
+	- 언패킹 : 함수 호출 시 매개변수 앞 * (리스트 / 튜플 >>> 각 요소별 매개변수)
+
+- 딕셔너리 인수 언패킹
+	- 패킹 : 함수 정의 시 매개변수 앞 ** (딕셔너리 매개변수)
+	- 언패킹 : 함수 호출 시 매개변수 앞 ** (리스트 / 튜플 >>> 각 요소별 매개변수)
+
+4. 람다식
+- 한 줄의 작은 익명함수를 반환함
+- lambda 매개변수 : return할 값
+
+4.1 람다식 연습
+	ex)
+	def add(a, b):
+		return a+b
+	add(10,2)
+
+	=
+	add1 = lambda a, b : a+b
+	add1(10, 2)
+
+	=
+	(lambda a, b : a+b)(10,2)
+
+4.2 함수의 매개변수에 람다식 사용
+- 람다식을 사용하는 곳 : 함수의 매개변수, 함수 반환 시
+
+- map() : 벡터 인수의 모든 item에 조건 적용 필요 시
+	벡터 인수 : 튜플, 리스트, 딕셔너리, 셋, 객체
+
+	ex 1) 
+	prices = ['5,000', '5000', '6,000', '1000', '5,000', '5000', '6,000', '1000’]를
+	[5000, 5000, 6000, 1000, 5000, 5000, 6000, 1000]으로 바꾸시오
+
+	prices = ['5,000', '5000', '6,000', '1000', '5,000', '5000', '6,000', '1000’]
+	# 매개변수를 받아 int로 형변환하여 return하는 함수
+	test_fun = lambda word : int(word.replace(',',''))
+	def fun(word):
+		return int(word.replace(',',''))
+	prices_int = list(map(lambda word : int(word.replace(',','')), prices))
+	prices_int
+	>>> [5000, 5000, 6000, 1000, 5000, 5000, 6000, 1000]
+
+	ex 2)
+	& : 	논리연산, 비트연산, 집합연산이 모두 가능하므로, 좌항이 False여도
+		우항이 숫자면 비트연산을 수행해야하므로 우항을 수행
+	and : 	논리연산의 역할만 하여, 좌항이 False면 우항을 수행하지 않음
+
+	prices = ['5,000', '5000', '','-', 5000, None, ]
+	# 다양한 매개변수를 받아 숫자로 return하는 함수
+	def get_price(data):
+		if isinstance(data, str)  and  data.replace(',','').isdigit():
+			return int(data.replace(',', ''))
+		elif isinstance(data, int):
+			return data
+		else:
+			return 0
+	test = lambda data : int(data.replace(',', '')) \
+			if isinstance(data, str)  and  data.replace(',','').isdigit() else \
+                  		data if isinstance(data, int) else \
+                     		0
+	prices_int = map(lambda data : int(data.replace(',', '')) \
+			if isinstance(data, str)  and  data.replace(',','').isdigit() else \
+			data if isinstance(data, int) else \
+			0, prices)
+	list(prices_int)
+	>>> [5000, 5000, 0, 0, 5000, 0]
+
+	ex 3)
+	members1 = [{'name':'홍길동', 'birth':'2000-01-01’}, {'name':'신길동', 'birth':'1995-12-18'}]를
+	members2 = [{'name':'홍길동', 'year':2000, 'month':1,'day':1}, {'name':'신길동', 'year':1995, 'month':12, 'day':18}]로 변환
+
+	member1 = [{'name':'홍길동', 'birth':'2000-01-01'}, {'name':'김길동', 'birth':'1995-12-16'}]
+
+	# "2000-01-01"을 받아 {'year':2000, 'month':1, 'day':1}을 return하는 함수
+	def split_date(date_):	<함수 정의>
+		split_data = date_.split('-')
+		return {'year':int(date_.split('-')[0]), 
+            	'month':int(date_.split('-')[1]),
+            	'day':int(date_.split('-')[2]) }
+
+	split_date = lambda date_ : {'year':int(split_data[0]), 	<람다식>
+                            		'month':int(split_data[1]),
+                            		'day':int(split_data[2])}
+
+	split_date("2000-01-01") >>> {'year': 2000, 'month': 1, 'day': 1}
+
