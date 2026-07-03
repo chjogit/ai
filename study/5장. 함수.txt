@@ -213,8 +213,9 @@
 4.2 함수의 매개변수에 람다식 사용
 - 람다식을 사용하는 곳 : 함수의 매개변수, 함수 반환 시
 
-- map() : 벡터 인수의 모든 item에 조건 적용 필요 시
-	벡터 인수 : 튜플, 리스트, 딕셔너리, 셋, 객체
+- map() : map(func, vector data)
+	- 벡터 인수의 모든 item에 조건 적용 필요 시
+	- 벡터 인수 : 튜플, 리스트, 딕셔너리, 셋, 객체
 
 	ex 1) 
 	prices = ['5,000', '5000', '6,000', '1000', '5,000', '5000', '6,000', '1000’]를
@@ -273,3 +274,60 @@
 
 	split_date("2000-01-01") >>> {'year': 2000, 'month': 1, 'day': 1}
 
+	ex 4) 
+	member1 = [{'name':' 홍길동 ', 'birth':'2000-01-01'},{'name':'신길동 ', 'birth':'1995-12-18'}]
+
+	member2 = list(map(lambda member : {\
+                    'name': member.get('name'),\
+                    'year':int(member.get('birth').split('-')[0]),\
+                    'month':int(member.get('birth').split('-')[1]),\
+                    'day':int(member.get('birth').split('-')[2])}, member1))
+
+	member2
+
+	ex5 )
+	mem2 = [{'name': ' 홍길동 ', 'year': 2000, 'month': 1, 'day': 1},{'name': '신길동 ', 'year': 1995, 'month': 12, 'day': 18}]
+ 	>>> mem1 = [{'name':' 홍길동 ', 'birth':'2000-01-01'},{'name':'신길동 ', 'birth':'1995-12-18'}] 변환
+
+	mem1 = list(map(lambda member:\
+		{
+		 'name': member.get('name'),\
+		'birth':f"{member.get('year')}-{member.get('month'):0>2}-{member.get('day'):0>2}"
+		}, mem2))
+	mem1 >>> [{'name': ' 홍길동 ', 'birth': '2000-01-09'}, {'name': '신길동 ', 'birth': '1995-12-18'}]
+
+- filter() : filter(func, vector data)
+	- 함수 조건에 맞추어 필터링
+
+- sort() : sort(key=func, reverse=True/False)
+	- 함수 결과 값을 정렬
+
+	ex) 가격에 따라 정렬하기
+	books = [
+	{'no':2, 'title':'큰별쌤 최태성의 별별 한국사', 'writer':'최태성', 'price':'17,100'},
+	{'no':1, 'title':'포켓몬 생태도감 특별판', 'writer':'이선희', 'price':'44,100'},
+	{'no':3, 'title':'내면 근력', 'writer':'지여울', 'price':'19,800'},
+	{'no':4, 'title':'가격 잘못', 'writer':'홍길동', 'price':'-'},
+	{'no':5, 'title':'가격 int', 'writer':' 김길동', 'price':30200},
+	{'no':6, 'title':'가격 x', 'writer':'고길동'}]
+
+	books.sort(key = lambda book : 
+		int(book.get('price').replace(',','')) \
+		if isinstance(book.get('price'), str) and book.get('price').replace(',','').isdigit() else\
+		book.get('price') if isinstance(book.get('price'),int) else 0, reverse=True)
+	books 
+>>>	[{'no': 1, 'title': '포켓몬 생태도감 특별판', 'writer': '이선희', 'price': '44,100'},
+ 	{'no': 5, 'title': '가격 int', 'writer': ' 김길동', 'price': 30200},
+ 	{'no': 3, 'title': '내면 근력', 'writer': '지여울', 'price': '19,800'},
+	{'no': 2, 'title': '큰별쌤 최태성의 별별 한국사', 'writer': '최태성', 'price': '17,100'},
+ 	{'no': 4, 'title': '가격 잘못', 'writer': '홍길동', 'price': '-'},
+ 	{'no': 6, 'title': '가격 x', 'writer': '고길동'}]
+
+5. 파이썬 내장함수
+- import 없이 바로 사용 가능한 함수
+- 키워드(if, for, while, lambda 등)처럼 간주하므로, 식별자(변수명, 함수명, 클래스명)로 사용하는 것을 지양
+
+- round() : 반올림
+- floor() : 내림
+- ceil() : 올림
+- all() : 모든 item이 True일 경우 True를 반환
