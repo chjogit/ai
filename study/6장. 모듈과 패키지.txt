@@ -1,0 +1,61 @@
+6장. 모듈과 패키지
+
+1. 파이썬 표준 모듈 사용
+- 모듈 : 함수, 변수, 클래스 등을 담고 있는 파이썬 코드 파일(*.py)
+- 파이썬 설치하는 방법
+	- python : 파이썬 표준 모듈 약 200개가 포함된 파이썬 인터프리터 설치
+		>> https://www.python.org/downloads/ (업계 표준 : 3.10~12ver)
+		>> https://apps.microsoft.com/detail/9NCVDN91XZQP?hl=neutral&gl=KR&ocid=pdpshare
+	- anaconda : 500개 이상의 패키지, 개발 도구(IDE tool) 등이 포함된 인터프리터 설치 (200명 이상의 사업체일 경우 유료)
+		>> https://www.anaconda.com/docs/getting-started/installation
+	- miniconda : python.org보다 조금 더 많은 모듈이 포함된 인터프리터 설치
+		>> https://www.anaconda.com/docs/reference/glossary
+	- uv : pip(파이썬 패키지 설치 도구, 패키지/프로젝트 관리도구)를 이용한 설치
+		>> https://docs.astral.sh/uv/getting-started/installation/
+
+- import
+
+1. 	import [모듈] : 모듈 안의 파일(함수, 클래스, 변수)을 메모리에 로드.
+
+2.	from [모듈] import [파일] : 모듈 내 특정 파일(함수, 클래스, 변수) 로드
+	from [패키지] import [모듈] : 패키지 내 특정 모듈 로드
+	from [패키지].[모듈] import [파일] : 패키지 내 특정 모듈의 특정 파일 로드
+
+3. 	import [모듈] as [별칭] : 모듈을 별칭으로 로드
+		고정 별칭 예시) import numpy as np
+
+4.	from [모듈] import [파일] as [별칭] : 모듈의 특정 파일을 별칭으로 로드
+	from [패키지] import [모듈] as [별칭] : 패키지 내 특정 모듈을 별칭으로 로드
+	from [패키지].[모듈] import [파일] as [별칭] : 패키지 내 특정 모듈의 특정 파일을 별칭으로 로드
+
+2. 사용자 정의 모듈
+
+- 함수나 클래스, 변수 등을 파이썬 파일(*.py)로 저장하여 모듈을 만들어 재사용하기 위한 목적
+- 모듈을 가져오는 순서
+	1) 표준 모듈 라이브러리에서 검색
+	2) sys.path 변수에 저장된 경로에서 검색
+
+- 모듈이 저장된 경로를 보관하는 리스트
+	import sys
+	sys.path
+
+- sys.path에 경로 추가 (새로운 디렉터리 경로 = 외부 모듈 사용 시)
+	sys.path.append(r'경로')
+
+3. 패키지
+
+- 모듈이 들어있는 폴더(__init__.py 파일을 포함한 폴더)
+
+- 패키지를 로드하면, 그 패키지에 해당되는 __init__이 바로 로드됨
+
+- 상위 패키지가 로드되어 있어도, 하위 패키지가 함께 import되지 않음 ; 별도 import 필요
+
+- from [패키지명] import * = 패키지의 전체 모듈 로드 ; __all__ 로드
+	- __all__ = ['특정 모듈'] 설정 시, *을 통해 전체 모듈 로드하여도 특정 모듈을 불러옴 ; 보통 __init__.py 파일에 저장됨
+
+4. 패키지 설치 및 삭제
+
+아나콘다 프롬포트에서
+- 패키지 설치 : pip install (패키지명)[==버전] / conda install (패키지명)[==버전] / uv pip install (패키지명)[==버전]
+- 패키지 확인 : pip show (패키지명)           / conda list (패키지명)
+- 패키지 삭제 : pip uninstall (패키지명) 

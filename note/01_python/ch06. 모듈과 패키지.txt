@@ -1,0 +1,30 @@
+ch06. 모듈과 패키지
+
+1. 파이썬 표준 모듈 사용
+- 모듈 : 함수, 변수, 클래스 등을 담고 있는 파이썬 코드 파일(*.py)
+- 모듈이나 모듈 내 함수를 가져오는 방법
+import A               - A 로드
+import A as B          - A를 B 별칭으로 로드
+from A import B        - A 모듈 내 B 파일 로드
+from A import B as C   - A 모듈 내 B 파일을 C 별칭으로 로드
+
+from A import B        - A 패키지 내 B 모듈 로드
+from A.B import C      - A 패키지 내 B 모듈의 C 파일 로드
+from A import B as C   - A 패키지 내 B 모듈을 C 별칭으로 로드
+from A.B import C as D - A 패키지 내 B 모듈의 C 파일을 D 별칭으로 로드
+
+2. 사용자 정의 모듈
+- 함수나 클래스, 변수 등을 파이썬 파일(*.py)로 저장하여 모듈을 만들어 재사용하기 위한 목적
+- 모듈을 가져오는 순서
+	1) 표준 모듈 라이브러리에서 검색
+	2) sys.path 변수에 저장된 경로에서 검색
+
+3. 패키지
+- 모듈이 들어있는 폴더(__init__.py 파일을 포함한 폴더)
+- 상위 패키지가 로드되어 있어도, 하위 패키지가 함께 import되지 않음
+
+4. 패키지 설치 및 삭제
+아나콘다 프롬포트에서
+- 패키지 설치 : pip install (패키지명)[==버전] / conda install (패키지명)[==버전] / uv pip install (패키지명)[==버전]
+- 패키지 확인 : pip show (패키지명)           / conda list (패키지명)
+- 패키지 삭제 : pip uninstall (패키지명) 
