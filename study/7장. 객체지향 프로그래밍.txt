@@ -1,0 +1,165 @@
+7장. 객체지향 프로그래밍
+
+1. 객체와 클래스
+
+- 클래스 : 객체를 만들기 위한 틀 (추상적인 공간)
+	- 모든 클래스는 기본적으로 최상위 클래스인 object 클래스를 상속받음
+	- 정의 문법: class 클래스명(상속받을클래스명): (첫 글자는 대문자로 명명)
+
+- 객체 : 클래스의 인스턴스 (실재하는 데이터)
+
+	ex)
+	class Person:
+	"""Person class에 대한 독스트링"""
+	def __init__(self):
+	# __init__이 class 내에 없을 경우, 자동으로 만들어짐
+		pass
+
+	p1 = Person()
+	print(p1.**str**())
+	print(p1)
+	p1.__doc__ # 기본적으로 상속받는 내장 속성 및 함수(object)가 존재함
+
+2. 생성자와 소멸자
+
+- 생성자 `__init__(self, 매개변수, ...)` : 객체가 생성될 때 자동 실행
+	- 인스턴스 변수 초기화 등 객체 생성 시 필요한 초기화 코드를 포함
+	- 파이썬은 함수 중복 정의(오버로딩)를 지원하지 않으므로 생성자 함수도 중복 정의할 수 없음
+
+- 소멸자 `__del__(self)` : 객체가 소멸될 때 자동 실행
+	- 인스턴스 객체의 레퍼런스 카운트(참조 횟수)가 0이 될 때 호출되며 소멸 시 필요한 코드를 포함
+
+- self : 함수를 호출한 객체(인스턴스) 자기 자신을 가리키는 변수
+	- 파이썬의 스타일 가이드(PEP 8 규칙)에 따른 표준 약속
+
+
+3. 변수와 메소드(함수)
+
+- 변수의 종류
+	- 인스턴스 변수 : 각 객체(인스턴스)마다 독립적으로 가지는 변수 (`self.변수명`)
+
+	- 클래스 변수 : 클래스 내부에 선언되어 모든 인스턴스가 공유하는 변수
+		- `[클래스].[클래스변수]`로 수정 시 모든 인스턴스에 변경 사항이 반영됨
+		- `[객체변수].[클래스변수]`로 값을 수정하면 해당 객체에 동일한 이름의 인스턴스 변수가 동적으로 생성되어 해당 객체에만 반영됨
+
+	- 스태틱 변수(정적 변수) : 클래스로 만든 모든 인스턴스가 다 함께 공유하는 하나의 변수 (파이썬에서는 클래스 변수 이름 앞에 `__`를 붙여 구현)
+
+- 메소드의 종류
+	- 인스턴스 메소드 : 첫 번째 매개변수로 `self`를 반드시 명시하며, 객체를 통해서만 호출하고 객체의 상태를 출력하거나 변경할 때 사용
+	- 클래스 메소드 : 메소드 위에 `@classmethod` 데코레이터를 선언하며, 
+				첫 번째 매개변수로 클래스 자신을 가리키는 `cls`를 받아 클래스 변수(공유 데이터)를 다룰 때 사용
+	- 스태틱 메소드 : 메소드 위에 `@staticmethod` 데코레이터를 선언하며, 
+				`self`나 `cls`를 받지 않고 입력된 매개변수만 가지고 판단하는 독립적인 로직(심부름꾼 역할)을 처리할 때 사용
+
+- 동적 멤버 추가 : 파이썬은 실행 중에 인스턴스에 새로운 멤버(속성)를 동적으로 추가할 수 있음
+
+	ex)
+	class Person:
+	academy = 'MBC' # 클래스 변수
+	
+  	def __init__(self, name='홍길동', gender='남자'): # 생성자
+  		self.name = name
+  		self.gender = gender
+
+  	# 인스턴스 메소드: 객체의 상태를 출력하거나 변경할 때
+  	def print_info(self): # 변수.print_info()로 호출 가능
+  		print(f"인스턴스 메소드 - {self.academy}의 {self.name}은(는) {self.gender}입니다.")
+
+  	def change_info(self, name, gender='남자'): # 변수.change_info('신길숙','여자')로 호출 가능
+  		self.name = name
+  		self.gender = gender
+	  	print(f"인스턴스 메소드를 통해 {self.name}(으)로 이름 변경, {self.gender}로 성별 변경 완료")
+
+  	# 클래스 메소드: 클래스 변수(공유 데이터)를 다룰 때
+  	@classmethod
+  	def change_class_method(cls, academy): # cls == Person; 변수.change_class_method("KBS")로 호출 가능
+  		cls.academy = academy # 클래스 영역의 클래스 변수 수정
+  		print(f"클래스 메소드 - {cls.academy}로 클래스 변수 변경")
+
+ 	 # 스태틱 메소드: 클래/인스턴스 데이터와 무관한 독립적 로직일 때
+	  @staticmethod
+  	def print_static_method():
+  		print(f'static 메소드 : {Person.academy}로 유지')
+
+  	@staticmethod
+ 	 def is_valid_gender(gender_input):
+  		# self나 cls를 받지 않고, 들어온 매개변수만 가지고 판단하는 '심부름꾼' 역할
+  		valid_list = ['남자', '여자', '남', '여', '그 외']
+  		return gender_input in valid_list
+
+
+	# 동적 멤버 추가 
+
+	p2 = Person()
+	p2.age = 30
+	print(p2.__dict__) # 출력 결과: {'name': '홍길동', 'gender': '남자', 'age': 30}
+
+4. 상속과 재정의
+
+- 상속 : 기존 클래스를 재사용하여 새로운 클래스를 만드는 방법
+	- 부모 클래스의 모든 속성과 메소드가 자식 클래스에게 상속됨
+	- 자식 클래스의 인스턴스를 생성하면 내부적으로 부모 클래스의 객체 요소가 함께 생성됨
+	- 상속 관계는 'is a'로 표현됨
+
+- 오버라이딩(Override) : 가능. 부모 클래스에 정의된 함수를 자식 클래스에서 이름과 매개변수 형태를 동일하게 하여 다시 정의하는 것
+- 오버로딩(Overload) : 불가능. 파이썬은 동일한 이름의 함수에 매개변수만 다르게 하여 중복 정의하는 것을 지원하지 않음
+
+
+- super() : 자식 클래스에서 부모 클래스의 멤버나 메소드(생성자 포함)를 호출할 때 사용하는 키워드
+	- `super().__init__(매개변수)` 형태로 부모의 생성자를 명시적으로 호출하여 초기화 로직을 이어받음
+
+
+- 네임 맹글링 (Name Mangling)
+	- 클래스 내부 변수 이름 앞에 `__`(언더스코어 2개)를 붙이면 파이썬이 내부적으로 그 이름을 `_클래스명__변수명` 형태로 강제 변환하는 기능
+	- 외부에서 직접적인 접근을 제한하여 실수로 인한 값 변경을 방지
+	- 상속 관계에서 자식 클래스가 부모 클래스의 변수 이름을 우연히 겹치게 하여 의도치 않게 덮어쓰기(오버라이딩)하는 사고를 방지함
+
+
+ 	ex)
+	class Shape:
+	"""Shape 클래스는 가로와 세로 멤버 변수를 가짐"""
+	def __init__(self, width, height):
+		self.width = width
+		self.height = height
+		print('Shape 객체 생성')
+  	def __del__(self):
+  		print('Shape 객체 소멸')
+  	def __str__(self):
+  		return f'가로 : {self.width}, 세로 : {self.height}'
+
+	class Rectangle(Shape): # 부모 클래스 : Shape, 자식 클래스 : Rectangle
+		def print_area(self): # 별도 함수 추가
+		print(f'넓이 : {self.width * self.height}')
+
+	r1 = Rectangle(3, 4) # 출력 결과: Shape 객체 생성 (부모 클래스의 객체 요소가 생성됨)
+	r1.print_area() # 출력 결과: 넓이 : 12
+
+	ex)
+	class Person:
+		def __init__(self, name, gender):
+		print("Person 객체 생성")
+			self.name = name
+			self.gender = gender
+  	def __del__(self):
+  		print("Person 객체 소멸")
+ 	 def print_info(self):
+  		print(self) # __str__()이 호출되어 문장 출력됨
+  	def __str__(self):
+  		return f'{self.name} 님은 {self.gender} 입니다.'
+
+	class Student(Person):
+		def __init__(self, name, gender, major): # **init** 재정의(오버라이딩)
+			print("Person-Student 객체 생성")
+		# Person.__init__(self, name, gender) 와 같이 직접 명시하거나 super() 사용 가능
+			super().__init__(name, gender) # 부모 클래스의 __init__ 호출
+			self.major = major
+ 	 def __del__(self): # __del__ 재정의
+  		pass
+  	def print_info(self): # print_info 재정의
+  		super().print_info() # 부모의 print_info 호출
+  		print('전공은 {} 입니다.'.format(self.major))
+ 	 def __str__(self): # __str__ 재정의
+  		return super().__str__() + f' 그리고 {self.major} 전공 입니다.'
+
+	s1 = Student("김길숙", "여자", "기계공학")
+	print(isinstance(s1, Person)) # 출력 결과: True (상속 관계로 인해 Student is a Person 성립)
