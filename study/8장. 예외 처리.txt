@@ -1,0 +1,255 @@
+8장. 예외 처리
+
+- 에러의 종류
+ 	 (1) 문법에러 : 문법적으로 나타나는 에러
+   	 (2) 실행에러
+		* 논리 에러 : 프로그래머가 잘못 작성하여 나타나는 에러
+		* 시스템 에러 : 프로그래머의 의지와 상관없이 나타나는 에러
+		* 예외사항 : 정상적으로 프로그램이 동작하는 과정 중 나타나는 에러
+				 (프로그램 실행 중 발생하는 예기치 않은 사건)
+
+1. 예외처리의 필요성
+
+- 예외처리 : 예외가 발생할 가능성이 있는 부분에 대해 미리 예상하고, 그에 대한 처리를 프로그래밍하는 것.
+		- 안정적으로 실행할 수 있도록 함
+	• 파일이 없거나 쓰기 금지로 인한 오류
+	• 데이터베이스 프로그래밍 시 제약조건 등에 의한 데이터베이스 서버 오류
+	• 네트워크 프로그래밍 시 네트워크 연결 실패로 인한 오류
+	• 리스트 또는 튜플의 인덱스를 벗어난 참조로 인한 오류
+
+- UnicodeDecodeError : ch08.txt - utf-8 파일의 경우 jupyter에서 인코딩 불가 
+	* UnicodeDecodeError: 'cp949' codec can't decode byte 0xeb in position 23: illegal multibyte sequence
+	- 한글 문자 11,172자 (초성 쌍자음 19 * 중성 21 * 종성 28)
+	- 한글 인코딩 방식 : 한글조합형(utf-8)
+	- 한글완성형(ANSI = euc-kr ; 2350개의 문자 이외 한글 인코딩 불가/cp949 ; 11,172자 인코딩 가능, Windows 전용)
+
+- FileNotFoundError : 'f = open('test/'+filename,'r');읽기 전용 파일 열기'에서 경로에 존재하지 않는 파일 입력 시 예외 발생
+	* FileNotFoundError: [Errno 2] No such file or directory: 'test/a.txt'
+
+- ZeroDivisionError : 0으로 나눌 시
+	* ZeroDivisionError: division by zero
+
+- IndexError : 리스트의 인덱스를 벗어난 참조 시
+	* IndexError: list index out of range
+
+2. try ~ except 예외처리
+
+2.1 try~except
+
+- 작성 문법
+	try:
+		예외가 발생할 가능성이 있는 명령어
+	except:
+    		예외가 발생할 경우 실행할 명령어
+
+	ex) 100을 입력받은 정수값으로 나눈 결과를 출력
+
+	x = int(input('정수를 입력하세요 : '))
+	# ValueError 예외 객체의 메세지 : invalid literal for int() with base 10: 'a'
+	#                              a를 입력했을 때의 예외 타입 (형변환 불가한 문자 입력)
+	print(f'입력한 정수는 {x} 입니다.')
+	print(f'100을 {x}로 나눈 결과 : {100/x:.2f}')
+	# ZeroDivisionError 예외 객체의 메시지 : division by zero
+	#                                     0을 입력했을 때의 예외 타입 (0으로 나누기 불가)
+
+	ex) while을 이용한 예외처리
+	while True:
+    		try:
+       		x = int(input('정수를 입력하세요 : '))
+        	print(f'입력한 정수는 {x} 입니다.')
+        	print(f'100을 {x}로 나눈 결과 : {100/x:.10f}')
+        	break
+    	except:
+        	print('유효한 정수가 아닙니다.')
+
+
+2.2 예외를 지정한 처리
+
+- 작성 문법
+	try:
+    		예외가 발생할 수도 있는 명령어
+	except 예외타입1:
+    		해당 예외가 발생할 경우 실행할 명령어
+	except 예외타입2:
+    		해당 예외가 발생할 경우 실행할 명령어
+	except: 
+		그 외의 예외 발생 시 실행할 명령어
+
+- 예외 지정이 많을 경우, 상위 예외타입(상속관계의 예외타입)은 하위 예외타입의 아래로 위치해야함
+	- except(Exception) : 최상위 예외타입
+
+	ex) 100을 나눌 유효한 정수를 입력할 때까지 정수를 입력받아 유효한 정수를 입력하면 
+	입력한 정수와 100으로 나눈 수를 출력하기
+
+	while True:
+ 	   	try:
+       	 	x = int(input('정수를 입력하세요 : '))
+        	print(f'입력한 정수는 {x} 입니다.')
+        	print(f'100을 {x}로 나눈 결과 : {100/x:.2f}')
+        	break
+
+    	except (ZeroDivisionError, ValueError): # 예외 지정 시 튜플 사용 가능
+        	print('나눗셈이 불가능한 정수입니다. 다시 입력하세요.')
+    
+    	except: # 그 외의 모든 예외 발생 시
+        	print('예상하지 못한 오류가 발생했습니다. 다시 입력하세요.')
+        
+	print('DONE')
+
+2.3 예외 인수(e)
+
+- 작성 문법
+	try:
+    		예외가 발생할 수도 있는 명령어
+	except 예외 타입 as e:
+    		print(e)
+
+	ex) 예외가 발생하면 예외 객체(인수)가 생성됨
+	e = ZeroDivisionError("division by zero") 
+	e.args[0] >>> 'division by zero'
+
+	ex) 
+	while True:
+    		try:
+       	 	x = int(input('정수를 입력하세요 : '))
+        	print(f'입력한 정수는 {x} 입니다.')
+        	print(f'100을 {x}로 나눈 결과 : {100/x:.2f}')
+        	break
+
+    	except (ZeroDivisionError, ValueError) as e:
+        	print(e)
+    
+    	except:
+        	print('예상하지 못한 오류가 발생했습니다. 다시 입력하세요.')
+
+* try ~ except ~ finally
+
+- 작성 문법
+	try:
+    		예외가 발생할 수도 있는 명령어
+	except [예외 타입 as e]:
+    		예외가 발생할 경우 실행할 명령어
+	[else:
+    		try 블록을 모두 수행한 후 실행할 명령어] - 자주 사용하지 않음
+	finally:
+    		try 블록 또는 except 블록을 모두 수행한 후 실행할 명령어
+
+	ex)
+	try:
+   	 	f = open('test/ch08.txt','r') # encoding='utf-8' # 파일 경로 및 오픈 방식 지정 (파일 열기)
+    		data = f.read() # 파일 읽기
+
+	except (FileNotFoundError, UnicodeDecodeError) as e:
+    		print(e)
+    
+	else:
+    		print(data) # 파일을 이용한 함수 ; try 블록이 종료될 경우 실행
+    
+	finally:
+    		f.close() # 파일 경로 삭제 (파일 닫기)
+
+3. raise : 강제 예외 발생
+
+- 사용자 정의 예외 : Exception 클래스를 상속 받은 클래스
+	class LengthZeroError(Exception):
+        	'len() 결과가 0일 때 발생하는 예외'
+        	def __init__(self, message):
+            		super().__init__(message) # 부모 클래스의 생성자에서 예외 메세지를 세팅
+
+# ch04_제어문 - 중첩 루프 탈출 방법 2 : Exception(예외처리) 활용
+
+	class BreakOutLoopError(Exception):
+    		pass
+
+	try:
+    		for a in range(0, 3):
+       			for b in range(1, 3):
+            			if a==b:
+                			raise BreakOutLoopError() # 강제 예외 발생
+            			print(a, b)
+	except BreakOutLoopError:
+    		pass
+
+	print('Done')
+	>>>
+	0 1
+	0 2
+	Done
+
+4. 추상 클래스
+
+- 추상 클래스 : 추상 메소드가 하나 이상 포함된 객체를 생성할 수 없는 클래스
+	- 자식 클래스들이 반드시 구현(재정의)해야 하는 메서드의 구조를 강제함
+	- 프로그램의 공통 규격(인터페이스)을 맞추기 위해 사용하는 미완성 설계도
+	- 파이썬의 추상 클래스 구현 : raise or @abstractmethod
+
+- 추상 메소드 : 내용(코드 body)이 비어 있는 메소드
+	- 메소드의 이름과 역할을 선언만 해두고, 실제 구체적인 기능은 구현하지 않음
+
+- 규격화와 강제성, 코드의 재사용성, 중복 방지 등의 역할
+
+	ex 1) raise NotImplementedError 를 이용한 추상 클래스 구현
+
+	class Shape: #부모클래스
+    		def __init__(self):
+        		raise NotImplementedError('추상 클래스')
+    		def calc_area(self):
+        		raise NotImplementedError('추상 메소드') ; 자식 클래스가 오버라이딩 없이 호출 시 에러 강제 발생
+
+	class Circle(Shape): #자식클래스
+    
+    		def __init__(self, x, y, r=3):
+        		self.x = x
+        		self.y = y
+        		self.r = r
+        
+    		def calc_area(self):
+       		 	import numpy as np
+        		print(f'{self.r*self.r*np.pi}')
+        
+    		def __str__(self):
+        		import numpy as np
+        		return f'좌표 : {self.x}, {self.y}, 넓이 :{self.r*self.r*np.pi}'
+
+	myCircle = Circle(3,3,5)
+	print(myCircle) >> 좌표 : 3, 3, 넓이 :78.53981633974483
+
+	ex 2) @abstractmethod를 이용한 추상 클래스 구현
+	from abc import ABC, abstractclassmethod
+
+	class Shape(ABC): #부모클래스
+    		@abstractclassmethod
+    		def __init_(self):
+        		pass
+    		@abstractclassmethod
+    		def calc_area(self):
+        		pass
+
+	class Circle(Shape): #자식클래스
+    		def __init_(self):
+        	pass
+
+	myCircle = Circle() #부모 클래스의 추상 클래스를 자식 클래스에서 구현하지 않을 시 에러 발생
+					-> 추상 클래스의 강제성
+
+5. 파일 정리 작업
+
+- with : with 블록이 완료되거나 에러가 발생하면 자동으로 close()가 실행됨
+
+	ex) with 사용 없이 finally를 사용할 경우
+	try:
+    		f = open('test/test.text','r')
+    		lines = f.readlines() ; read : 모든 내용을 읽고 반환, readlines : 모든 내용을 한 줄씩 읽고 list로 반환
+    		print(lines)
+	except (FileNotFoundError, UnicodeDecodeError) as e:
+    		print(e)
+	finally:
+    		f.close() ; close 하지않을 시 다중 접근이 불가
+
+	ex) with을 사용한 경우
+	try:
+    		with open('test/test.text','r') as f:
+        	lines = f.readlines()
+    		print(lines)
+	except (FileNotFoundError, UnicodeDecodeError) as e:
+    		print(e)
