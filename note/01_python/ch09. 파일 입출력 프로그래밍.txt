@@ -1,0 +1,27 @@
+9장 파일 입출력 프로그래밍
+- 파일 : txt, pickle(머신러닝 모델 저장, 넘파이 배열 저장), csv, json, h5(딥러닝 모델 저장)
+
+1. txt 파일 입출력 ; 파일 형식 지정 - t : 텍스트 모드, 기본값 (.txt, .csv)
+- 쓰기 - write(), writelines()
+- 읽기 - read(), readline(), readlines()
+
+2. pickle 객체 입출력
+- 형식이 있는 텍스트 데이터 불러오기 (.txt → 객체 리스트 변환)
+- 피클링 ; 파일 형식 지정 - b : 바이너리 모드 (.pkl)
+	- 피클링 	pickle.dump(저장하고 싶은 객체, 피클링할 파일 객체)
+	- 언피클링 	pickle.load(객체로 불러올 피클링 파일)
+
+3. csv 파일 입출력 : list 또는 dict 데이터로 읽고 쓰기
+- reader : reader를 통해 CSV 형식을 list로 변환, quoting
+- writer : 문자열 데이터를 저장하는 객체를 반환, newline
+- DictReader : 딕셔너리(dict) 형태로 한 줄씩 반환, restval, fieldnames
+- DictWriter : 딕셔너리(dict) 데이터를 CSV 파일로 저장, writeheader(), writerows()
+
+4. json 파일 입출력
+- json dump : 딕셔너리 리스트 / 객체 리스트를 json 파일로 저장, default, indent, ensure_ascii
+- json load :  json 파일을 딕셔너리 리스트 / 객체 리스트로 읽기, object_hook
+
+5. hdf5/h5 파일 입출력
+- 딥러닝 모델 저장, 데이터 프레임 입출력 용도(확장자 : h5, keras)
+- h5 파일 읽기 : h5(hdf/hdf5)파일을 데이터 프레임로 불러오기
+- h5 파일 쓰기 : 데이터 프레임을 h5(hdf/hdf5)파일로 저장하기

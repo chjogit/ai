@@ -80,8 +80,10 @@
     		age = int(data[1])
     		email = data[2]
     		address = data[3]
-    		print("이름 : {}, 나이 : {}, 이메일 : {}, 주소 : {}".format(name, age, email, address))
+		print("이름 : {}, 나이 : {}, 이메일 : {}, 주소 : {}".format(name, age, email, address))
+		>>> 이름 : 홍길동, 나이 : 20, 이메일 : kildong@hong.com, 주소 : 서울시 관악구
 
+	ex)
 	class Member:
     		def __init__(self, name, age, email, address):
         		self.name = name
@@ -95,5 +97,173 @@
     		def as_list(self): # 객체를 리스트로 반환
         		return [self.name, self.age, self.email, self.address]
 
-		print(member.__dict__) 
-		>>> {'name': '홍길동', 'age': '33', 'email': 'hongil@h.co.kr', 'address': '신림동'}
+		print(member.__dict__) >>> {'name': '홍길동', 'age': '33', 'email': 'hongil@h.co.kr', 'address': '신림동'}
+		print(member.as_list()) >>> ['홍길동', '33', 'hongil@h.co.kr', '신림동']
+
+2.2 피클링
+
+- 파일 형식 지정 - b : 바이너리 모드 (.pkl)
+- 작성 문법
+	- 피클링 	pickle.dump(저장하고 싶은 객체, 피클링할 파일 객체)
+	- 언피클링 	pickle.load(객체로 불러올 피클링 파일)
+
+ex) member_list와 loaded_member_list 비교 2 (__eq__ 처리 이후)
+
+    	def __eq__(self, other): # Member class에 __eq__ 함수 호출함.
+        	if isinstance(other, Member):
+            		return self.__str__() == other.__str__() # a == b 사용 시, a.__eq__(b)가 호출됨.
+       		return False
+
+	for member, loaded_member in zip(member_list, loaded_member_list):
+    		print(member == loaded_member)
+
+3. csv 파일 입출력
+
+- list 또는 dict 데이터로 읽고 쓰기
+-데이터 프레임으로 읽고 쓰기 (11장)
+
+3.1 reader
+
+- 데이터 양옆의 쌍따옴표("")와 행 끝에 있는 줄바꿈 문자(\n)를 걸러냄.
+- 쉼표(,)를 기준으로 글자를 분리하여 파이썬의 list로 변환.
+
+	ex)
+	import csv
+	with open('data/ch09_member1.csv', 'r', encoding='utf-8') as f:
+    		reader = csv.reader(f) # f를 통해 파일과 연결 후, reader를 통해 CSV 형식을 list로 변환
+    		for row in reader: # 주의 : with 구문을 벗어나면 파일이 닫힘.
+        		print(row)
+
+	ex)
+	with open('data/ch09_member1-cp.csv') as f:
+    		reader = csv.reader(f)
+    		result = list(reader) # 파일이 닫히기 전, result에 list 작성
+	for row in result: # list를 가져왔기 때문에 파일 상태와 관계 없이 for문 구동 가능
+    		print(row)
+
+- quoting : CSV 파일의 따옴표 처리 정책을 정하는 역할. 기본값 - QUOTE_MINIMAL
+
+- QUOTE_NONNUMERIC : 파일에서 따옴표가 없는 데이터를 발견하면 실수형 숫자로 변환
+
+	ex)
+	import csv
+	with open('data/ch09_member1.csv', 'r', encoding='utf-8') as f:
+    		reader = csv.reader(f, quoting=csv.QUOTE_NONNUMERIC)
+    		for row in reader:
+        	print(row)
+
+3.2 writer
+- 파일에 구분자로 연결된 문자열 데이터를 저장하는 객체를 반환
+
+	x)
+	with open('data/ch09_member2_write_cp.csv', 'w', newline='') as f:
+                                     		 # newline='' : 엑셀 상의 줄바꿈 중복 방지
+    		writer = csv.writer(f) # f를 통해 파일과 연결 후, writer를 통해 CSV 문법에 맞춰 텍스트 변환
+    		for user in user_list:
+        		writer.writerow(user) # 한 줄씩 쓰기
+
+    		writer = csv.writer(f)
+    		writer.writerows(user_list) # 한번에 쓰기
+
+3.3 DictReader
+- csv 파일 헤더의 제목을 Key로, 데이터들을 Value로 매칭하여 딕셔너리(dict) 형태로 한 줄씩 반환
+
+	ex)
+	with open('data/ch09_member3.csv', 'r', encoding='utf-8') as f:
+    		dict_reader = csv.DictReader(f, restval='-') # 결측치 표기 restval='-' - 기본값 : None
+    		result = list(dict_reader)
+
+	ex) 헤더가 없는 csv 파일을 딕셔너리로 변환하기
+	with open('data/ch09_member1-cp.csv', 'r') as f:
+    		dict_reader = csv.DictReader(f, fieldnames=['이름', '나이', '이메일', '주소', '직책'])
+    		# fieldnames=[] 헤더가 없는 파일의 키를 넣어줌
+    		for row in dict_reader:
+       			print(row)
+
+3.4 DictWriter
+- 파이썬의 딕셔너리(dict) 데이터를 CSV 파일로 저장
+
+	ex) 
+	fieldname = ['name', 'age', 'email', 'address']
+	with open('data/ch09_member4.csv', 'w', encoding='utf-8', newline='') as f:
+    		dict_writer = csv.DictWriter(f, fieldnames=fieldname)
+    	# f를 통해 파일과 연결 후, fieldnames에 지정된 Key 순서에 맞춰 CSV 형식으로 저장
+    		dict_writer.writeheader() # 헤더 설정
+    		dict_writer.writerows(result)
+
+4. json 파일 입출력
+
+4.1 json dump
+
+- 딕셔너리 리스트 데이터를 json 파일로 저장
+- 객체 리스트 데이터를 json 파일로 저장
+- 성질: 파이썬 객체를 변환함과 동시에 오픈된 파일 객체(f)에 즉시 기록
+- 매개변수: dump(데이터, 파일객체)
+
+	ex) 딕셔너리 리스트를 json 파일로 저장 시
+	import json
+	with open('data/ch09_member1.json', 'w', encoding='utf-8') as jsonf:
+	    	json.dump(data, jsonf, ensure_ascii=False, indent=' ')
+                  	                      # indent : json 파일 저장 시 들여쓰기 사용
+
+	ex) 객체 리스트를 json 파일로 저장 시
+	class Member:
+    		def __init__(self, name, age, email, address):
+        		self.name = name
+        		self.age = age
+        		self.email = email
+        		self.address = address
+    		def as_dict(self):
+        		'객체를 딕셔너리로 바꾸어 반환, json.dump 사용 시 필요'
+        		return self.__dict__
+    		def __str__(self):
+        		return f'이름 :{self.name}, 나이 :{self.age}, 이메일 :{self.email}, 주소 :{self.address}'
+
+	member_list = [Member('홍길동',20,'h1@h.com','신대방'),
+              			Member('김길동',30,'h2@h.com','봉천'),
+              			Member('신길숙',25,'h3@h.com','신림')]
+
+	# default : JSON으로 변환할 수 없는 객체를 만났을 때, 이를 어떻게 처리할지 알려줌. 함수 지정 가능.
+	with open('data/ch09_member2.json', 'w', encoding='utf-8') as jsonf:
+    		json.dump(member_list, jsonf, ensure_ascii=False, indent=' ', default=Member.as_dict) # 객체를 딕셔너리 형태로 반환하는 인스턴스 함수 지정
+						# ensure_ascii=False : 영어권 및 일부 특수문자 외 문자를 유니코드 변환 없이 그대로 표현
+
+4.2 json load
+
+- 딕셔너리 리스트 변수로 읽기
+- 객체 리스트 변수로 읽기
+
+	ex) json 파일을 딕셔너리 리스트로 읽기
+	with open('data/ch09_member1.json', 'r', encoding='utf-8') as jsonf:
+    		load_data = json.load(jsonf)
+
+	result = set() # 두 딕셔너리의 item이 같은지 item마다 T/F (백업 체크 ; 원본과 read file 비교)
+	for d, load_d in zip(data, load_data):
+    		result.add(d==load_d)
+	result
+
+	ex) json 파일을 객체 리스트로 읽기
+
+	def as_member(dic):
+   		return Member(dic.get('name'), dic.get('age'), dic.get('email'), dic.get('address'))
+
+	with open('data/ch09_member2.json', 'r', encoding='utf-8') as jsonf:
+    		load_member_list = json.load(jsonf, object_hook=as_member)
+           				# object_hook = 읽어온 딕셔너리를 내가 만든 파이썬 클래스 객체로 변환
+
+5. hdf5/h5 파일 입출력
+
+- 딥러닝 모델 저장 용도(확장자 : h5, keras)
+- 데이터 프레임 입출력
+
+- h5 파일 쓰기 : 데이터 프레임을 h5(hdf/hdf5)파일로 저장하기
+
+	ex)
+	iris_df.to_hdf('data/ch09_iris.h5', key='iris')
+
+- h5 파일 읽기 : h5(hdf/hdf5)파일을 데이터 프레임로 불러오기
+
+	ex)
+	import pandas as pd
+	load_iris_df = pd.read_hdf('data/ch09_iris.h5', key='iris')
+	load_iris_df
