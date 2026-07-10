@@ -1,0 +1,17 @@
+10장 Numpy 패키지의 함수와 속성
+
+- 배열 속성
+	dtype : 요소의 타입 (기본값 : int32) / 타입 변경 시 astype()
+	itemsize : 요소의 bytesize
+	ndim : 차원(축;axis) 수
+	size : 요쇼 개수
+	shape : 배열 구조 및 차원 확인 (a, b, c, ...)
+	arange(from,stop,by) : from부터 stop 전까지 by씩 증가하는 1차원 정수 배열 생성
+
+- 배열 생성 함수
+	np.array(obj, dtype, copy=T/F)
+	np.array(obj, dtype, copy=T/F).reshape()
+	np.zeros(tup, dtype)
+	np.ones(tup, dtype)
+	np.full(tup, def, dtype)
+	np.empty(tup, dtype)
