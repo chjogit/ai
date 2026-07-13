@@ -1,0 +1,209 @@
+10장. N차원 배열 다루기
+
+N차원 배열 객체 : 동일 자료형의 집합
+2차원 배열 : 행렬과 비슷한 개념
+NumPy : https://numpy.org/
+NumPy API Docs : https://numpy.org/doc/stable/reference/index.html
+
+1. 넘파이 패키지
+
+1.1 배열 속성
+
+- NumPy 함수들은 기본적으로 원본을 건드리지 않고 새로운 배열(혹은 View)을 반환하는 것이 원칙 
+- 원본을 직접 바꾸는 건 resize(), arr.sort(), 그리고 += 같은 대입 연산
+- 사용 함수
+	- np.arange : from부터 stop 전까지 by씩 증가하는 1차원 정수 배열 생성
+	- a.dtype : a 배열의 요소(element)들의 type
+	- a.itemsize : a 배열 속 item 하나의 bytesize
+	- a.ndim : a 배열의 차원 수 확인
+	- a.reshape(b,c) : a 배열의 행렬을 b*c로 외형만 수정해 출력. 원본 배열의 구조를 바꾸는게 아님.
+
+	ex)
+
+	a = np.arange(15) 
+	print(a.shape) # 배열 구조 및 차원 확인 ; 15 길이를 가진 1차원 배열을 확인 >>> (15,)
+	a >>> array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14])
+
+	from numpy import arange
+	a = np.arange(15, dtype=np.int8) #dtype 기본값 : int32
+	a >>> array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14], dtype=int8) dtype 설정으로 int8로 변경됨
+
+	1.2 배열 타입 변경
+
+	a.astype : a 배열의 타입 변경
+	a.ravel() : flatten된 배열을 반환
+	a.flatten() : a 배열의 내용을 1차원 리스트로 반환
+
+	ex)
+
+	a = np.arange(12).reshape(3,4)
+	a.size, a.dtype, a.itemsize
+	a.dtype = np.int64
+	a.dtype, a.itemsize#32bit->64bit 변경되며 itemsize 변경됨
+
+>>> 
+	2개의 열이 하나로 합쳐짐(스택) 
+	-> 00000001/00000002 [1, 2] -> 0000000100000002 [4294967296]
+	-> 스택으로 합쳐진 16진수가 10진수로 표기됨
+>>>
+	array([[ 4294967296, 12884901890],
+ 	      	[21474836484, 30064771078],
+       		[38654705672, 47244640266]], dtype=int64)
+
+1.3 배열 저장
+
+- pkl : 객체, 배열, 머신러닝 모델 저장
+- npy : 넘파이 포맷, io 개선
+
+
+2. 넘파이 배열
+
+- array() 함수를 이용한 파이썬 데이터(list, tuple) 변환
+- 특정 값을 갖는 배열 생성 함수 : ones(), zeros(), empty(), full(), ...
+- 랜덤한 값을 갖는 배열 생성 함수 : random.normal() ...
+- NumPy Func : https://numpy.org/doc/stable/reference/index.html
+
+2.1 array() 함수
+
+- array(obj, dtype=np.type(or 'type'), copy=T/F) ; obj:list
+- type : int32, int64, float32, float64, ...
+- 동일 자료형의 집합으로 배열 생성. 우선 순위 : 정수 → 실수 → 문자
+
+- 2차원 [axis0 : 행, axis1 : 열] cf. 1차원 [axis0 : 열]
+- 존재하지 않는 index 출력은 에러 발생
+
+- 행과 열의 슬라이싱 : 2차원 배열 데이터 반환
+- 특정 행(열)의 슬라이싱 : 1차원 배열 데이터 반환
+
+	ex) 정수의 기본 타입 : int32 / 실수의 기본 타입 : float64
+
+	a = np.array([2, 14, 6])
+	a, a.dtype >>> (array([ 2, 14,  6]), dtype('int32'))
+
+	ex) 일반적인 list 데이터 탐색과 같음
+
+	for item in a: 
+    		print(item, end=' ')
+
+
+
+
+	ex) a의 배열 구조 변경 : 2*2에서 4*1로 변경
+
+	a = np.array([[1.5,3.2],
+   	     		      [4,5]], dtype='float32').reshape(4)
+	a.shape = (4, 1) 
+
+	ex) NumPy 배열에서의 깊은 복사
+	c = np.array([[1,2,3],[4,5,6]], dtype='int16') 
+	d = np.array(c, copy=False, dtype='int8') # copy=False인 상태에서, dtype이 바뀌면 깊은 복사로 변경됨
+	print(id(c), id(d))
+	d[0,0]=9
+	print(c, d, sep='\n')
+
+	ex) NumPy 배열에서의 깊은 복사
+
+	c = np.array([[1,2,3],[4,5,6]], dtype='int16') 
+	d = np.array(c, copy=True) # 내용을 복사한 독립개체 ; Deep Copy - c.copy()와 동일
+	print(id(c), id(d))
+	d[0,0]=9
+	print(c, d, sep='\n')
+
+** 정보처리에서, u'type' : unsigned 'type'
+
+- int8에서 1은 00000001으로 표기.
+- 제일 앞의 0은 부호 표기를 담당. (0:+,1:-)
+- 따라서, 1의 경우 11111110으로 표기.
+- unsigned는 해당 이진수를 양수로 읽으므로 uint8에서 -1은 10진수 254를 의미함.
+
+2.2 기본값이 있는 배열
+
+- 사용 함수
+	- np.zeros(tup, dtype) : 0.0으로 채우기
+	- np.ones(tup, dtype) : 1.0으로 채우기
+	- np.full(tup, def, dtype) : def으로 채우기
+	- np.empty(tup, dtype) : 임의의 값으로 채우기
+	- 위의 함수를 이용해서 생성된 배열은 기본 dtype이 float64으로 설정됨.
+
+	ex) 
+
+	np.zeros((3,5)) # 3행 5열의 2차원 float64 배열에 모든 요소를 0.0으로
+
+	np.ones((4,5), dtype='int16') # 4행 5열의 2차원 int16 배열에 모든 요소를 1으로
+
+	np.empty((3,8)) # 3행 8열의 2차원 float64 배열에 모든 요소를 임의의 값으로
+
+2.3 랜덤한 값을 갖는 배열
+
+- 사용 함수
+	- np.random.random(tup) : 0 이상 1 미만의 균일한 확률을 가진 무작위 실수
+	- np.random.uniforn(low, high, size=tup) : low 이상 high 미만의 균일한 확률을 가진 무작위 실수
+	- np.random.normal(loc, scale, size=tup) : 평균 loc, 표준편차 scale을 가진 정규분포의 무작위 실수
+
+	- np.random.rand(n) : 균등분포의 1차원 n개 난수 배열 생성
+	- np.random.randn(n) : 표준정규분포(평균 0, 표준편차 1)의 1차원 n개 난수 배열 생성
+	- np.random.randint(n) : 0 이상 n 미만의 정수 난수 1개 발생 == random.randint(1, n-1)
+	- np.random.randint(low, high, size=tup) : low 이상 high 미만 균일한 확률을 가진 무작위 정수
+
+	ex)
+
+	import matplotlib.pyplot as plt
+	plt.figure(figsize = (10,2)) # 그래프 사이즈 조절
+	x = [1, 1, 1, 2, 2, 2, 2, 5, 3, 2, 4]
+	plt.hist(x, bins=10) # 그래프의 촘촘한 정도
+	plt.show()
+
+	ex)
+
+	%%time # 해당 코드의 실행 시간 측정
+	import matplotlib.pyplot as plt
+	plt.figure(figsize = (15,5))
+	x = np.random.randn(50000000)
+	plt.hist(x, bins=500)
+	plt.show()
+
+2.4 연속된 값을 갖는 배열
+
+- 사용 함수
+	- np.arange(from, to, by, dtype) : from부터 to 전까지 by씩 건너뛴 값을 1차원 배열로 생성
+	- np.linspace(from, to, n) : from부터 to까지 n개의 숫자를 1차원 배열로 생성, num의 기본값 : 50
+
+ex) 
+
+np.arange(10, 24, 2, dtype=np.float32)
+
+ex) to가 실수일 때, to 값이 포함될 수 있음
+
+	p.arange(1, 2.2, 0.2, dtype=np.float64) 
+			*
+	진수 실수 표기의 한계로 인함. 실제값은 2.199999997이지만 2.2로 출력됨.
+	.2를 이진수 표기할 경우 무한소수가 되어,파이썬의 계산 상으론 0.19999999..가 더해짐.
+	로 인해, 실수 배열 생성의 경우 linspace가 더 정교하고 안전함.
+
+2.5 배열의 차원 변경
+
+- 사용 함수
+	- reshape(행, 열): -1 사용 가능
+		- 원본의 총 원소 개수와 바꿀 모양의 총 원소 개수가 반드시 일치해야함
+		- 원본 데이터는 그대로 두고, 모양이 바뀐 "새로운 뷰(View)"를 반환함
+	- resize(tup): -1 사용 불가
+		- 원본 배열 자체를 직접 변경
+		- 원본과 원소 개수가 달라도 작동
+	- ravel() : 1차원 배열(View)을 반환, ravel()로 만든 배열의 값을 수정할 경우, 원본도 함께 바뀜
+	- flatten() : 1차원으로 변경한 새로운 복사본(Copy) 배열을 반환
+	- T, transpose() : 전치(행과 열을 바꿈)행렬로 View 반환
+
+2.6 배열 인쇄
+
+- np.get_printoptions() : 출력 옵션 확인, 'threshold' 기본값 1000으로 item 개수 최대 1000개까지 출력됨
+- 배열의 요소가 많아 출력할 수 없는 경우, 일부를 생략하고 모서리 부분만 출력함
+
+- 넘파이 출력 옵션 변경 (출력 사이즈 조정)
+	- n개 출력
+		np.set_printoptions(threshold=n) 
+	- 무한대 ; np.inf
+		np.set_printoptions(threshold=np.inf) 
+	- 파이썬 시스템의 가장 큰 수(약 920경)
+		import sys
+		np.set_printoptions(threshold=sys.maxsize)
+

@@ -12,6 +12,48 @@
 	np.array(obj, dtype, copy=T/F)
 	np.array(obj, dtype, copy=T/F).reshape()
 	np.zeros(tup, dtype)
-	np.ones(tup, dtype)
+	np.ones(tup, dtype)ㅡ
 	np.full(tup, def, dtype)
 	np.empty(tup, dtype)
+
+	np.random.random(tup) : 0 이상 1 미만의 균일한 확률을 가진 무작위 실수
+	np.random.uniforn(low, high, size=tup) : low 이상 high 미만의 균일한 확률을 가진 무작위 실수
+	np.random.normal(loc, scale, size=tup) : 평균 loc, 표준편차 scale을 가진 정규분포의 무작위 실수
+	np.random.rand(n) : 균등분포의 1차원 n개 난수 배열 생성
+	np.random.randn(n) : 표준정규분포(평균 0, 표준편차 1)의 1차원 n개 난수 배열 생성
+
+	np.arange(from, to, by, dtype) : from부터 to 전까지 by씩 건너뛴 값을 1차원 배열로 생성
+	np.linspace(from, to, n) : from부터 to까지 n개의 숫자를 1차원 배열로 생성
+
+- 배열 차원 변경
+	reshape(행, 열): -1 사용 가능
+	resize(tup): -1 사용 불가
+	ravel() / flatten() : 1차원 변경 반환
+	T, transpose() : 전치(행과 열을 바꿈)행렬로 반환
+
+
+- 배열 연산
+	요소별 연산, 행렬곱(@ dot, 단위행렬 I), 집계함수(sum, min, max, mean, var, std)
+	범용함수(np.add, np.sqrt...), 브로드캐스팅
+
+- 배열 합치기
+	np.vstack(tup)
+	np.hstack(tup)
+	np.dstack(tup) : depth 방향으로 합침
+	np.concatenate(tup, axis) : axis 축으로 합침
+	
+	np.column_stack(tup) : 1차원 배열을 열 단위로 배열하여 2차원 배열로 합침
+	np.row_stack(tup) : 행 단위로 합침
+
+	np.stack(tup, axis)
+
+	np.r_[a, b, c] : row 단위로 쌓아 합치기 (한 행으로 합치기)
+	np.c_[a, b, c] : column 단위로 쌓아 합치기 (1차원->2차원으로
+	A.[:, np.newaxis] : 1차원 배열 A를 2차원으로 쌓아줌(축 증가)
+		reshape(-1, 1) / np.expand_dims(A, axis=1)
+
+- 배열 분리하기				* ary : 배열, indices : 개수, sections : 인덱스
+	vsplit(ary, indices or sections) : 첫번째 축(2차원의 경우 가로축)을 따라 분할
+	hsplit(ary, indices or sections) : 두번째 축(2차원의 경우 세로축)을 따라 분할
+	split(ary, indices or sections, axis) : axis=0이면, vsplit, axis=1이면 hsplit과 동일
+	array_split(ary, indices or sections, axis) : 나누어지지 않는 정수로도 split 가능
