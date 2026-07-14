@@ -1,59 +1,84 @@
-10장 Numpy 패키지의 함수와 속성
+10장. N차원 배열 다루기
 
 - 배열 속성
 	dtype : 요소의 타입 (기본값 : int32) / 타입 변경 시 astype()
-	itemsize : 요소의 bytesize
-	ndim : 차원(축;axis) 수
-	size : 요쇼 개수
+	itemsize : 요소의 bytesize (Byte 단위)
+	ndim : 차원(축; axis) 수
+	size : 요소 개수
 	shape : 배열 구조 및 차원 확인 (a, b, c, ...)
-	arange(from,stop,by) : from부터 stop 전까지 by씩 증가하는 1차원 정수 배열 생성
+	arange(from, stop, by) : from부터 stop 전까지 by씩 증가하는 1차원 정수 배열 생성
 
 - 배열 생성 함수
-	np.array(obj, dtype, copy=T/F)
+	np.array(obj, dtype, copy=T/F) : 리스트/튜플을 배열로 변환 (동일 자료형 필수, 정수->실수->문자 자동 형변환)
 	np.array(obj, dtype, copy=T/F).reshape()
-	np.zeros(tup, dtype)
-	np.ones(tup, dtype)ㅡ
-	np.full(tup, def, dtype)
-	np.empty(tup, dtype)
+	np.zeros(tup, dtype) : 모든 요소 0.0 채움
+	np.ones(tup, dtype) : 모든 요소 1.0 채움
+	np.full(tup, def, dtype) : 모든 요소 지정 기본값(def) 채움
+	np.empty(tup, dtype) : 초기화 없이 기존 메모리 임의 값으로 빠르게 생성
 
 	np.random.random(tup) : 0 이상 1 미만의 균일한 확률을 가진 무작위 실수
-	np.random.uniforn(low, high, size=tup) : low 이상 high 미만의 균일한 확률을 가진 무작위 실수
+	np.random.uniform(low, high, size=tup) : low 이상 high 미만의 균일한 확률을 가진 무작위 실수
 	np.random.normal(loc, scale, size=tup) : 평균 loc, 표준편차 scale을 가진 정규분포의 무작위 실수
 	np.random.rand(n) : 균등분포의 1차원 n개 난수 배열 생성
 	np.random.randn(n) : 표준정규분포(평균 0, 표준편차 1)의 1차원 n개 난수 배열 생성
+	np.random.randint(low, high, size=tup) : 범위 내 정수형 난수 배열 생성
 
 	np.arange(from, to, by, dtype) : from부터 to 전까지 by씩 건너뛴 값을 1차원 배열로 생성
-	np.linspace(from, to, n) : from부터 to까지 n개의 숫자를 1차원 배열로 생성
+	np.linspace(from, to, n) : from부터 to까지 n개의 숫자를 1차원 배열로 생성 (실수 배열 생성 시 안전)
 
 - 배열 차원 변경
-	reshape(행, 열): -1 사용 가능
-	resize(tup): -1 사용 불가
-	ravel() / flatten() : 1차원 변경 반환
+	reshape(행, 열) : -1 사용 가능, 새로운 뷰(View) 반환 (불일치 시 에러)
+	resize(tup) : -1 사용 불가, 원본 구조 직접 수정 (모자라면 0 채움)
+	ravel() / flatten() : 1차원 평탄화 반환 (ravel은 뷰, flatten은 깊은 복사본)
 	T, transpose() : 전치(행과 열을 바꿈)행렬로 반환
 
+- 배열 인쇄 제어
+	np.set_printoptions(threshold) : 대용량 배열 출력 시 생략 기호(...) 제어 (무한대 출력은 np.inf)
 
 - 배열 연산
-	요소별 연산, 행렬곱(@ dot, 단위행렬 I), 집계함수(sum, min, max, mean, var, std)
-	범용함수(np.add, np.sqrt...), 브로드캐스팅
+	요소별 연산 : 배열 간 동일 위치 요소끼리 일대일 대응 연산
+	행렬곱 : @, .dot() 사용 (단위행렬 I의 경우 A@B와 B@A 결과 동일)
+	복합 대입 연산 : a += b (메모리 주소 유지, Overflow 주의) / a = a + b (새 객체 대입, 타입 자동 확장)
+	집계함수 : sum, min, max, mean, var, std
+		- 1차원 : axis 0 = 열 방향
+		- 2차원 : axis 0 = 행(위에서 아래), axis 1 = 열(왼쪽에서 오른쪽)
+		- 3차원 : axis 0 = 면, axis 1 = 행, axis 2 = 열 방향 수축
+	범용함수 : np.add, np.sqrt, np.multiply 등 일괄 수학 연산 (out 매개변수 지원)
+	브로드캐스팅 : 모양이 다른 배열 간 차원 자동 확장 연산 (np.newaxis, np.ix_ 활용 가능)
 
 - 배열 합치기
-	np.vstack(tup)
-	np.hstack(tup)
-	np.dstack(tup) : depth 방향으로 합침
-	np.concatenate(tup, axis) : axis 축으로 합침
-	
+	np.vstack(tup) : 수직 방향(행 추가) 결합
+	np.hstack(tup) : 수평 방향(열 추가) 결합
+	np.dstack(tup) : 깊이(depth/차원 추가) 방향으로 합침
+	np.concatenate(tup, axis) : axis 축 방향으로 합침
 	np.column_stack(tup) : 1차원 배열을 열 단위로 배열하여 2차원 배열로 합침
 	np.row_stack(tup) : 행 단위로 합침
+	np.stack(tup, axis) : 지정 axis 축 기준 차원을 새로 생성하며 결합
+	np.r_[a, b, c] : row 단위로 쌓아 합치기 (한 행으로 길게 연결)
+	np.c_[a, b, c] : column 단위로 쌓아 합치기 (1차원 -> 2차원으로 세로 결합)
+	A[:, np.newaxis] : 1차원 배열 A를 2차원으로 쌓아줌 (축 증가, reshape(-1, 1) / np.expand_dims(A, axis=1)과 동일)
 
-	np.stack(tup, axis)
+- 배열 분리하기				* ary : 배열, indices_or_sections : 개수 또는 인덱스 목록
+	vsplit(ary, indices_or_sections) : 첫번째 축(가로축)을 따라 분할
+	hsplit(ary, indices_or_sections) : 두번째 축(세로축)을 따라 분할
+	split(ary, indices_or_sections, axis) : axis=0이면 vsplit, axis=1이면 hsplit과 동일 (균등 분할 필수)
+	array_split(ary, indices_or_sections, axis) : 나누어떨어지지 않아도 에러 없이 강제 분할
 
-	np.r_[a, b, c] : row 단위로 쌓아 합치기 (한 행으로 합치기)
-	np.c_[a, b, c] : column 단위로 쌓아 합치기 (1차원->2차원으로
-	A.[:, np.newaxis] : 1차원 배열 A를 2차원으로 쌓아줌(축 증가)
-		reshape(-1, 1) / np.expand_dims(A, axis=1)
+- 복사와 뷰 (Copy & View)
+	할당 : b = a 단순 대입, 동일 메모리 주소 공유 (동기화)
+	뷰(View) : 얕은 복사, 형태는 독립적이나 실제 원소 공간 공유 (a.view() 또는 슬라이싱)
+	깊은 복사 : .copy() 또는 np.array(a, copy=True), 완벽히 독립된 데이터 객체 생성
 
-- 배열 분리하기				* ary : 배열, indices : 개수, sections : 인덱스
-	vsplit(ary, indices or sections) : 첫번째 축(2차원의 경우 가로축)을 따라 분할
-	hsplit(ary, indices or sections) : 두번째 축(2차원의 경우 세로축)을 따라 분할
-	split(ary, indices or sections, axis) : axis=0이면, vsplit, axis=1이면 hsplit과 동일
-	array_split(ary, indices or sections, axis) : 나누어지지 않는 정수로도 split 가능
+- 고급 인덱싱 (Fancy Indexing)
+	인덱스 배열 : a[[0, 5, 9]] 등 특정 인덱스 배열 전달로 무작위 추출 (중복 인덱스 대입 연산 시 1번만 연산됨)
+	argmax(axis) : 배열 내 최댓값을 가진 원소의 인덱스 번호를 축 기준으로 반환
+	불리언 인덱싱 : 조건식(예: a % 2 == 0) 검사 후 True인 원소만 필터링 추출
+
+- 선형 대수 (Linear Algebra)
+	np.linalg.inv(a) : 정방행렬의 역행렬 계산
+	np.trace(a) : 정방행렬 주대각선 성분 총합(대각합) 연산
+	np.eye(n) : n * n 정방 단위행렬 생성 (기본 float64)
+	회귀분석 수식 모델 :
+		- 독립 1개, 데이터 2개 : X에 상수항(Bias) 결합 후 wb = np.linalg.inv(X) @ Y
+		- 단별량 최소제곱법 (데이터 n개) : 정방행렬 변환 후 wb = np.linalg.inv(X.T @ X) @ (X.T @ Y)
+		- 다변량 회귀분석 : 독립 n개, 데이터 n개 환경에서 wb = np.linalg.inv(X) @ Y

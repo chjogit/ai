@@ -15,10 +15,10 @@
 - 상대경로 : 코드파일 기준으로 작성
 - 절대경로 : 드라이브 위치부터 작성
 
-	ex) 상대경로
+ ex) 상대경로
 	f = open('data/ch09.txt', 'w', encoding='utf-8')
 
-	ex) 파일을 'a' 모드로 열기
+ ex) 파일을 'a' 모드로 열기
 	with open('data/ch09.txt', 'a') as f:
     		print('프린트 함수를 사용한 파일 쓰기\n', file = f)
 
@@ -26,7 +26,7 @@
 
 - write(), writelines()
 
-	ex) 파일을 만들어 쓰기 모드로 열기
+ ex) 파일을 만들어 쓰기 모드로 열기
 
 	with open('data/ch09.txt', 'w', encoding='utf-8') as f:
     		# 방법 1
@@ -49,7 +49,7 @@
 
 - readline() : 파일을 한 줄(현재 커서 위치부터 \n까지)씩 읽고 출력하기
 
-	ex)
+ ex)
 	with open('data/ch09.txt', 'rt', encoding='utf-8') as txtf:
     		filecontent = txtf.readline()
     		while line!= '' : # line이 빈 스트링['']이 아닐 경우 아래 명령어 실행
@@ -58,7 +58,7 @@
 
 - readlines() : 파일을 한번에 읽어 list로 받아 출력하기
 
-	ex)
+ ex)
 	with open('data/ch09.txt', 'r', encoding='utf-8') as txtf:
     		lines = txtf.readlines()
 
@@ -69,7 +69,7 @@
 
 2.1 형식이 있는 텍스트 데이터 불러오기
 
-	ex) ch09_member.txt → 객체 리스트 변환
+ ex) ch09_member.txt → 객체 리스트 변환
 
 	with open('data/ch09_member.txt', 'rt', encoding='utf-8') as f:
     		lines = f.readlines()
@@ -83,7 +83,7 @@
 		print("이름 : {}, 나이 : {}, 이메일 : {}, 주소 : {}".format(name, age, email, address))
 		>>> 이름 : 홍길동, 나이 : 20, 이메일 : kildong@hong.com, 주소 : 서울시 관악구
 
-	ex)
+ ex)
 	class Member:
     		def __init__(self, name, age, email, address):
         		self.name = name
@@ -127,14 +127,14 @@ ex) member_list와 loaded_member_list 비교 2 (__eq__ 처리 이후)
 - 데이터 양옆의 쌍따옴표("")와 행 끝에 있는 줄바꿈 문자(\n)를 걸러냄.
 - 쉼표(,)를 기준으로 글자를 분리하여 파이썬의 list로 변환.
 
-	ex)
+ ex)
 	import csv
 	with open('data/ch09_member1.csv', 'r', encoding='utf-8') as f:
     		reader = csv.reader(f) # f를 통해 파일과 연결 후, reader를 통해 CSV 형식을 list로 변환
     		for row in reader: # 주의 : with 구문을 벗어나면 파일이 닫힘.
         		print(row)
 
-	ex)
+ ex)
 	with open('data/ch09_member1-cp.csv') as f:
     		reader = csv.reader(f)
     		result = list(reader) # 파일이 닫히기 전, result에 list 작성
@@ -145,7 +145,7 @@ ex) member_list와 loaded_member_list 비교 2 (__eq__ 처리 이후)
 
 - QUOTE_NONNUMERIC : 파일에서 따옴표가 없는 데이터를 발견하면 실수형 숫자로 변환
 
-	ex)
+ ex)
 	import csv
 	with open('data/ch09_member1.csv', 'r', encoding='utf-8') as f:
     		reader = csv.reader(f, quoting=csv.QUOTE_NONNUMERIC)
@@ -153,9 +153,10 @@ ex) member_list와 loaded_member_list 비교 2 (__eq__ 처리 이후)
         	print(row)
 
 3.2 writer
+
 - 파일에 구분자로 연결된 문자열 데이터를 저장하는 객체를 반환
 
-	x)
+ ex)
 	with open('data/ch09_member2_write_cp.csv', 'w', newline='') as f:
                                      		 # newline='' : 엑셀 상의 줄바꿈 중복 방지
     		writer = csv.writer(f) # f를 통해 파일과 연결 후, writer를 통해 CSV 문법에 맞춰 텍스트 변환
@@ -166,14 +167,15 @@ ex) member_list와 loaded_member_list 비교 2 (__eq__ 처리 이후)
     		writer.writerows(user_list) # 한번에 쓰기
 
 3.3 DictReader
+
 - csv 파일 헤더의 제목을 Key로, 데이터들을 Value로 매칭하여 딕셔너리(dict) 형태로 한 줄씩 반환
 
-	ex)
+ ex)
 	with open('data/ch09_member3.csv', 'r', encoding='utf-8') as f:
     		dict_reader = csv.DictReader(f, restval='-') # 결측치 표기 restval='-' - 기본값 : None
     		result = list(dict_reader)
 
-	ex) 헤더가 없는 csv 파일을 딕셔너리로 변환하기
+ ex) 헤더가 없는 csv 파일을 딕셔너리로 변환하기
 	with open('data/ch09_member1-cp.csv', 'r') as f:
     		dict_reader = csv.DictReader(f, fieldnames=['이름', '나이', '이메일', '주소', '직책'])
     		# fieldnames=[] 헤더가 없는 파일의 키를 넣어줌
@@ -181,9 +183,10 @@ ex) member_list와 loaded_member_list 비교 2 (__eq__ 처리 이후)
        			print(row)
 
 3.4 DictWriter
+
 - 파이썬의 딕셔너리(dict) 데이터를 CSV 파일로 저장
 
-	ex) 
+ ex) 
 	fieldname = ['name', 'age', 'email', 'address']
 	with open('data/ch09_member4.csv', 'w', encoding='utf-8', newline='') as f:
     		dict_writer = csv.DictWriter(f, fieldnames=fieldname)
@@ -200,13 +203,13 @@ ex) member_list와 loaded_member_list 비교 2 (__eq__ 처리 이후)
 - 성질: 파이썬 객체를 변환함과 동시에 오픈된 파일 객체(f)에 즉시 기록
 - 매개변수: dump(데이터, 파일객체)
 
-	ex) 딕셔너리 리스트를 json 파일로 저장 시
+ ex) 딕셔너리 리스트를 json 파일로 저장 시
 	import json
 	with open('data/ch09_member1.json', 'w', encoding='utf-8') as jsonf:
 	    	json.dump(data, jsonf, ensure_ascii=False, indent=' ')
                   	                      # indent : json 파일 저장 시 들여쓰기 사용
 
-	ex) 객체 리스트를 json 파일로 저장 시
+ ex) 객체 리스트를 json 파일로 저장 시
 	class Member:
     		def __init__(self, name, age, email, address):
         		self.name = name
@@ -233,7 +236,7 @@ ex) member_list와 loaded_member_list 비교 2 (__eq__ 처리 이후)
 - 딕셔너리 리스트 변수로 읽기
 - 객체 리스트 변수로 읽기
 
-	ex) json 파일을 딕셔너리 리스트로 읽기
+ ex) json 파일을 딕셔너리 리스트로 읽기
 	with open('data/ch09_member1.json', 'r', encoding='utf-8') as jsonf:
     		load_data = json.load(jsonf)
 
@@ -242,7 +245,7 @@ ex) member_list와 loaded_member_list 비교 2 (__eq__ 처리 이후)
     		result.add(d==load_d)
 	result
 
-	ex) json 파일을 객체 리스트로 읽기
+ ex) json 파일을 객체 리스트로 읽기
 
 	def as_member(dic):
    		return Member(dic.get('name'), dic.get('age'), dic.get('email'), dic.get('address'))
@@ -258,12 +261,12 @@ ex) member_list와 loaded_member_list 비교 2 (__eq__ 처리 이후)
 
 - h5 파일 쓰기 : 데이터 프레임을 h5(hdf/hdf5)파일로 저장하기
 
-	ex)
+ ex)
 	iris_df.to_hdf('data/ch09_iris.h5', key='iris')
 
 - h5 파일 읽기 : h5(hdf/hdf5)파일을 데이터 프레임로 불러오기
 
-	ex)
+ ex)
 	import pandas as pd
 	load_iris_df = pd.read_hdf('data/ch09_iris.h5', key='iris')
 	load_iris_df

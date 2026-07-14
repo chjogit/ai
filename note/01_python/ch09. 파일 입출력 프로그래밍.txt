@@ -1,39 +1,41 @@
-9장 파일 입출력 프로그래밍
-- 파일 : txt, pickle(머신러닝 모델 저장, 넘파이 배열 저장), csv, json, h5(딥러닝 모델 저장)
+9장. 파일 입출력 프로그래밍
 
-1. txt 파일 입출력 ; 파일 형식 지정 - t : 텍스트 모드, 기본값 (.txt, .csv)
-- 작성 문법
-	with open('파일 경로','r/w/a','encoding) as f:
-	* 쓰기 - 문자변수; f.write()/리스트변수; f.writelines()
-	* 읽기 - 문자변수; f.read()/리스트변수; f.readline(), f.readlines()
+- 파일 형식 : txt, pickle(머신러닝 모델, 넘파이 배열 저장), csv, json, h5/keras(딥러닝 모델, 데이터프레임 저장)
 
-2. pickle 객체 입출력
-- 형식이 있는 텍스트 데이터 불러오기 (.txt → 객체 리스트 변환)
-- 피클링 ; 파일 형식 지정 - b : 바이너리 모드 (.pkl)
-- 작성 문법
-	with open('파일 경로','rb/wb','encoding) as f:
-	* 피클링 	; pickle.dump(저장하고 싶은 객체, f)
-	* 언피클링 	; pickle.load(f)
+- 1. txt 파일 입출력
+	* 파일 모드 : t(텍스트 모드, 기본값), r(읽기), w(쓰기 - 덮어쓰기), a(추가 - 이어쓰기)
+	* 작성 문법
+		with open('파일 경로', 'r/w/a', encoding='utf-8') as f:
+		- 쓰기 : f.write(문자열) / f.writelines(문자열 리스트)
+		- 읽기 : f.read() (전체 문자열 읽기) / f.readline() (한 줄 문자열 읽기) / f.readlines() (한 줄씩 리스트로 읽기)
 
-3. csv 파일 입출력 : list 또는 dict 데이터로 읽고 쓰기
-- 작성 문법
-	with open('파일 경로','r/w/a','encoding) as f:
-	* reader = csv.reader(f)\ 2d list = list(reader) : reader를 통해 CSV 형식을 list로 변환, quoting
-	* writer = csv. writer(f)\ writer.writerows() : 문자열 데이터를 저장하는 객체를 반환, newline
-	* dic_reader = csv.DictReader(f)\ dict_list = list(dic_reader) : 딕셔너리(dict) 형태로 한 줄씩 반환, restval, fieldnames
-	* dic_writer = csv.DictWriter(f)\ dic_writer.writerows() : 딕셔너리(dict) 데이터를 CSV 파일로 저장, writeheader()
+- 2. pickle 객체 입출력
+	* 피클링 : 파이썬 객체 구조(List, Dict 등)를 바이너리 형식(.pkl)으로 직렬화 및 역직렬화 저장
+	* 파일 모드 : b(바이너리 모드 필수, encoding 설정 불필요)
+	* 작성 문법
+		with open('파일 경로', 'rb/wb') as f:
+		- 피클링(저장) : pickle.dump(저장할_객체, f)
+		- 언피클링(불러오기) : 객체_변수 = pickle.load(f)
 
-4. json 파일 입출력
-- 작성 문법
-	with open('파일 경로','r/w/a','encoding) as f:
-	* 딕셔너리 리스트 - dict_list = json.dump(dict_list, f, ensure_ascii=False, indent=)
-	* 딕셔너리 리스트 - dict_list = json.load(f)
-	* 객체 리스트 - ins_list = json.dump(ins_list, f, default=Class_name, func_name)
-	* 객체 리스트 - json.load(f, object_hook=func_name)
+- 3. csv 파일 입출력
+	* 작성 문법 (※ 쓰기 작업 시 빈 줄 방지를 위해 newline='' 옵션 필수 지정 권장)
+		with open('파일 경로', 'r/w/a', encoding='utf-8', newline='') as f:
+		- 2D List 읽기 : reader = csv.reader(f) -> list_data = list(reader) (quoting 옵션 사용 가능)
+		- 2D List 쓰기 : writer = csv.writer(f) -> writer.writerows(데이터_리스트)
+		- Dict 읽기    : dic_reader = csv.DictReader(f) -> dict_list = list(dic_reader) (fieldnames, restval 설정 가능)
+		- Dict 쓰기    : dic_writer = csv.DictWriter(f, fieldnames=필드명_리스트) -> dic_writer.writeheader() (헤더 쓰기) -> dic_writer.writerows(딕셔너리_리스트)
 
-5. hdf5/h5 파일 입출력
-- 딥러닝 모델 저장, 데이터 프레임 입출력 용도(확장자 : h5, keras)
-- 작성 문법
-	import pandas as pd
-	* data_frm = pd.read_hdf('파일 경로', key) : h5(hdf/hdf5)파일을 데이터 프레임로 불러오기
-	* data_frm.to_hdf('파일 경로', key) : 데이터 프레임을 h5(hdf/hdf5)파일로 저장하기
+- 4. json 파일 입출력
+	* 작성 문법
+		with open('파일 경로', 'r/w/a', encoding='utf-8') as f:
+		- 딕셔너리 리스트 저장 : json.dump(dict_list, f, ensure_ascii=False, indent=4)
+		- 딕셔너리 리스트 읽기 : dict_list = json.load(f)
+		- 객체 리스트 저장     : json.dump(ins_list, f, default=변환_함수명)
+		- 객체 리스트 읽기     : ins_list = json.load(f, object_hook=변환_함수명)
+
+- 5. hdf5/h5 파일 입출력
+	* 특징 : 대용량 데이터프레임 입출력 및 딥러닝 모델 저장용 (※ pandas 사용 시 pytables 설치 필요)
+	* 작성 문법
+		import pandas as pd
+		- 불러오기 : data_frm = pd.read_hdf('파일 경로', key='key_name')
+		- 저장하기 : data_frm.to_hdf('파일 경로', key='key_name')
