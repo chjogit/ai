@@ -2,9 +2,495 @@
 
 1. 판다스 패키지
 
-- 데이터 분석을 위해 반드시 알아야할 패키지.
-- 넘파이를 기반으로 하며, 다른 많은 라이브러리와 잘 통합되도록 설계됨.
-- 1차원 구조 시리즈, 2차원 구조 데이터프레임 제공.
-- 장점 :
-	데이터 프레임 생성 용이, 파일 i/o 간편화, 레이블링
-	부분 데이터 추출, 크기 변경(행/열 삽입 및 삭제 용이)
+- 데이터 분석을 위해 반드시 알아야 할 패키지
+- 넘파이를 기반으로 하며, 다른 많은 라이브러리와 잘 통합되도록 설계됨
+- 1차원 구조 시리즈, 2차원 구조 데이터프레임 제공
+- 장점: 데이터 프레임 생성 용이, 파일 i/o 간편화, 레이블링, 부분 데이터 추출, 크기 변경(행/열 삽입 및 삭제 용이)
+- import pandas as pd
+
+	ex) pd.read() : 'encoding=' 기본값 : utf-8
+	data = pd.read_json('data/ch09_member1.json')
+	display(data) # display를 통해 출력됨
+
+	>>>
+	# 	name		age	email		address		job
+	# 0	홍길동	20	h@h.com	서울시 관악구	-
+	# 1	신길동	40	s@h.com	서울시 영등포구	팀장
+	# 2	김길동	30	k@h.com	서울시 동작구	-
+
+	ex) 헤더가 있는 CSV
+	member3 = pd.read_csv('data/ch09_member3.csv')
+
+	ex) 헤더가 없는 CSV ; 헤더 설정 가능
+	member1 = pd.read_csv('data/ch09_member1.csv', 
+	                    header=None,
+	                    names=['이름', '나이', '이메일', '주소'] 
+	                     )
+
+	ex) h5 파일 불러오기
+	pd.read_hdf('data/ch09_iris.h5', key='iris')
+
+2. 데이터 프레임 생성
+
+- 1차원 데이터 : 시리즈 (Series)
+- 2차원 데이터 : 데이터 프레임 (DataFrame)
+
+2-1. 딕셔너리를 이용한 데이터 프레임 생성
+
+- 데이터 프레임은 열별로 동일 자료형을 가짐
+
+	ex) 딕셔너리로 생성
+	d = {'kor':[100,90], 'mat':[95,97]}
+	df = pd.DataFrame(data=d)
+
+	# 	kor	mat
+	# 0	100	95
+	# 1	90	97
+
+- 사용 함수
+	- df.to_dict(): 데이터 프레임을 딕셔너리로
+	- df.to_numpy(): 데이터 프레임을 넘파이 배열으로
+	- df.dtypes: 데이터 프레임의 열별 타입
+	- df.info(): 데이터 프레임의 정보 확인
+	- df.head(): 기본값 - 상위 5행
+	- df.tail(): 기본값 - 하위 5행
+
+	ex) 데이터 프레임의 열 타입 변경
+	import numpy as np
+	df['kor'] = df['kor'].astype(np.float64)
+
+- 결측치(NaN)의 기본 type: float (결측치가 하나라도 섞여 있는 열은 자동 float 처리됨)
+
+- 열 인덱스에 맞추어 생성 및 결측치 처리
+	ex) 
+	d = [{'kor':100, 'mat':100},{'kor':90, 'mat':95},{'kor':83,'eng':97}]
+	df = pd.DataFrame(d)
+
+	>>>
+	# 	kor	mat	eng
+	# 0	100	100.0	NaN
+	# 1	90	95.0	NaN
+	# 2	83	NaN	97.0
+
+2-2. 리스트를 이용한 데이터 프레임 생성
+
+	ex) 기본 리스트 전달 생성
+	kor = [100,100,95,80,87]
+	mat = [80,90,65,80,75]
+	df = pd.DataFrame({'kor':kor, 'mat':mat})
+
+	>>> 결과(1)
+	# 	kor	mat
+	# 0	100	80
+	# 1	100	90
+	# 2	95	65
+	# 3	80	80
+	# 4	87	75
+
+	ex) 두 리스트를 np.c_ 처리하여 데이터 프레임 생성 및 columns를 통해 헤더 생성 ; 결과 (1)과 동일
+	pd.DataFrame(np.c_[kor, mat], columns=['kor', 'mat'])
+
+- 작성 방식
+	df = pd.read_csv(r'파일 경로',
+	                #encoding='utf-8', sep=',' : 기본값
+	                nrows = 30, # 첫 30행 불러오기
+	                low_memory=False, # 데이터 용량이 클 경우 사용
+	                )
+	df.shape # 데이터 프레임 크기
+
+- 데이터 프레임 디스플레이 옵션
+	pd.options.display.max_columns = nn # nn열까지 display
+	pd.options.display.max_rows = mm # mm행까지 display
+
+- 상위 n행을 전치
+	df.head(n).T
+
+2-3. read_csv
+
+- csv 파일 불러오기(기본값) : '#'을 생략하지 않음
+	import pandas as pd
+	member = pd.read_csv('data/ch11_member.csv')
+
+	>>> 
+	# 	Name	Age	Email			Address		Birth
+	# 0	홍길동	20.0	hong@hong.com	서울시 강동구	1999-01-01
+	# 1	홍길서	30.0	seo@hong.com	서울시 중구	1999-12-01
+	# 2	홍길남	21.0	nam@hong.com	서울시 강동구	1999-11-01
+	# 3	홍길북	22.0	buk@hong.com	서울시 관악구	1999-05-01
+	# 4	홍길중	23.0	mid@hong.com	부산시 중구	1999-01-30
+	[#홍길뜽, NaN, non@not.com, 없는구, 2000-01-01]를 포함해 출력함
+
+	ex) 문자형으로 변환
+	member['Age'] = member['Age'].astype('str')
+
+	ex) 숫자형으로 변환 1 (결측치가 포함된 경우 대문자 'Int64'를 써야 정수 변환 가능)
+	member['Age'] = pd.to_numeric(member['Age'], 
+	                             errors='coerce' # 변환 불가 값은 결측치(NaN)로 강제 변환
+	                             )
+	member['Age'] = member['Age'].astype('Int64') # Nullable Integer 타입 적용
+
+	ex) 숫자형으로 변환 2 (errors 옵션 종류: 'raise'(에러발생), 'coerce'(NaN대체), 'ignore'(원본유지))
+	pd.to_numeric(member['Age'], 
+	               downcast='integer', # 메모리 최소화 위해 가능한 가장 작은 크기의 정수 타입으로 형변환
+	               errors='ignore'
+	              )
+
+	ex) object로 읽어들인 Birth를 datetime형으로 (pd.to_datetime 사용이 안정적)
+	member['Birth'] = pd.to_datetime(member['Birth'])
+	member = member.astype({'Age':'Int32'})
+
+	ex) 날짜형 데이터의 년-월-일 분할
+	member['year'] = member.Birth.dt.year
+	member['month'] = member.Birth.dt.month
+	member['day'] = member.Birth.dt.day
+
+	display(member)
+	>>>
+	# 	Name	Age	Email			Address		Birth		year month day
+	# 0	홍길동	20	hong@hong.com	서울시 강동구	1999-01-01	1999	1	1
+	# 1	홍길서	30	seo@hong.com	서울시 중구	1999-12-01	1999	12	1
+	# 2	홍길남	21	nam@hong.com	서울시 강동구	1999-11-01	1999	11	1
+	# 3	홍길북	22	buk@hong.com	서울시 관악구	1999-05-01	1999	5	1
+	# 4	홍길중	23	mid@hong.com	부산시 중구	1999-01-30	1999	1	30
+	# 5	#홍길뜽	<NA>	non@not.com	없는구	2000-01-01	2000	1	1
+
+- sep='|', 주석(#) 제외, 상위 n행, datetime형 필드 지정
+	ex)
+	member_df = pd.read_csv('data/ch11_membersep.csv',
+	                        sep='|', # '|' 기준으로 데이터를 분리해 읽기
+	                        comment='#', # 주석(#) 제외
+				encoding = 'cp949', # cp949로 인코드
+	                        skiprows=[1,6], # 1, 6 행 제외
+	                        nrows=3, # 상위 3행만 불러오기
+	                        parse_dates=['Birth']) # datetime형 필드 지정
+
+2-4. 패키지에서 가져오기
+
+- 예시: iris data 가져오기
+	- 방법 1) sklearn (머신러닝 패키지)
+	- 방법 2) statsmodels (R 데이터 패키지)
+	- 방법 3) seaborn (시각화 패키지)
+
+2-4-1. sklearn
+
+- 머신러닝을 공부하기 위한 학습용 데이터셋 제공
+- sklearn pkg dataset : 독립변수(입력변수)와 종속변수(타겟변수)가 분리된 딕셔너리 형태로 제공
+- sklearn.datasets 모듈의 데이터를 데이터 프레임으로 변환
+
+- sklearn을 통해 iris data 가져오기
+	from sklearn import datasets
+	iris = datasets.load_iris() # 딕셔너리 형태
+
+- iris.DESCR : iris 데이터셋에 대한 설명
+
+- 독립변수 : iris.data
+- 독립변수의 열 이름(인덱스) : iris.feature_names
+
+	ex) 데이터프레임에서의 독립변수 열 이름 (' ' 또는 특수문자 '()' 사용 불가)
+	[col[:-5].replace(' ', '_') for col in iris.feature_names]
+
+- 종속변수(타겟변수) : iris.target
+- 종속변수의 열 이름(인덱스) : iris.target_names
+
+	ex) 독립변수와 종속변수를 stack한 후, 데이터 프레임으로 생성
+	result = np.c_[data, target]
+	df = pd.DataFrame(result, columns=[col[:-5].replace(' ',  '_') for col in iris.feature_names]+['species'])
+
+	ex) 독립변수와 종속변수를 각각 데이터 프레임으로 생성 후 두 데이터 프레임을 연결
+	# X : 독립변수 데이터 프레임 ; 변수 개수가 많을 경우 대문자 사용
+	X = pd.DataFrame(data, columns=[col[:-5].replace(' ', '_') for col in iris.feature_names])
+	# y : 종속변수 데이터 프레임 ; 변수 개수가 하나일 경우 소문자 사용
+	y = pd.DataFrame(target, columns=['species'])
+	# 두 데이터 프레임을 연결 
+	iris_df = pd.concat([X, y],
+	                    axis = 1 # 기본값 : 0 (행 방향 결합), 1 (열 방향 결합)
+	                   )
+	iris_df[::25]
+
+2-4-2. statsmodels
+
+	ex) statsmodels 데이터 패키지 읽어오기
+	from statsmodels.api import datasets
+	iris_dataset = datasets.get_rdataset('iris',
+	                                    package='datasets',
+	                                    cache=True # 기본값 False ; 캐시 생성 없이 데이터를 불러옴 
+	                                    )          # True로 변경 ; 캐시 데이터를 PC에 저장
+	iris = iris_dataset.data
+
+- 열 이름에 '.'이 있는 경우 "데이터프레임['열']" 형식만 사용 가능 (속성 조회 . 은 불가)
+	ex)
+	iris['Sepal.Length'][:5]
+
+- 열 이름 수정
+	ex)
+	iris.columns = [col.replace('.', '_').lower() for col in iris.columns]
+	iris.head()
+
+2-4-3. seaborn
+
+	ex) seaborn 활용 및 파일 저장
+	import seaborn as sns
+	iris = sns.load_dataset('iris')
+
+	ex) 데이터 프레임을 파일로 출력
+	iris.to_csv('data/ch11_iris.csv') # 기본값 : sep=',', encoding='utf-8', index=True
+
+	ex) index(행 이름)를 생략하여 파일로 출력
+	iris.to_csv('data/ch11_iris.csv', index=False)
+
+	ex) 파일을 압축하여 출력
+	iris.to_csv('data/ch11_iris.zip',
+	           index=False,
+	           compression='infer' # 파일 확장자(.zip, .gz, .bz2)를 확인 후 압축 형식을 따름
+	           )
+
+	ex) 임의의 3행 반환
+	load_iris.sample(3)
+
+3. 이름 지정하기
+
+3-1. 열 이름 지정하기
+
+	ex) 데이터 준비
+	member = pd.read_csv('data/ch11_member.csv', comment='#', parse_dates=['Birth'])
+
+	>>>
+	# 	Name	Age	Email			Address		Birth
+	# 0	홍길동	20	hong@hong.com	서울시 강동구	1999-01-01
+	# 1	홍길서	30	seo@hong.com	서울시 중구	1999-12-01
+	# 2	홍길남	21	nam@hong.com	서울시 강동구	1999-11-01
+	# 3	홍길북	22	buk@hong.com	서울시 관악구	1999-05-01
+	# 4	홍길중	23	mid@hong.com	부산시 중구	1999-01-30
+
+	ex) 열 이름 확인하기
+	member.columns >>> Index(['Name', 'Age', 'Email', 'Address', 'Birth'], dtype='object') ; column name's level : 1
+
+	ex) 열 이름 지정하기
+	member.columns = ['성명', '나이', '이메일', '주소', '생일']
+	>>>
+	# 	성명		나이	이메일		주소			생일
+	# 0	홍길동	20	hong@hong.com	서울시 강동구	1999-01-01
+	# 1	홍길서	30	seo@hong.com	서울시 중구	1999-12-01
+	# 2	홍길남	21	nam@hong.com	서울시 강동구	1999-11-01
+	# 3	홍길북	22	buk@hong.com	서울시 관악구	1999-05-01
+	# 4	홍길중	23	mid@hong.com	부산시 중구	1999-01-30
+
+3-2. 행 이름 지정하기
+
+	ex) 행 이름 확인하기
+	member.index >>> RangeIndex(start=0, stop=5, step=1)
+
+	ex) 행 이름 지정하기 1
+	member.index = ['동', '서', '남', '북', '중']
+	>>>
+	# 	성명		나이	이메일		주소			생일
+	# 동	홍길동	20	hong@hong.com	서울시 강동구	1999-01-01
+	# 서	홍길서	30	seo@hong.com	서울시 중구	1999-12-01
+	# 남	홍길남	21	nam@hong.com	서울시 강동구	1999-11-01
+	# 북	홍길북	22	buk@hong.com	서울시 관악구	1999-05-01
+	# 중	홍길중	23	mid@hong.com	부산시 중구	1999-01-30
+
+	ex) 열 이름을 행 이름(index)으로 지정하기 (1) 할당 방식 권장 (2) inplace=True는 폐지 트렌드
+	member = member.set_index('성명')
+	>>> 열 이름에서 '이름' 열이 없어짐
+	# 		나이	이메일		주소			생일
+	# 성명				
+	# 홍길동	20	hong@hong.com	서울시 강동구	1999-01-01
+	# 홍길서	30	seo@hong.com	서울시 중구	1999-12-01
+	# 홍길남	21	nam@hong.com	서울시 강동구	1999-11-01
+	# 홍길북	22	buk@hong.com	서울시 관악구	1999-05-01
+	# 홍길중	23	mid@hong.com	부산시 중구	1999-01-30
+
+	ex) 행 이름(index)을 열에 편입하기
+	member = member.reset_index()
+
+	ex) 기존 행 이름을 0부터 numbering
+	member = member.reset_index(drop=True) # 기존 행 이름을 제거하고 숫자 index 초기화
+
+	>>>
+	# 	성명		나이	이메일		주소			생일
+	# 0	홍길동	20	hong@hong.com	서울시 강동구	1999-01-01
+	# 1	홍길서	30	seo@hong.com	서울시 중구	1999-12-01
+	# 2	홍길남	21	nam@hong.com	서울시 강동구	1999-11-01
+	# 3	홍길북	22	buk@hong.com	서울시 관악구	1999-05-01
+	# 4	홍길중	23	mid@hong.com	부산시 중구	1999-01-30
+
+3-3. 레벨 이름 지정하기
+
+	ex) 열 레벨이 2개 이상인 데이터 프레임 생성
+	member.columns = [['필수정보','필수정보','필수정보','선택정보','선택정보'],
+	                 ['성명', '나이', '이메일', '주소', '생년월일']]
+	member.columns.names = ['대분류','소분류']
+
+	ex) 행 레벨이 2개 이상인 데이터 프레임 생성
+	member.index = [['좌우','좌우','상하','상하','중앙'],
+	                 ['동', '서', '남', '북', '중']]
+	member.index.names = ['레벨 1','레벨 2']
+	member
+	>>>
+	# 	대분류	필수정보					선택정보
+	# 	소분류	성명		나이	이메일		주소			생년월일
+	# 레벨 1   레벨 2	
+	# 좌우	동	홍길동	20	hong@hong.com	서울시 강동구	1999-01-01
+	# 		서	홍길서	30	seo@hong.com	서울시 중구	1999-12-01
+	# 상하	남	홍길남	21	nam@hong.com	서울시 강동구	1999-11-01
+	# 		북	홍길북	22	buk@hong.com	서울시 관악구	1999-05-01
+	# 중앙	중	홍길중	23	mid@hong.com	부산시 중구	1999-01-30
+
+- 행/열의 레벨이 2개 이상일 때
+	- member.loc[('대분류','소분류'),('대분류','소분류')]
+	- member.xs(key='소분류', level='소분류 열 이름')
+
+4. 부분 데이터 조회
+
+4-1. 열 조회
+
+- df[열 이름]
+- df[조건]
+
+4-2. loc 조회
+
+- df.loc[행 이름, 열 이름] : 행 이름과 열 이름으로 조회
+- 슬라이싱 가능 [from:to] : from부터 to까지 (to 포함됨)
+- list를 이용한 조회 가능 : 연속되지 않거나 원하는 특정 행/열
+- 열 이름 생략 시 모든 열 조회 (판다스 loc에서는 '...'을 지원하지 않으므로 대신 ':'을 쓸 것)
+
+- 예시 데이터 프레임
+	# 	Name	Age	Email			Address		Birth
+	# 동	홍길동	20	hong@hong.com	서울시 강동구	1999-01-01
+	# 서	홍길서	30	seo@hong.com	서울시 중구	1999-12-01
+	# 남	홍길남	21	nam@hong.com	서울시 강동구	1999-11-01
+	# 북	홍길북	22	buk@hong.com	서울시 관악구	1999-05-01
+	# 중	홍길중	23	mid@hong.com	부산시 중구	1999-01-30
+
+- 슬라이싱
+	ex) 행 이름(index)으로 호출하기
+	member.loc[0]
+
+	ex) 인덱스 슬라이싱 (판다스 loc은 ':'을 사용해 행/열 범위를 지정함)
+	member.loc[0:2]
+	member.loc[0:2, :]
+
+	ex) 슬라이싱을 이용한 특정 정보 추출
+	member.loc['동':'남','Name':'Email']
+
+- list
+	ex) 동행과 남행의 Name과 Email만 조회
+	member.loc[['동','남'],['Name', 'Email']]
+
+	ex) 모든 행의 Name
+	member.loc[:,'Name'] # 하나의 열 또는 행을 조회할 경우, 결과는 1차원 시리즈로 나타남
+
+4-3. iloc 조회
+
+- df.iloc[행 번호, 열 번호]
+- 슬라이싱 가능 [from:stop:by] : from부터 stop 전까지 by씩 건너뜀 (stop 미포함)
+- list 조회 가능
+- 열 번호 생략 시 모든 열 조회
+
+- 슬라이싱
+	ex) 서부터 남까지 조회
+	member.iloc[1:3]
+
+	ex) 0~2 행, 1~2 열
+	member.iloc[0:3,1:3]
+
+	ex) 짝수번째 행 / 마지막 열 제외
+	member.iloc[::2,:-1:]
+
+- list
+	ex) 0, 2 행 / 1, 3열
+	member.iloc[[0,2],[1,3]]
+
+4-4. 조건 조회
+
+	ex) 단순 조건 비교
+	member['Age']>=23
+	>>>
+	# 동    False
+	# 서     True
+	# 남    False
+	# 북    False
+	# 중     True
+
+	ex) boolen 인덱싱
+	member.loc[[False, True, False, False, True]]
+	>>>
+	# 	Name	Age	Email			Address		Birth
+	# 서	홍길서	30	seo@hong.com	서울시 중구	1999-12-01
+	# 중	홍길중	23	mid@hong.com	부산시 중구	1999-01-30
+
+	ex) 23세 이상의 Name, Age, Email 데이터 조회 ; 슬라이싱 이용
+	member.loc[member['Age']>=23, 'Name':'Email']
+
+	ex) 23세 미만의 데이터
+	member[~(member['Age']>=23)] # ~[조건] : 조건의 반대값
+
+- Series.str.find()
+
+	ex) Address에 중구가 포함된 데이터
+	member[member['Address'].str.find('중구')!=-1] # [조건]!=[결과] : [조건]의 [결과]가 일치하지 않을 때 True
+	member.loc[member['Address'].str.find('중구')!=-1]
+
+	ex) Address에 중구가 포함된, Name, Email 데이터
+	member.loc[member['Address'].str.find('중구')!=-1, ['Name', 'Email']]
+
+- Series.str.contains(value1|value2) : 시리즈 내에 value1 또는 value2가 있을 경우, value를 반환
+
+	ex) Address에 관악구 또는 중구가 포함된 데이터
+	member[member['Address'].str.contains('중구|관악구')]
+
+	ex) Address에 서울이 포함되지 않은 데이터
+	member[~member['Address'].str.startswith('서울')]
+
+	ex) Name이 홍길동이거나 홍길남인 데이터의 모든 열 1
+	member[(member['Name']=='홍길동')|(member['Name']=='홍길남')]
+
+- Series.isin(values) : 시리즈 내에 values가 있을 경우, values를 반환
+
+	ex) Name이 홍길동이거나 홍길남인 데이터의 모든 열 2
+	member[member['Name'].isin(['홍길동', '홍길남', '홍길서'])]
+
+	ex) 1월생의 데이터 ; Birth datetime dtype 확인 필요
+	member[member['Birth'].dt.month == 1]
+
+	ex) 서울에 거주 중인 1월생의 데이터
+	member[(member['Birth'].dt.month == 1)&(member['Address'].str.startswith('서울'))]
+
+	ex) 2번, 4번 인덱스 행의 Email 열 item을 결측치로 변경
+	member.loc[[2,4], 'Email'] = np.nan
+	>>>
+	# 	Name	Age	Email			Address		Birth
+	# 0	홍길동	20	hong@hong.com	서울시 강동구	1999-01-01
+	# 1	홍길서	30	seo@hong.com	서울시 중구	1999-12-01
+	# 2	홍길남	21	NaN			서울시 강동구	1999-11-01
+	# 3	홍길북	22	buk@hong.com	서울시 관악구	1999-05-01
+	# 4	홍길중	23	NaN			부산시 중구	1999-01-30
+
+	ex) 모든 행과 열의 결측치 여부를 확인
+	member.isna()
+	>>>
+	# 	NameAge EmailAddressBirth
+	# 0	False	False	False	False	False
+	# 1	False	False	False	False	False
+	# 2	False	False	True	False	False
+	# 3	False	False	False	False	False
+	# 4	False	False	True	False	False
+
+	ex) 각 열의 결측치 개수
+	member.isna().sum(axis=0)
+	>>>
+	# Name	0
+	# Age		0
+	# Email		2
+	# Address	0
+	# Birth		0
+
+	 ex) 결측치가 있는 행의 모든 열 출력
+	member[member.isna().any(axis=1)]
+	 >>>
+	# 	Name	Age	Email	Address		Birth
+	# 2	홍길남	21	NaN	서울시 강동구	1999-11-01
+	# 4	홍길중	23	NaN	부산시 중구	1999-01-30
+
+
