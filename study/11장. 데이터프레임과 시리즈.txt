@@ -493,4 +493,253 @@
 	# 2	홍길남	21	NaN	서울시 강동구	1999-11-01
 	# 4	홍길중	23	NaN	부산시 중구	1999-01-30
 
+5. 데이터 삭제 및 추가
 
+5-1. 데이터 프레임의 요소 삭제
+
+- df.drop(labels, axis)  # labels: 열 이름 또는 행 이름
+- axis=0 : 행 삭제 (기본값)
+- axis=1 : 열 삭제
+
+	ex) 데이터 준비
+	import pandas as pd
+	member = pd.read_csv('data/ch11_member.csv', comment='#', parse_dates=['Birth'])
+
+	# 행 이름(index) 임의 지정을 완료했다고 가정:
+	member.index = ['동', '서', '남', '북', '중']
+
+	>>> member 데이터 프레임 상태
+	# 	Name	Age	Email			Address		Birth
+	# 동	홍길동	20	hong@hong.com	서울시 강동구	1999-01-01
+	# 서	홍길서	30	seo@hong.com	서울시 중구	1999-12-01
+	# 남	홍길남	21	nam@hong.com	서울시 강동구	1999-11-01
+	# 북	홍길북	22	buk@hong.com	서울시 관악구	1999-05-01
+	# 중	홍길중	23	mid@hong.com	부산시 중구	1999-01-30
+
+	ex 1) 단일 행 삭제
+	member.drop('동') # 기본값: axis=0. 삭제된 새로운 데이터프레임을 반환 (원본 유지)
+	member = member.drop('동') # 원본 반영 방법 1: 재할당
+	# member.drop('동', inplace=True) # 원본 반영 방법 2: inplace 사용
+
+	ex 2) 복수 행 삭제 - list 전달
+	member.drop(['서', '남'])
+
+	>>>
+	# 	Name	Age	Email			Address		Birth
+	# 북	홍길북	22	buk@hong.com	서울시 관악구	1999-05-01
+	# 중	홍길중	23	mid@hong.com	부산시 중구	1999-01-30
+
+	ex 3) 열 삭제 (axis=1 필수 지정)
+	member.drop(['Age', 'Birth'], axis=1)
+
+	>>>
+	# 	Name	Email			Address
+	# 동	홍길동	hong@hong.com	서울시 강동구
+	# 서	홍길서	seo@hong.com	서울시 중구
+	# 남	홍길남	nam@hong.com	서울시 강동구
+	# 북	홍길북	buk@hong.com	서울시 관악구
+	# 중	홍길중	mid@hong.com	부산시 중구
+
+5-2. 요소 추가
+
+- 열 추가
+
+	- df['new_label'] = value # 새로운 열에 단일 값(또는 리스트)을 추가
+	- df['new_label'] = pd.Series([values], index=[idx]) # 특정 인덱스에만 값을 매핑하여 추가하고 나머지는 결측치(NaN) 처리
+
+	ex 1) 모든 행에 동일한 값 추가
+	member['no'] = 7  # 'no' 열이 생성되고 모든 행에 7이 입력됨
+
+	ex 2) 특정 인덱스(행 이름)를 지정하여 시리즈 추가 (매칭되지 않는 행은 NaN 처리됨)
+	new_col = pd.Series([7, 8, 9], index=['동', '서', '중'])
+	member['num'] = new_col
+
+	ex 3) 기존 열 데이터를 가공하여 추가 (dt: datetime 접근자 사용)
+	member['출생년도'] = member['Birth'].dt.year
+
+	>>> 결과 데이터 프레임
+	# 	Name	Age	Email			Address		Birth		no	num	출생년도
+	# 동	홍길동	20	hong@hong.com	서울시 강동구	1999-01-01	7	7.0	1999
+	# 서	홍길서	30	seo@hong.com	서울시 중구	1999-12-01	7	8.0	1999
+	# 남	홍길남	21	nam@hong.com	서울시 강동구	1999-11-01	7	NaN	1999
+	# 북	홍길북	22	buk@hong.com	서울시 관악구	1999-05-01	7	NaN	1999
+	# 중	홍길중	23	mid@hong.com	부산시 중구	1999-01-30	7	9.0	1999
+
+- 행 추가
+
+	- pd.concat([df1, df2], axis=0) # 두 데이터프레임을 아래(행 방향)로 연결하여 합침
+
+	ex 1) 데이터 프레임끼리 행 방향 연결
+	member = pd.concat([member, new_member], axis=0)
+	member = member.reset_index(drop=True) # 행 이름이 겹치거나 지저분할 경우 인덱스 재정렬
+
+	ex 2) 시리즈를 데이터 프레임의 행으로 연결 (to_frame().T 활용)
+	new_series1 = pd.Series(['홍길현', 33, 'hyeon@hong.com', '인천시 서구', '1995-08-01'], index=member.columns[:5])
+	member = pd.concat([member, new_series1.to_frame().T], axis=0).reset_index(drop=True)
+
+	ex 3) .loc을 활용한 직관적인 단일 행 추가
+	member.loc[len(member)] = ['홍길신', 25, 'shin@hong.com', '대전시 유성구', '2001-04-15']
+	member = member.reset_index(drop=True)
+
+6. 병합과 연결
+
+6-1. merge()
+
+- 특정 '열(값)'을 기준으로 데이터프레임을 병합
+- df1.merge(df2, how='inner', on='기준열')
+
+	ex) 데이터 준비
+	df1 = pd.DataFrame({'key': ['a', 'b', 'c', 'd'], 'c1': [1, 2, 3, 4]})
+	df2 = pd.DataFrame({'key': ['a', 'b', 'c', 'f'], 'c2': [5, 6, 7, 8]})
+
+	ex 1) inner join (공통된 key값만 병합)
+	df1.merge(df2) # 기본값: how='inner', 온(on)을 생략하면 이름이 같은 열을 자동으로 기준 지정
+
+	ex 2) left join (왼쪽 df1의 key를 무조건 유지하고 오른쪽을 붙임)
+	df1.merge(df2, how='left')
+
+	ex 3) right join (오른쪽 df2의 key를 무조건 유지하고 왼쪽을 붙임)
+	df1.merge(df2, how='right')
+
+	ex 4) outer join (어느 한쪽에만 존재하는 key라도 모두 포함하여 합침, 빈 곳은 NaN)
+	df1.merge(df2, how='outer')
+
+	ex 5) 기준 열 이름이 서로 다른 두 데이터 프레임의 병합
+	df1_diff = pd.DataFrame({'key1': ['a', 'b', 'c', 'd'], 'c1': [1, 2, 3, 4]})
+	df2_diff = pd.DataFrame({'key2': ['a', 'b', 'c', 'f'], 'c2': [5, 6, 7, 8]})
+	df1_diff.merge(df2_diff, left_on='key1', right_on='key2', how='outer')
+
+	>>>
+	# 	key1	c1	key2	c2
+	# 0	a	1.0	a	5.0
+	# 1	b	2.0	b	6.0
+	# 2	c	3.0	c	7.0
+	# 3	d	4.0	NaN	NaN
+	# 4	NaN	NaN	f	8.0
+
+6-2. concat()
+
+- pd.concat([df1, df2], axis)
+- axis=0 : 기본값. 행 방향 연결 (위아래로 쌓기)
+- axis=1 : 열 방향 연결 (좌우로 붙이기, 인덱스/위치 번호 기준)
+
+	ex) 인덱스 번호가 다를 때의 열 방향 concat
+	df1 = pd.DataFrame({'key1': ['a', 'b', 'c', 'd'], 'c1': [1, 2, 3, 4]})
+	df2 = pd.DataFrame({'key2': ['a', 'b', 'c', 'f'], 'c2': [5, 6, 7, 8]})
+	df2.index = [0, 1, 2, 4] # 인덱스 번호(행 이름) 중 '3'이 생략되고 '4'가 지정됨
+	
+	pd.concat([df1, df2], axis=1)
+	>>> 인덱스가 맞지 않는 부분(3행, 4행)은 서로 결측치(NaN)로 채워짐
+	# 	key1	c1	key2	c2
+	# 0	a	1.0	a	5.0
+	# 1	b	2.0	b	6.0
+	# 2	c	3.0	c	7.0
+	# 3	d	4.0	NaN	NaN
+	# 4	NaN	NaN	f	8.0
+
+7. 정렬
+
+- 정렬 기준 : 행 이름(index) / 열 이름(columns) / 실제 데이터 값(values)
+- df.sort_index(axis) : 행 또는 열의 '이름'을 기준으로 정렬
+- df.sort_values(by='열이름', ascending=True/False) : 특정 열의 '데이터 값'을 기준으로 정렬
+
+7-1. 행 이름 정렬 (Index 기준)
+
+	ex) axis=0 (기본값): 행 이름 기준 내림차순 정렬
+	member.sort_index(axis=0, ascending=False)
+
+7-2. 열 이름 정렬 (Columns 기준)
+
+	ex) 컬럼 알파벳/가나다 순 정렬
+	member.sort_index(axis=1) 
+	member.sort_index(axis='columns') 
+
+7-3. 값에 의한 정렬 (Values 기준)
+
+ex 1) 단일 조건 오름차순 정렬
+	member.sort_values(by='Age') # Age 열의 실제 데이터 값을 기준으로 오름차순 정렬 (기본값: ascending=True)
+
+ex 2) 다중 조건 정렬 (Age 기준 내림차순 정렬 후, 나이가 같으면 Birth 기준 내림차순 정렬)
+	member.sort_values(by=['Age', 'Birth'], ascending=False)
+
+	ex 3) 다중 조건 정렬에서 조건별 차등 정렬 (Age 기준 내림차순, 나이가 같으면 Birth 기준 오름차순 정렬)
+	member.sort_values(by=['Age', 'Birth'], ascending=[False, True])
+
+8. 기초 통계 분석
+
+- pandas : 간편한 기술 통계 제공
+- statsmodels : 정밀하고 심화된 추론 통계 제공
+
+8-1. 주요 통계 함수
+
+- count() : 결측치(NaN)를 제외한 데이터 개수
+- isna().sum() : 각 열의 결측치 개수 ( = isnull().sum() )
+- min() / max() : 최솟값 / 최댓값
+- sum() : 열별 합계
+- cumsum() / cumprod() : 누적 합 / 누적 곱
+- mean() / median() : 평균 / 중위수 (중앙값)
+- var() / std() : 분산 / 표준편차
+- quantile() : 사분위수 및 백분위수 산출 (이상치 탐색 용도)
+- rolling(n).mean() : 이동 평균 계산 (노이즈를 제거하고 추세를 파악할 때 유용)
+
+	ex 1) 문자열 컬럼이 섞여 있을 때 수치형 데이터만 선택하여 중앙값 구하기
+	iris.median(axis=0, numeric_only=True) # numeric_only=True를 통해 에러 방지
+
+	ex 2) 시리즈에서의 사분위수(quantile) 구하기
+	data = [1, 3, 4, 7, 10]
+	df = pd.DataFrame(data, columns=['value'])
+	df['value'].quantile(q=0.5, interpolation='linear') # q=0.5: 중앙값 구하기 (기본값)
+	>>> 결과: 4.0
+
+	ex 3) 데이터프레임에서의 분위수 구하기
+	X.quantile([0, 0.25, 0.5, 0.75, 1])
+
+- 사분위수 계산 시 경계값 처리
+
+	- 'linear'      : [기본값] 경계값 사이를 직선으로 연결해 비례 배분하여 계산 (선형 보간)
+	- 'nearest'    : 가상의 계산 위치에서 가장 가까운 '실제 존재하는 값'을 선택
+	- 'midpoint' : 가상 위치 양옆에 있는 두 실제값의 산술 평균(중간값)을 계산
+
+- 사분위수를 이용한 이상치(Outlier) 정의 및 계산
+
+	- IQR = Q3 - Q1
+	- 이상치 판단 기준(하한선) : Q1 - 1.5 * IQR
+	- 이상치 판단 기준(상한선) : Q3 + 1.5 * IQR
+
+8-2. 요약 통계량 (describe)
+
+- 기본값 : 수치형(Numeric) 데이터를 가진 컬럼의 요약 통계량(개수, 평균, 표준편차, 최솟값, 사분위수, 최댓값)만 출력
+
+	ex 1) 문자열/범주형 데이터를 가진 컬럼의 요약 통계량 확인
+	# count(개수), unique(고유값 종류 수), top(최빈값), freq(최빈값의 빈도수) 출력
+	df.describe(include=['object', 'bool'])
+
+	ex 2) 수치형과 범주형을 망라한 모든 타입의 요약 통계량 출력
+	df.describe(include='all')
+
+	ex 3) 특정 데이터 타입만 요약에서 제외하기
+	df.describe(exclude='float64')
+
+	ex 4) 특정 컬럼의 고유값 목록 및 고유값 빈도수(개수) 확인
+	df['c'].unique() # 고유한 값들을 배열로 반환
+	df['c'].value_counts() # 고유값별 개수를 내림차순 정렬하여 반환
+
+- value_counts()의  매개변수
+	- normalize=True : 개수 대신 전체에서 차지하는 '비율(Percentage)'로 출력 (0~1 사이)
+	- dropna=False   : 결측치(NaN)를 누락시키지 않고 결측치의 빈도수도 함께 집계
+	- ascending=True : 빈도수가 적은 순서(오름차순)로 정렬하여 출력
+
+
+8-3. 공분산과 상관계수
+
+- 공분산
+
+	- 두 변수 X, Y 간의 선형적 연관성을 나타내는 척도
+	- Cov(X, Y) = [(Xi - X 평균)(Yi - Y 평균)의 합] / (n - 1)
+  	- df.cov()
+
+- 상관계수
+
+  	- 공분산을 각 변수의 표준편차로 나누어 -1과 1 사이의 값으로 표준화한 척도
+  	- r = Cov(X, Y) / (X 표준편차 * Y 표준편차)  [-1 <= r <= 1]
+  	- df.corr()
