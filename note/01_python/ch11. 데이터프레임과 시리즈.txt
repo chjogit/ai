@@ -1,0 +1,145 @@
+11장. 데이터 프레임과 시리즈
+
+1. 판다스(Pandas) 패키지 기초
+- 1차원 구조(Series) 및 2차원 구조(DataFrame) 제공
+- import pandas as pd
+- 파일 읽기 및 옵션 
+	pd.read_csv('경로', sep=',', encoding='utf-8', nrows=30, low_memory=False, comment='#', skiprows=[1,6], parse_dates=['컬럼명'])
+	pd.read_json('경로')
+	pd.read_hdf('경로', key='키명')
+- 디스플레이 옵션 
+	pd.options.display.max_columns = nn (nn개 열까지 출력)
+	pd.options.display.max_rows = mm (mm개 행까지 출력)
+
+2. 데이터 프레임 생성 및 탐색
+- 2-1. 딕셔너리로 생성
+	pd.DataFrame(data={'kor':[100,90], 'mat':[95,97]}) (열별로 동일 자료형)
+	pd.DataFrame([{'kor':100, 'mat':100}, {'kor':90, 'mat':95}]) (결측치는 NaN 처리, float 변환)
+- 2-2. 리스트/배열로 생성
+	pd.DataFrame(np.c_[kor, mat], columns=['kor', 'mat'])
+- 2-3. 기본 탐색 및 타입 변환
+	df.shape : 크기 확인 (행, 열)
+	df.dtypes : 열별 데이터 타입 확인
+	df.info() : 전체 정보 및 결측치, 메모리 확인
+	df.head(n) / df.tail(n) : 상위/하위 n개 행 확인
+	df.to_dict() / df.to_numpy() : 딕셔너리 또는 넘파이 배열 변환
+	df['컬럼'].astype('타입') : 데이터 타입 변경 (결측치 포함 시 'Int64')
+	pd.to_numeric(s, errors='raise/coerce/ignore', downcast='integer') : 숫자형 강제 변환
+	pd.to_datetime(s) : 날짜형 변환 (s.dt.year, s.dt.month, s.dt.day로 분할)
+- 2-4. 외부 패키지 데이터셋 수집
+	from sklearn import datasets -> datasets.load_iris() (data, target, feature_names, target_names)
+	from statsmodels.api import datasets -> datasets.get_rdataset('iris', package='datasets', cache=True).data
+	import seaborn as sns -> sns.load_dataset('iris')
+- 2-5. 파일 저장
+	df.to_csv('경로', index=False, encoding='utf-8', compression='infer') (zip, gz 등 압축 지원)
+
+3. 이름 지정 (Index & Columns)
+- 3-1. 열/행 이름 변경 및 초기화
+	df.columns = ['컬럼1', '컬럼2'] : 열 이름 전체 일괄 변경
+	df.index = ['행1', '행2'] : 행 이름 전체 일괄 변경
+	df.set_index('컬럼명') : 특정 열을 행 인덱스로 지정 (재할당 사용 권장)
+	df.reset_index(drop=True) : 기존 인덱스를 제거하고 0부터 새로 부여
+- 3-2. 다중 레벨 이름 지정
+	df.columns = [['대분류', '대분류'], ['소분류1', '소분류2']] ; df.columns.names = ['대1', '소1']
+	df.index = [['레벨1', '레벨2'], ['행1', '행2']] ; df.index.names = ['레벨A', '레벨B']
+	df.loc[('대분류','소분류'), ('레벨1','행1')] / df.xs(key='소분류', level='소분류열이름')
+
+4. 부분 데이터 조회 (Indexing & Slicing)
+- 4-1. loc 조회 (라벨/이름 기준)
+	df.loc['행이름', '열이름'] : 단일 요소 또는 지정 범위 조회
+	df.loc['동':'남', 'Name':'Email'] : 슬라이싱 (끝 범위 포함됨)
+	df.loc[['동','남'], ['Name','Email']] : 리스트 지정 조회
+	df.loc[:, 'Name'] : 전체 행 선택 시 ':' 필수 사용 ('...' 사용 불가)
+- 4-2. iloc 조회 (위치/인덱스 번호 기준)
+	df.iloc[행번호, 열번호] : 위치 번호 기준 조회
+	df.iloc[0:3, 1:3] : 슬라이싱 (끝 범위 stop 미포함)
+	df.iloc[::2, :-1] : 짝수 행 / 마지막 열 제외
+- 4-3. 조건 필터링 (Boolean Indexing)
+	df[조건] / df.loc[조건, ['열1', '열2']]
+	~[조건] : 조건의 반대 (NOT)
+	s.str.find('문자') != -1 : 특정 문자열 포함 여부
+	s.str.contains('A|B') : A 또는 B 문자열 포함 여부
+	s.str.startswith('문자') / s.str.endswith('문자') : 특정 문자로 시작/종료 여부
+	s.isin(['A', 'B']) : 지정한 리스트 포함 여부
+	df.isna() / df.notna() : 결측치 여부 확인
+	df.isna().sum(axis=0) : 열별 결측치 개수 집계
+	df[df.isna().any(axis=1)] : 결측치가 하나라도 있는 행 추출
+
+5. 데이터 삭제 및 추가
+- 5-1. 삭제
+	df.drop('행이름', axis=0) : 행 삭제 (재할당 또는 inplace=True 사용)
+	df.drop(['열1', '열2'], axis=1) : 열 삭제
+- 5-2. 추가
+	df['new_label'] = 값 : 단일 값 또는 리스트 추가
+	df['new_label'] = pd.Series([값], index=['인덱스']) : 특정 인덱스 추가 (나머지 NaN)
+	pd.concat([df1, df2], axis=0).reset_index(drop=True) : 행 방향 연결
+	member.loc[len(member)] = [값1, 값2] : 단일 행 마지막 위치 추가
+
+6. 병합과 연결 (Merge & Concat)
+- 6-1. merge() (열/값 기준 병합)
+	df1.merge(df2, how='inner/left/right/outer', on='기준열')
+	df1.merge(df2, left_on='열1', right_on='열2', how='outer') : 기준 열 이름이 다를 때
+- 6-2. concat() (축 기준 연결)
+	pd.concat([df1, df2], axis=0) : 위아래 연결 (행 방향)
+	pd.concat([df1, df2], axis=1) : 좌우 연결 (열 방향, 인덱스 맞지 않으면 NaN)
+
+7. 정렬 (Sort)
+- df.sort_index(axis=0/1, ascending=True/False) : 행(axis=0) 또는 열(axis=1) 이름 기준 정렬
+- df.sort_values(by='열이름', ascending=True/False) : 특정 열의 데이터 값 기준 정렬
+- df.sort_values(by=['열1', '열2'], ascending=[False, True])
+
+8. 기초 통계 분석
+- 8-1. 통계 함수
+	count(), isna().sum(), min(), max(), sum(), mean(), median(), std(), var()
+	cumsum(), cumprod(), rolling(n).mean()
+	df.median(axis=0, numeric_only=True) : 수치형 컬럼만 선택 집계
+	s.quantile(q=0.5, interpolation='linear/nearest/midpoint') : 사분위수 및 보간법
+	※ 이상치 기준 : IQR = Q3 - Q1 ; 하한선(Q1 - 1.5*IQR), 상한선(Q3 + 1.5*IQR)
+- 8-2. 요약 통계량 (describe)
+	df.describe() : 수치형 기본 요약
+	df.describe(include=['object', 'bool']) / df.describe(include='all')
+	s.unique() : 고유값 배열 반환
+	s.value_counts(normalize=True, dropna=False, ascending=True) : 고유값 빈도/비율 집계
+- 8-3. 공분산과 상관계수
+	df.cov() : 두 변수 간 공분산 연산
+	df.corr() : -1 ~ 1 사이의 피어슨 상관계수 연산
+
+9. 데이터 그룹화 및 집계 (Groupby & Pivot Table)
+- 9-1. Groupby
+	df.groupby('기준열')['대상열'].func()
+	df.groupby(by='기준열', as_index=False)['대상열'].sum() : 인덱스 미지정(열 유지)
+- 9-2. Pivot Table
+	df.pivot_table(index='기준열', columns='분류열', values='대상열', aggfunc='mean')
+	※ 차이점 : pivot_table은 결과를 인덱스 오름차순 자동 정렬, groupby는 원본 순서 유지
+- 9-3. 그룹 탐색 및 인덱싱
+	for name, group in df.groupby('기준열'): 로 그룹별 탐색
+	df.groupby('기준열').take([]) : 그룹 내부 특정 위치 행 추출
+
+10. 데이터 구조 변경 (Melt & Pivot)
+- 10-1. melt() (와이드 포맷 -> 롱 포맷 언피벗팅)
+	df.melt(id_vars=['고정열'], value_vars=['전환열'], var_name='변수명', value_name='값')
+- 10-2. pivot_table() (롱 포맷 -> 와이드 포맷 복원)
+	df.pivot_table(index=['인덱스열'], columns=['변수명'], values='값').reset_index()
+
+11. 데이터 프레임 함수
+- s.map(func) : 시리즈 전용, 요소별 함수 적용
+- s.apply(func) / df.apply(func, axis=0/1) : 행(axis=1) 또는 열(axis=0) 단위 적용
+- df.map(func) : 데이터프레임 전체 모든 요소별 함수 일괄 적용 (applymap)
+
+12. 일괄 변경 및 결측치 처리
+- 12-1. 결측치 확인
+	np.isnan(val) (수치형 확인) / pd.isna(val) (NaN 및 None 동시 확인)
+- 12-2. fillna() (결측치 대체)
+	df.fillna(0) / df.fillna(value=df.median(axis=0)) / df.fillna(dict_values)
+	df.ffill() (이전 값 대체) / df.bfill() (다음 값 대체)
+- 12-3. replace() (값 변경)
+	df.replace(old, new) / 정규표현식 적용 가능
+- 12-4. where() & mask()
+	s.where(s >= 15, other=-1) : 조건 거짓(False)인 데이터를 -1(또는 NaN)로 대체
+	s.mask(s < 15) : 조건 참(True)인 데이터를 NaN으로 대체
+- 12-5. dropna() (결측치 삭제)
+	df.dropna(axis=0/1, how='any/all', thresh=개수, subset=['열1', '열2'])
+
+13. Series (시리즈) 전용 기초
+- s = pd.Series([], index=['a', 'b'])
+- s = s.drop(), s.sort_index(), s.sort_values(), s.to_frame('열이름')

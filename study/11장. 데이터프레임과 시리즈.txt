@@ -743,3 +743,206 @@ ex 2) 다중 조건 정렬 (Age 기준 내림차순 정렬 후, 나이가 같으
   	- 공분산을 각 변수의 표준편차로 나누어 -1과 1 사이의 값으로 표준화한 척도
   	- r = Cov(X, Y) / (X 표준편차 * Y 표준편차)  [-1 <= r <= 1]
   	- df.corr()
+
+9. 데이터 그룹화 및 집계
+
+9-1. Group by와 Pivot Table
+
+- df.groupby('label1')['label2'].func()
+	label1 : 그룹화의 기준이 되는 열 이름 (그룹화 후 행 인덱스가 됨)
+	label2 : 함수를 적용할 대상 열 (생략 시 모든 수치형 열에 적용)
+	func() : 적용할 기초 통계 함수
+
+- 그룹화 방법 1
+	df.groupby('label1')['label2'].func() : label1별로 그룹화한 뒤 label2의 데이터 출력
+	df.groupby('label1')[['label2','label3']].func() : label1별로 그룹화한 뒤 label2, label3 데이터 출력
+
+	ex 1) iris 그룹화 결과 부분 조회
+	iris_grouped_sum[(iris_grouped_sum.Species=='setosa') | (iris_grouped_sum.Species=='virginica')]
+	iris_grouped_sum[iris_grouped_sum.Species.isin(['setosa', 'virginica'])]
+
+	ex 2) 그룹핑 과정에서 인덱스를 컬럼 데이터로 유지하기 (as_index=False)
+	iris.groupby(by='Species', as_index=False)['Sepal.Length'].sum()
+
+- 그룹화 방법 2 : pivot_table()
+	df.pivot_table(index='label1', values='label2', aggfunc='func')
+	label1 : 기준이 될 열 이름
+	label2 : 함수를 적용해 출력할 열 (생략 시 모든 수치형 열에 적용)
+	aggfunc : 적용할 함수 (기본값: 'mean')
+
+- groupby / pivot_table 정렬 차이
+	pivot_table() : 결과를 인덱스 기준 오름차순으로 자동 정렬
+	groupby() : 원본 열의 그룹 순서를 유지
+
+	ex 3) groupby와 pivot_table의 출력 및 정렬 차이 비교
+	- groupby 사용
+	iris.groupby('Species').mean(numeric_only=True)
+	>>>
+	# 		Petal.Length Petal.Width Sepal.Length Sepal.Width
+	# Species				
+	# setosa	1.462		  0.246	   5.006	     3.428
+	# versicolor	4.260		  1.326	   5.936	     2.770
+	# virginica	5.552		  2.026	   6.588	     2.974
+
+	- pivot_table 사용
+	iris.pivot_table(index='Species')
+	>>>
+	# 		Sepal.Length Sepal.Width Petal.Length Petal.Width
+	# Species				
+	# setosa	5.006		   3.428	    1.462	      0.246
+	# versicolor	5.936		   2.770	    4.260	      1.326
+	# virginica	6.588		   2.974	    5.552	      2.026
+
+9-2. 그룹 간 데이터 처리 (반복문)
+
+	ex) 그룹 객체 반복 탐색
+	for speciesname, group in iris.groupby('Species'):
+		print(speciesname)
+		display(group.sample(3).sort_index().reset_index(drop=True))
+
+9-3. 그룹별 인덱싱
+
+	ex) 각 그룹 내부에서 특정 순번(위치)의 행 추출
+	iris.groupby('Species').take([0, 15, 30, 45])
+
+10. 데이터 구조 변경 
+
+- 와이드 포맷 ↔ 롱 포맷
+	- 와이드 포맷 : 열이 가로로 넓게 펼쳐진 형태
+	- 롱 포맷 : 변수명과 값이 세로로 길게 쌓인 형태
+
+10-1. melt() 언피벗팅 (와이드 포맷 → 롱 포맷)
+
+- df.melt(id_vars, value_vars, var_name, value_name)
+- pd.melt(df, id_vars, value_vars, var_name, value_name)
+
+	ex) airquality 데이터 언피벗팅
+	airquality_melted = airquality.melt(id_vars=['Month', 'Day'],
+	                                    var_name='변수명', # melt되어 생성될 열 이름
+	                                    value_name='값'   # 측정값들이 들어갈 열 이름
+	                                    )
+	airquality_melted = airquality_melted.sort_values(by=['Month', 'Day']).reset_index(drop=True)
+
+10-2. pivot_table() 피벗팅 (롱 포맷 → 와이드 포맷)
+
+- df.pivot_table(index, columns, values)
+
+	ex) melt된 롱 포맷 데이터를 다시 와이드 포맷으로 복원
+	airquality2 = airquality_melted.pivot_table(index=['Month', 'Day'],
+	                                           columns=['변수명'],
+	                                           values='값'
+	                                           )
+	airquality2.columns = airquality2.columns.droplevel(level=0) # 다중 컬럼 레벨 정리
+	airquality2.columns.name = None # 컬럼 그룹명 제거
+	airquality2 = airquality2.reset_index()
+
+11. 데이터 프레임 함수 적용
+
+- apply(func, axis)
+	시리즈 적용 시: 요소별 func 적용
+	데이터프레임 적용 시 : 행(axis=1) 또는 열(axis=0) 단위로 func 적용
+
+- map(func) : 시리즈의 각 요소별 func 적용 (시리즈 전용)
+
+- applymap(func) / map(func) : 데이터프레임의 모든 요소별 func 적용
+
+11-1. apply() 및 map()
+
+	ex 1) 시리즈에서의 map / apply 사용
+	member['Year'] = member['Birth'].map(lambda datestr : int(datestr.split('-')[0]))
+	member['Month'] = member['Birth'].apply(lambda datestr : int(datestr.split('-')[1]))
+
+	ex 2) 데이터 프레임 행 단위 apply 사용
+	df_last['연월'] = df_last.apply(year_month, axis=1)
+
+11-2. 데이터프레임 전체 요소 단위 함수 적용 (applymap / map)
+
+	ex) 모든 원소 소수점 둘째 자리 반올림
+	X = X.map(lambda x : round(x, 2)) # 기존: X.applymap(...)
+
+12. 일괄 변경하기
+
+- np.isnan(scalar) : 숫자형 값의 결측치 여부 확인
+- pd.isna(scalar) / pd.isnull(scalar) : NaN과 None 모두 결측치로 인식하여 확인
+
+12-1. fillna()
+
+- 결측치는 삭제하거나 평균, 중위수, 최빈값, 이전/다음 값 등으로 대체함
+
+	ex 1) 특정 단일 값으로 대체
+	df.fillna(0)
+
+	ex 2) 이전/다음 행의 값으로 대체
+	df.ffill() # 기존: df.fillna(method='ffill')
+	df.bfill() # 기존: df.fillna(method='bfill')
+
+	ex 3) 최빈값(Mode)으로 대체
+	df.fillna(value=df.mode().iloc[0])
+
+	ex 4) 각 열의 중위수(Median)로 대체
+	df.fillna(value=df.median(axis=0))
+
+	ex 5) 열마다 서로 다른 특정 값으로 대체
+	values = {'A': 99, 'B': 85, 'C': 75, 'D': 35}
+	df.fillna(value=values)
+
+	ex 6) 각 열의 평균값으로 대체하되 대체 개수 제한 (limit 설정)
+	df.fillna(value=round(df.mean(axis=0)), limit=2)
+
+12-2. replace (값 치환)
+
+- replace(to_value, new_value) : to_value를 new_value로 변경
+	to_value : 단일값, 리스트, 딕셔너리, 정규표현식 적용 가능
+
+	ex) 정규표현식을 활용한 문자열 일괄 치환
+	df.replace('^ba.+$', 'XX', regex=True)
+	df.replace(regex='^ba.+$', value='XX')
+
+12-3. where / mask
+
+- where()
+- mask()
+
+	ex 1) 시리즈 조건 필터링
+	s = pd.Series(range(10, 20))
+	s[s >= 15] # 15 이상만 선택 추출
+
+	ex 2) where: 조건을 만족하지 않은 데이터를 결측치 처리 또는 특정 값 대체
+	s.where(s >= 15) # 15 미만은 NaN 처리
+	s.where(s >= 15, other=-1) # 15 미만은 -1로 대체
+
+	ex 3) mask: 조건을 만족한 데이터를 결측치 처리
+	s.mask(s < 15) # 15 미만은 NaN 처리
+
+12-4. dropna()
+
+	ex 1) 결측치가 있는 열(axis=1) 또는 행(axis=0) 삭제
+	df.dropna(axis=1) # 결측치가 하나라도 포함된 열 삭제
+	df.dropna(axis=0) # 결측치가 하나라도 포함된 행 삭제 (기본값)
+
+	ex 2) 정상 데이터 최소 개수 기준 삭제 (thresh)
+	df.dropna(thresh=2) # 결측치가 아닌 유효 값이 최소 2개 이상이면 유지
+
+	ex 3) 특정 열에 결측치가 존재하는 경우만 행 삭제
+	df.dropna(subset=['name', 'born'])
+
+	ex 4) 행의 모든 요소가 결측치인 경우만 삭제
+	df.dropna(how='all')
+
+13. Series (시리즈)
+
+	ex 1) 데이터 생성 및 원소 접근
+	s = pd.Series([1000, 2000, 3000], index=['banana', 'mango', 'apple'])
+	s['banana'] # 인덱스 이름으로 요소 접근
+
+	ex 2) 요소 추가 및 제거
+	s['watermelon'] = 20000 # 새 요소 추가
+	s = s.drop('watermelon') # 요소 제거 (재할당 또는 inplace=True)
+
+	ex 3) 정렬
+	s = s.sort_index()  # 인덱스 이름 기준 정렬
+	s = s.sort_values() # 실제 데이터 값 기준 정렬
+
+	ex 4) 시리즈를 데이터프레임으로 변환
+	s.to_frame('price') # 열 이름을 'price'로 지정하여 데이터프레임 변환
+	s.to_frame('price').T # 전치하여 1행짜리 데이터프레임 변환
