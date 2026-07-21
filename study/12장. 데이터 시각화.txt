@@ -1,0 +1,99 @@
+12장. 데이터 시각화
+
+시각화 라이브러리 : matplotlib, seaborn, folium(지도 시각화)
+
+matplotlib : 파이썬에서 가장 기본적으로 사용되는 시각화 라이브러리. (판다스에서도 제공됨)
+
+seaborn : matplotlib 기반의 라이브러리. 다양한 색상, 테마, 차트 기능과 groupby 기능이 추가됨.
+
+
+1. matplotlib
+
+1.1 import 및 기본 설정
+
+- import
+import matplotlib.pyplot as plt
+- 그래프를 코드 박스 아래에서 확인할 수 있게
+%matplotlib inline
+- 시각화한 그래프 해상도 높이기
+%config InlineBackend.figure_format='retina'
+- 한글 설정
+plt.rc('font', family='Malgun Gothic')
+plt.rc('axes', unicode_minus=False)
+- 경고 메세지 안보이게
+import warnings
+warnings.filterwarnings(action='ignore')
+
+
+1.2 그래프 그리기
+matplotlib으로 그래프를 그리기 위한 단계
+	1 데이터 준비
+	2 그래프 생성
+	3 그래프 함수로 그리기
+	4 그래프 커스터마이징
+	5 색상이나 스타일 조정
+	6 그래프 출력 및 저장
+
+ex) 
+# 데이터 준비
+x = [1,2,3]
+y = [-10, 20, 30]
+
+# 원하는 크기의 그래프 객체 생성
+plt.figure(figsize=(12,3))
+
+# 그래프 함수로 그리기
+plt.plot(x,y)
+
+# 그래프 커스터마이징
+plt.ylabel('some numbers')
+
+# 그래프 저장
+plt.savefig('data/ch12_plot.png', bbox_inches='tight')
+
+# 그래프 출력
+plt.show()
+
+1.3 그래프 영역 나누기
+1) subplot()
+서브 플롯 추가
+
+ex) 데이터 준비
+import numpy as np
+x = np.linspace(0, 9.9, 100)
+
+ex) 
+plt.figure(figsize=(5, 5)) - # 실행 중인 셀에 적용
+plt.rcParams['figure.figsize'] = (5, 5) # 그래프 사이즈 고정(전체 셀에 적용)
+# 2행 n열의 subplot 위치에 n번째 subplot을 '함수식'으로 그린다.
+plt.subplot(2, 2, 1);plt.plot(x, np.sin(x))
+plt.subplot(2, 2, 2);plt.plot(x, np.cos(x)/np.sin(x))
+plt.subplot(2, 2, 3);plt.plot(x, np.cos(x))
+plt.subplot(2, 2, 4);plt.plot(x,np.cos(x)*np.sin(x))
+plt.show()
+
+2) subplots()
+서브 플롯 생성
+
+ex) subplots은 Figure size와 <Axes: >의 배열을 가짐
+fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(7,4))
+axes[0,0].plot(x, np.sin(x), color = 'navy', linewidth=3)
+axes[0,1].plot(x, np.cos(x), 'b--') # color = 'b', linestyle='--'
+axes[1,0].plot(x, np.tan(x), '#4a199e', lw=2) # color = '#4a199e', linewidth = 2
+axes[1,0].plot([0,2,4],[-1,0,1], 'ko-.') # color='k', marker='o', linestyle = '-.-'
+axes[1,1].plot(x, np.sin(x)*np.cos(x),'r:') # color='k', linestyle = ':'
+plt.show()
+
+ex) for문 사용
+x = np.linspace(0, 9.9, 20)
+
+func_list = [np.sin,np.cos,np.tanh,lambda x:np.sin(x)*np.cos(x)]
+fmt_lst = ['ro--', 'bs-.', '#4a199e', 'r:']
+
+fig, axes = plt.subplots(1, 4, figsize=(15,3), sharey=True)
+for i, ax in enumerate(axes.flat):
+    ax.plot(x, func_list[i](x), fmt_lst[i])
+    
+axes[2].plot([3,6],[-1,1],'kx--')
+plt.show()
+
