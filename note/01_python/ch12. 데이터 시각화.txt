@@ -1,0 +1,30 @@
+12장. 데이터 시각화
+
+1. matplotlib
+
+1.1 데이터 준비 및 기본설정 
+1.2 그래프 그리기 기본 단계
+	- 시각화 단계 : 데이터 준비 -> 그래프 객체 생성 -> 그래프 함수 실행 -> 커스터마이징 -> 저장 및 출력
+1.3. 그래프 영역 나누기 : subplot, subplots
+1.4 다양한 그래프 그리기 : df.plot(kind='line', x=None, y=None, figsize=None, title=None, grid=None, xlim=None, ylim=None)
+	- kind 옵션 : line(기본), scatter, bar, barh, box, kde(밀도추정), hist(빈도) 등
+1.5 그 외 그래프 그리기 : boxplot, violinplot, bar, barh, hist, fill_between, axvline, axhline, pie
+1.6 그래프 커스터마이징 : text(),set_title(), annotate(xytext, xy,arrowprops=dict(arrowstyle, connoctionstyle,color)), subplots_adjust(hspace, wspace)
+
+
+2. seaborn
+
+2.1 데이터 준비
+2.2 미적 속성 설정하기 sns.set(style='', # 그리드 및 배경색
+					context='', # 배율
+					palettes='' # 컬러 파레트
+					rc={})
+2.3 그래프 함수
+	- 관계형 그래프 : plot = scatterplot, lineplot / subplot = relplot
+	- 범주형 그래프 : plot = stripplot, swarmplot, barplot, pointplot, countplot, boxplot, violinplot, boxenplot
+			subplot = catplot
+	- 쌍관계 그래프 : pairplot
+	- 밀도 그래프 : displot(rug), histplot
+	- 회귀 그래프 : regplot, lmplot
+
+2.4 다중 그래프를 위한 FacetGrid

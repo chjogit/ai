@@ -1,99 +1,327 @@
 12장. 데이터 시각화
 
-시각화 라이브러리 : matplotlib, seaborn, folium(지도 시각화)
+시각화 라이브러리: matplotlib, seaborn, folium(지도 시각화)
+- matplotlib: 파이썬 시각화의 기본 패키지 (pandas 내부 시각화 기능의 기반)
+- seaborn: matplotlib 기반의 고수준 패키지. 다양한 색상, 테마, 범주형 차트, 다중 서브플롯 지원
 
-matplotlib : 파이썬에서 가장 기본적으로 사용되는 시각화 라이브러리. (판다스에서도 제공됨)
-
-seaborn : matplotlib 기반의 라이브러리. 다양한 색상, 테마, 차트 기능과 groupby 기능이 추가됨.
-
+---
 
 1. matplotlib
 
-1.1 import 및 기본 설정
+1-1. import 및 기본 설정
 
-- import
-import matplotlib.pyplot as plt
-- 그래프를 코드 박스 아래에서 확인할 수 있게
-%matplotlib inline
-- 시각화한 그래프 해상도 높이기
-%config InlineBackend.figure_format='retina'
-- 한글 설정
-plt.rc('font', family='Malgun Gothic')
-plt.rc('axes', unicode_minus=False)
-- 경고 메세지 안보이게
-import warnings
-warnings.filterwarnings(action='ignore')
+- 환경 설정 문법
+	import matplotlib.pyplot as plt
 
+	 # 경고 메시지 무시
+	import warnings
+	warnings.filterwarnings(action='ignore')
 
-1.2 그래프 그리기
-matplotlib으로 그래프를 그리기 위한 단계
-	1 데이터 준비
-	2 그래프 생성
-	3 그래프 함수로 그리기
-	4 그래프 커스터마이징
-	5 색상이나 스타일 조정
-	6 그래프 출력 및 저장
+	# 주피터 환경 설정
+	%matplotlib inline # 그래프를 코드 셀 아래에 바로 출력
+	%config InlineBackend.figure_format='retina' # 그래프 해상도 향상
 
-ex) 
-# 데이터 준비
-x = [1,2,3]
-y = [-10, 20, 30]
+	# 한글 폰트 및 마이너스 기호 깨짐 방지
+	plt.rc('font', family='Malgun Gothic') # Mac은 'AppleGothic'
+	plt.rc('axes', unicode_minus=False)
 
-# 원하는 크기의 그래프 객체 생성
-plt.figure(figsize=(12,3))
+1-2. 그래프 그리기 기본 단계
+- 시각화 단계 : 데이터 준비 -> 그래프 객체 생성 -> 그래프 함수 실행 -> 커스터마이징 -> 저장 및 출력
 
-# 그래프 함수로 그리기
-plt.plot(x,y)
+	ex) 기본 단계
 
-# 그래프 커스터마이징
-plt.ylabel('some numbers')
+	# 1. 데이터 준비
+	x = [1, 2, 3]
+	y = [-10, 20, 30]
 
-# 그래프 저장
-plt.savefig('data/ch12_plot.png', bbox_inches='tight')
+	# 2. 그래프 크기 지정
+	plt.figure(figsize=(12, 3))
 
-# 그래프 출력
-plt.show()
+	# 3. 그래프 그리기
+	plt.plot(x, y)
 
-1.3 그래프 영역 나누기
-1) subplot()
-서브 플롯 추가
+	# 4. 커스터마이징
+	plt.ylabel('some numbers')
 
-ex) 데이터 준비
-import numpy as np
-x = np.linspace(0, 9.9, 100)
+	# 5. 저장 및 출력
+	plt.savefig('data/ch12_plot.png', bbox_inches='tight')
+	plt.show()
 
-ex) 
-plt.figure(figsize=(5, 5)) - # 실행 중인 셀에 적용
-plt.rcParams['figure.figsize'] = (5, 5) # 그래프 사이즈 고정(전체 셀에 적용)
-# 2행 n열의 subplot 위치에 n번째 subplot을 '함수식'으로 그린다.
-plt.subplot(2, 2, 1);plt.plot(x, np.sin(x))
-plt.subplot(2, 2, 2);plt.plot(x, np.cos(x)/np.sin(x))
-plt.subplot(2, 2, 3);plt.plot(x, np.cos(x))
-plt.subplot(2, 2, 4);plt.plot(x,np.cos(x)*np.sin(x))
-plt.show()
+1-3. 그래프 영역 나누기
 
-2) subplots()
-서브 플롯 생성
+- subplot() : 서브플롯을 개별 지정하여 그리기
 
-ex) subplots은 Figure size와 <Axes: >의 배열을 가짐
-fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(7,4))
-axes[0,0].plot(x, np.sin(x), color = 'navy', linewidth=3)
-axes[0,1].plot(x, np.cos(x), 'b--') # color = 'b', linestyle='--'
-axes[1,0].plot(x, np.tan(x), '#4a199e', lw=2) # color = '#4a199e', linewidth = 2
-axes[1,0].plot([0,2,4],[-1,0,1], 'ko-.') # color='k', marker='o', linestyle = '-.-'
-axes[1,1].plot(x, np.sin(x)*np.cos(x),'r:') # color='k', linestyle = ':'
-plt.show()
+	ex 1) plt.subplot 이용
+	import numpy as np
+	x = np.linspace(0, 9.9, 100)
 
-ex) for문 사용
-x = np.linspace(0, 9.9, 20)
+	plt.figure(figsize=(5, 5)) # 실행 중인 셀에만 적용
+	# plt.rcParams['figure.figsize'] = (5, 5) # 전체 셀에 그래프 크기 고정 시 사용
 
-func_list = [np.sin,np.cos,np.tanh,lambda x:np.sin(x)*np.cos(x)]
-fmt_lst = ['ro--', 'bs-.', '#4a199e', 'r:']
+	plt.subplot(2, 2, 1); plt.plot(x, np.sin(x))
+	plt.subplot(2, 2, 2); plt.plot(x, np.cos(x)/np.sin(x))
+	plt.subplot(2, 2, 3); plt.plot(x, np.cos(x))
+	plt.subplot(2, 2, 4); plt.plot(x, np.cos(x)*np.sin(x))
+	plt.show()
 
-fig, axes = plt.subplots(1, 4, figsize=(15,3), sharey=True)
-for i, ax in enumerate(axes.flat):
-    ax.plot(x, func_list[i](x), fmt_lst[i])
-    
-axes[2].plot([3,6],[-1,1],'kx--')
-plt.show()
+- subplots() : Figure와 Axes 객체 배열을 동시에 생성
 
+	ex 2) 객체 지향 방식을 활용한 서브플롯 생성
+	fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(7, 4))
+	axes[0,0].plot(x, np.sin(x), color='navy', linewidth=3)
+	axes[0,1].plot(x, np.cos(x), 'b--') # color='b', linestyle='--'
+	axes[1,0].plot(x, np.tan(x), '#4a199e', lw=2)
+	axes[1,0].plot([0, 2, 4], [-1, 0, 1], 'ko-.') # color='k', marker='o', linestyle='-.-'
+	axes[1,1].plot(x, np.sin(x)*np.cos(x), 'r:')
+	plt.show()
+
+	ex 3) 반복문을 활용한 다중 서브플롯 그리기
+	x = np.linspace(0, 9.9, 20)
+	func_list = [np.sin, np.cos, np.tanh, lambda x: np.sin(x)*np.cos(x)]
+	fmt_lst = ['ro--', 'bs-.', '#4a199e', 'r:']
+
+	fig, axes = plt.subplots(1, 4, figsize=(15, 3), sharey=True)
+	for i, ax in enumerate(axes.flat):
+		ax.plot(x, func_list[i](x), fmt_lst[i])
+
+	axes[2].plot([3, 6], [-1, 1], 'kx--')
+	plt.show()
+
+1-4. 다양한 그래프 그리기
+
+- 주요 속성 옵션
+	c, color : 색상
+	marker : o, ^, x, s 등
+	linestyle : -, --, :, -.
+
+- DataFrame.plot() 문법 구조
+	df.plot(kind='line', x=None, y=None, figsize=None, title=None, grid=None, xlim=None, ylim=None)
+	kind 옵션 : line(기본), scatter, bar, barh, box, kde(밀도추정), hist(빈도) 등
+
+	ex 1) pandas 내장 plot 활용과 plt.plot 방식 비교
+	# df.plot 방식을 권장 (자동 범례 및 라벨링)
+	iris.plot(kind='line', figsize=(12, 3), color=['navy', 'maroon', 'olivedrab', 'royalblue'], ylim=[0, 9])
+	plt.legend(iris.columns[:-1], bbox_to_anchor=(1.05, 0.7), loc=2, borderaxespad=0.)
+
+	ex 2) DataFrame.plot 커스터마이징 및 서브플롯
+	# 박스플롯 옵션 적용
+	iris.plot(kind='box', colormap='prism', title='iris box plot', ylabel='y-axis', xlabel='x-axis', fontsize=13)
+	plt.show()
+
+	# 컬럼별 서브플롯 생성
+	iris.plot(kind='box', colormap='prism', title='iris box plot', subplots=True)
+	plt.show()
+
+	ex 3) 산점도(scatter) 크기 및 색상 매핑
+	iris.plot(kind='scatter', x='petal_length', y='petal_width', ylim=[-0.5, 3], figsize=(8, 5),
+	          s='sepal_length', # 점 크기
+	          c='sepal_length', # 점 색상
+	          colormap='plasma')
+
+	ex 4) groupby와 연계된 종별 boxplot
+	iris.groupby('species').plot(kind='box', subplots=True, sharey=True, figsize=(10, 3))
+	plt.show()
+
+	ex 5) plt.scatter 투명도 설정
+	plt.figure(figsize=(12, 4))
+	plt.scatter(x=iris.petal_length, y=iris.petal_width,
+	            s=iris.sepal_length*20,
+	            c=iris.sepal_length*20,
+	            alpha=0.5) # alpha: 투명도 (0: 투명 ~ 1: 불투명)
+	plt.show()
+
+1-5. 기타 주요 차트 유형
+
+- boxplot : 5가지 요약 통계량(최솟값, Q1, 중앙값, Q3, 최댓값) 및 이상치 표기
+- violinplot : 커널 밀도 추정(KDE) 곡선을 결합하여 데이터의 전체 분포 형태 파악
+
+	ex 1) boxplot과 violinplot 동시 표현
+	fig, axes = plt.subplots(1, 2)
+	axes[0].boxplot(iris.sepal_width)
+	axes[1].violinplot(iris.sepal_width)
+
+	ex 2) bar, barh
+	fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+	axes[0].bar(x, y, color='r')
+	axes[0].plot(x, y, c='k')
+	axes[1].barh(x, y, color='b') # 가로 막대 그래프
+	axes[1].plot(y, x, c='k')
+
+	ex 3) hist
+	plt.hist(iris.sepal_length,
+	         bins=30, # 구간 수
+	         color='blue',
+	         edgecolor='black', # 막대 테두리 지정으로 구분감 형성
+	         alpha=0.7)
+	plt.show()
+
+	ex 4) fill_between, axvline, axhline
+	x = np.linspace(0, 10)
+	y = np.cos(x)
+	fig, axes = plt.subplots(2, 2, figsize=(12, 4))
+	axes[0,0].scatter(x, y, s=7, marker='^')
+	axes[0,1].fill(x, y, c='k')
+	axes[1,0].fill_between(x, y, color='r')
+	axes[1,1].axvline(0.5, c='g', linestyle='--') # 수직 보조선
+	axes[1,1].axhline(0.5, c='y', linestyle='-.') # 수평 보조선
+
+	ex 5) pie
+	cnt = [40, 35, 25]
+	labels = ['seoul', 'busan', 'inchon']
+	colors = ['red', 'yellow', 'green']
+	plt.pie(cnt, startangle=90, autopct="%.1f%%", textprops={'fontsize':15}, labels=labels, colors=colors)
+	plt.show()
+
+1-6. 그래프 커스터마이징
+
+	ex 1) 텍스트 및 주석(annotate) 추가
+	x = np.linspace(0, 10)
+	y = np.cos(x)
+	fig, axes = plt.subplots(1, 2, figsize=(12, 3))
+
+	axes[0].plot(x, y, linewidth=5, linestyle='-.', color='#4a199e')
+	axes[0].set_title('첫번째 그래프')
+	axes[0].text(2, 0.5, '한글', fontsize=20) # 좌표 (2, 0.5)에 텍스트 표기
+
+	axes[1].scatter(x, y, marker='o')
+	axes[1].set_title('두번째 그래프')
+	axes[1].annotate('Sine', xytext=(2, 0.75), xy=(5, 0.5), # xytext: 텍스트 위치, xy: 화살표 지점
+	                arrowprops=dict(arrowstyle='->', connectionstyle='angle3', color='k'))
+
+	ex 2) 축, 눈금 및 여백 조정
+	fig, axes = plt.subplots(2, 2, figsize=(12, 5))
+	plt.subplots_adjust(hspace=0.4, wspace=0.2) # hspace: 상하 여백, wspace: 좌우 여백
+
+	axes[0,0].scatter(x, y)
+	axes[0,0].set(title='예시 1', ylabel='y값', xlabel='x값', ylim=[-2, 2], xlim=[2, 6],
+	              yticks=[-2, -1, 0, 1, 2], yticklabels=['limit_min', -1, '원점', 1, 'limit_max'],
+	              xticks=[2, 3, 4, 5, 6], xticklabels=['시작', 3, 4, 5, '끝'])
+
+	axes[1,0].plot(x, y, c='k')
+	axes[1,0].spines['top'].set_visible(False) # 상단 축 테두리 숨김
+	axes[1,0].spines['bottom'].set_position(('outward', 10)) # 축을 10pt 바깥으로 이동
+
+	axes[1,1].bar(x, y, color='g')
+	axes[1,1].grid(True, color='k', linestyle='-')
+
+	ex 3) 이중 축 생성 (twinx)
+	fig, ax1 = plt.subplots(figsize=(10, 3))
+	ax1.plot(x, y1, 'g^:')
+	ax1.set(title='축 공유', xlabel='X1 data', ylabel='Y1 data', xlim=[-10, 10], ylim=[-40, 40])
+
+	ax2 = ax1.twinx() # ax1과 x축 공유
+	ax2.plot(x, y2, 'bs--')
+	ax2.set_ylabel('Y2 data')
+	ax2.set(xlim=[-10, 10], ylim=[-40, 40])
+
+	ex 4) 범례 위치 이동
+	plt.legend(iris.columns[:-1], bbox_to_anchor=(1.05, 0.7), loc=2, borderaxespad=0.)
+
+2. seaborn
+- matplotlib 기반의 고수준 시각화 패키지
+
+2-1. 데이터 준비
+
+	ex) 내장 데이터셋 로드
+	import seaborn as sns
+	iris = sns.load_dataset('iris')
+	titanic = sns.load_dataset('titanic')
+
+2-2. 테마 및 미적 속성 설정
+
+	ex 1) 스타일 및 범례 위치 지정
+	plt.rcParams['figure.figsize'] = (10, 4)
+	sns.set_style('whitegrid') # white, dark, whitegrid, darkgrid, ticks
+
+	# 한글 폰트 다시 지정 필요
+	plt.rc('font', family='Malgun Gothic')
+	plt.rc('axes', unicode_minus=False)
+
+	ax = sns.scatterplot(data=iris, x='petal_length', y='petal_width', hue='species')
+	sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
+	ax.set(title='상관계수가 높은 두 변수', xlabel='꽃잎 길이', xticks=[1, 3, 5, 7])
+	ax.set_ylabel('꽃잎 너비', fontsize=20, color='r')
+
+	ex 2) 컨텍스트(배율) 설정
+	sns.set_context('notebook') # notebook(1.0), paper(0.8), talk(1.3), poster(1.8)
+
+	ex 3) 팔레트 지정
+	sns.set_theme(style='white', palette='husl')
+
+2-3. 그래프 유형별 함수
+
+- 관계형 그래프 (scatterplot, lineplot, relplot)
+
+	ex 1) scatterplot 및 lineplot
+	sns.scatterplot(data=iris, x='petal_length', y='petal_width', hue='species')
+	plt.show()
+
+	sns.lineplot(data=iris, x='petal_length', y='petal_width', hue='species', style='species')
+	plt.show()
+
+	ex 2) relplot (서브플롯 분할 기능 제공)
+	ax = sns.relplot(data=iris, x='petal_length', y='petal_width', hue='species',
+	                 kind='line', col='species', col_wrap=3,
+	                 facet_kws={'sharey': True, 'sharex': False})
+	ax.fig.set_size_inches(10, 3)
+
+	ex 3) matplotlib 객체와 혼용
+	fig, ax = plt.subplots(1, 2)
+	sns.scatterplot(data=iris, x='petal_length', y='petal_width', hue='species', ax=ax[0])
+	sns.lineplot(data=iris, x='petal_length', y='petal_width', hue='species', ax=ax[1])
+
+- 범주형 그래프 (stripplot, swarmplot, barplot, pointplot, countplot, catplot 등)
+
+	- stripplot: 데이터 지점을 무작위 오프셋으로 분산하여 표시 (중첩 허용)
+	- swarmplot: 데이터 지점이 겹치지 않도록 옆으로 펼쳐서 정렬
+	- barplot: 각 범주의 평균값을 막대 높이로 표시 (신뢰구간 함께 출력)
+	- pointplot: 막대 대신 점과 선으로 평균 및 변화 추세 표기
+	- countplot: 각 범주의 빈도수를 막대 높이로 표시
+	- catplot: 범주형 서브플롯 분할 전용 함수
+
+	ex 1) stripplot 순서 및 팔레트 지정
+	sns.stripplot(data=iris, x='species', y='petal_width', order=['versicolor', 'virginica', 'setosa'], hue='species', palette='Set1')
+
+	ex 2) barplot 옵션 지정
+	sns.barplot(data=iris, x='species', y='sepal_length', errorbar=None, estimator='sum') # estimator 기본값: mean
+
+	ex 3) pointplot 활용
+	sns.pointplot(data=titanic, x='class', y='survived', hue='who', palette=['skyblue', 'pink', 'limegreen'],
+	              linestyles='--', markers=['^', 'v', 'o'], errorbar=None)
+
+	ex 4) catplot 서브플롯 구현
+	g = sns.catplot(data=titanic, x='who', y='survived', kind='bar', col='class', dodge=False, 
+				hue='who', palette=['skyblue', 'pink', 'limegreen'])
+	g.fig.set_size_inches(12, 3)
+
+- 쌍관계 그래프 (pairplot)
+
+	ex) 수치형 변수 간 일대일 산점도 및 대각선 히스토그램 자동 생성
+	sns.pairplot(iris, hue='species')
+	plt.show()
+
+- 분포/밀도 그래프 (histplot, kdeplot, displot)
+
+	ex) displot 활용
+	sns.displot(iris['sepal_length'], rug=True, kde=True)
+
+- 회귀 그래프 (regplot, lmplot)
+
+	ex 1) 히트맵과 상삼각 마스크 적용
+	corr = iris.corr(numeric_only=True)
+	mask = np.triu(np.ones_like(corr, dtype=bool)) # 상삼각행렬 마스크 생성
+	sns.heatmap(corr, vmin=-1, vmax=1, annot=True, fmt='.3f', cmap='Blues', mask=mask)
+
+	ex 2) regplot과 lmplot
+	# regplot (단일 Axes 회귀선)
+	sns.regplot(data=iris, x='petal_length', y='petal_width')
+
+	# lmplot (서브플롯 분할 지원 회귀선)
+	sns.lmplot(data=iris, x='petal_length', y='petal_width', hue='species', col='species', sharex=False)
+
+2-4. 다중 그래프 (FacetGrid)
+
+	ex) FacetGrid를 이용한 커스텀 다중 그래프
+	g = sns.FacetGrid(iris, col='species', hue='species', sharex=False)
+	g.map(sns.scatterplot, 'petal_length', 'petal_width')
+	g.fig.set_size_inches(15, 5)
