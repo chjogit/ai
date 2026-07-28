@@ -1,0 +1,114 @@
+1장. html 개요
+
+1. Web이란?
+
+1-1. Web의 정의 및 인터넷과의 관계
+
+- Web(World Wide Web, WWW) : 인터넷에 연결된 컴퓨터를 통해 사람들이 정보를 공유할 수 있는 정보 공간
+- 인터넷(Internet) : 전 세계 컴퓨터들을 연결하는 정보 통신망
+- 프로토콜(Protocol) : 네트워크상에서 약속한 통신 규약
+	HTTP : HyperText Transfer Protocol. 웹 문서를 주고받아 브라우저 화면에 표시
+	FTP : File Transfer Protocol. 파일 전송 규약
+	SMTP / POP : 이메일 송수신 규약
+	DHCP : Dynamic Host Configuration Protocol. IP 주소를 자동으로 할당하는 규약
+- IP : 네트워크상에서 특정 컴퓨터를 식별하는 주소
+- DNS : 숫자로 된 IP 주소를 사람이 외우기 쉬운 문자열 형태로 매핑한 주소
+- Port : IP 주소가 컴퓨터를 식별한다면, Port 번호는 해당 컴퓨터에서 구동 중인 프로그램을 구분하는 번호
+
+	ex) URL 구조 분석
+	http://www.lec.com:80/abc/def/index.jsp
+	http : 통신 프로토콜
+	www.lec.com : 컴퓨터 주소 (DNS를 통해 IP 주소로 변환됨)
+	80 : 기본 웹 포트 번호
+	abc/def/index.jsp : 정보 경로 (Information Path)
+
+1-2. 웹의 역사 및 HTML5
+
+- 1969년 : ARPANET(웹의 모태) 등장
+- 1991년 : 월드 와이드 웹(WWW) 개발 및 등장 (HTML 언어 탄생)
+- 1993년 : 웹 표준 단체 W3C 창설
+- HTML 버전 역사 : HTML1(1991) -> HTML2(1995) -> HTML3(1997) -> HTML4(1997) -> HTML5(2014)
+
+- HTML5의 주요 특징
+	멀티미디어 기능 : 플래시 같은 플러그인 없이 음악과 동영상 직접 재생
+	그래픽 기능 : 하드웨어 가속 기반 2D 및 3D 그래픽 구현
+	통신 기능 : 서버와의 양방향 통신 지원
+	장치 접근 : 디바이스 정보(배터리, CPU) 및 카메라, GPS, 진동 등 직접 제어
+	오프라인 및 저장소 : 인터넷 미연결 상태에서도 애플리케이션 동작 가능
+	CSS3 스타일시트 완벽 지원
+
+
+2. HTML
+
+- Hyper Text Markup Language의 약자
+- 웹 문서의 구조와 정보를 태그(Tag) 형태로 기술하는 언어
+
+
+3. CSS
+
+- Cascading Style Sheets의 약자
+- HTML 문서의 레이아웃, 디자인, 스타일을 컨트롤하여 전달력을 높이는 언어
+
+
+4. JavaScript 및 웹 동작 체계
+
+- JavaScript : 웹 페이지의 동적 제어 및 동작을 담당
+- 클라이언트 단(Client-side) : HTML, CSS, JavaScript (사용자 브라우저에서 실행)
+- 서버 단(Server-side) : Java, Python, Node.js 등 (DB 연동 및 백엔드 비즈니스 로직 처리)
+- Ajax : 웹 페이지 전체를 새로고침하지 않고 일부 영역만 서버와 데이터를 주고받아 업데이트하는 기술
+
+
+5. 웹 표준 문서의 상호관계 (3대 요소)
+
+- 웹 표준은 구조(HTML), 표현(CSS), 동작(JavaScript)을 별도로 분리하여 개발함
+- 역할 분리를 통해 문서가 가벼워지고 유지보수가 용이해짐
+
+	ex 1) 한 파일 내 통합 방식
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>첫 페이지</title>
+		<style>
+			body {
+				background-color: #FFF0B5;
+				font-size: 30pt;
+			}
+		</style>
+		<script>
+			var name = prompt("What's your name?", "Hong, GilDong");
+			document.write(name + "~ Welcome<br>");
+		</script>
+	</head>
+	<body>
+		안녕하세요.<br>
+		오늘부터 웹표준 수업이 시작됩니다.<br>
+		Hello, World
+	</body>
+	</html>
+
+	ex 2) 외부 파일 분리 참조 방식 (권장)
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>첫 페이지</title>
+		<link href="ex2.css" rel="stylesheet" type="text/css"/>
+		<script src="ex2.js"></script>
+	</head>
+	<body>
+		안녕하세요.<br>
+		Hello, World
+	</body>
+	</html>
+
+
+6. 웹 접근성 (Web Accessibility)
+
+- 장애인, 비장애인 구분 없이 모든 사용자가 어떠한 기기나 브라우저 환경에서도 동등하게 웹 콘텐츠에 접근할 수 있도록 보장하는 것
+- 웹 표준을 준수해야 브라우저 종류에 상관없이 올바른 레이아웃과 콘텐츠가 출력됨
+
+7. 개발 환경 및 편집 툴
+
+- 텍스트 에디터 및 IDE: Visual Studio Code, Visual Studio Community, EditPlus, Notepad++, Eclipse, IntelliJ
+- 개발용 브라우저: Google Chrome (웹 표준 검수 및 개발자 도구 활용)

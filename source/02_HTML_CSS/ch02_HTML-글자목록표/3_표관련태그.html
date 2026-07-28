@@ -1,0 +1,82 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        table{
+            background-color:#000000;
+            margin: 10px 20px /* 밖여백 : 위, 오른쪽, 아래, 왼쪽 */
+        }
+        tr {
+            background-color:#FFFFFF;
+        }
+        td{
+            padding: 5px 10px; /* 안여백 : 위, 오른쪽, 아래, 왼쪽 */
+            text-align:center;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <caption>표 만들기(병합 x)</caption>
+            <tr>
+                <td>1행1열</td>
+                <td>1행2열</td>
+                <td>1행3열</td>
+                <td>1행4열</td>
+            </tr>
+            <tr>
+                <td>2행1열</td>
+                <td>2행2열</td>
+                <td>2행3열</td>
+                <td>2행4열</td>
+            </tr>
+            <tr>
+                <td>3행1열</td>
+                <td>3행2열</td>
+                <td>3행3열</td>
+                <td>3행4열</td>
+            </tr>
+            <tr>
+                <td>4행1열</td>
+                <td>4행2열</td>
+                <td>4행3열</td>
+                <td>4행4열</td>
+            </tr>
+    </table>
+    <table>
+        <caption>표 만들기(병합 o)</caption>
+        <thead>
+        <th colspan="5">제목 셀</th>
+        </thead>
+        <tbody>
+            <tr>
+                <td rowspan="4">소<br />제<br />목</td>
+                <td>1행1열</td>
+                <td>1행2열</td>
+                <td>1행3열</td>
+            </tr>
+            <tr>
+                <td>2행1열</td>
+                <td>2행2열</td>
+                <td>2행3열</td>
+            </tr>
+            <tr>
+                <td>3행1열</td>
+                <td>3행2열</td>
+                <td>3행3열</td>
+            </tr>
+            <tr>
+                <td>4행1열</td>
+                <td>4행2열</td>
+                <td>4행3열</td>
+            </tr>
+        </tbody>
+        <tfoot>
+        <td colspan="5"><i>바닥글</i></td>
+        </tfoot>
+    </table>
+</body>
+</html>
