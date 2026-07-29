@@ -1,0 +1,107 @@
+3장. 공간분할
+
+1. 입력 양식 태그 <form>
+- 사용자로부터 데이터를 입력받아 서버로 전송할 때 사용하는 태그
+- 입력받은 데이터는 서버로 전달되어 데이터베이스(DB) 연동 및 비즈니스 로직 처리에 사용됨
+
+- 주요 속성
+	- action : 입력 데이터를 전달할 서버의 URL 경로 지정
+	- method : 데이터 전송 방식 선택
+		* get : URL 뒤에 ?name=value 형태로 데이터를 노출하여 전송 (데이터 길이 제한 존재)
+		* post : HTTP Request Body에 데이터를 담아 눈에 보이지 않게 전송 (길이 제한 없음, 보안성 우수)
+
+- input type 및 폼 요소
+	- text : 일반 단일 행 텍스트 입력
+	- password : 마스킹 처리되는 비밀번호 입력
+	- button : 일반 버튼 생성
+	- checkbox : 다중 선택 가능한 체크박스
+	- radio : 그룹 중 하나만 선택 가능한 라디오 버튼 (name 속성값을 동일하게 지정해야 함)
+	- file : 파일 첨부 양식 생성
+	- hidden : 화면에는 보이지 않으나 서버로 보낼 데이터를 담는 요소
+	- submit : 폼 데이터를 서버로 전송하는 버튼
+	- reset : 폼에 입력된 값들을 초기화하는 버튼
+	- date / color / range / url / tel / email : HTML5 추가 전송 타입
+	- <textarea> : 여러 줄의 텍스트를 입력받는 양식 (rows, cols 속성 활용)
+	- <select> / <option> : 드롭다운 선택 리스트 (multiple 속성으로 다중 선택 가능)
+
+- 폼 유효성 및 UI 향상 속성
+	- autofocus : 페이지 로드 시 해당 입력란으로 자동 커서 이동
+	- placeholder : 입력 필드에 힌트 문구 표시
+	- required : 필수 입력 항목 지정 (미입력 시 폼 제출 불가)
+	- min, max, step : 숫자/범위 입력 필드의 최소/최대/간격 설정
+	- pattern : 정규표현식을 이용한 데이터 형식 검증
+	- <label for="ID"> : 입력 요소와 텍스트를 연결하여 클릭 영역 확대 및 접근성 향상
+	- <fieldset> / <legend> : 폼 요소를 그룹화하고 그룹의 제목을 부여
+
+2. 공간 분할 태그 <div> / <span>
+- div : 블록 형식으로 공간 분할 (줄바꿈 포함, 너비 전체 차지)
+- span : 라인 형식으로 공간 분할 (줄바꿈 없이 텍스트 크기만큼 차지)
+
+ex) div와 span 차이점 예제
+	<body>
+    	<p>블록형 태그</p>
+    	<ul>
+        	<li>item1</li>
+        	<li>item1</li>
+        	<li>item1</li>  <!-- 들여쓰기 생성 ; 공간 분할형 태그로 부적합 -->
+    	</ul>
+    	<h1>tests</h1> <!-- 바깥 여백 생성 ; 공간 분할형 태그로 부적합 -->
+    	<div>block1</div><div>block1</div><div>block1</div> <!-- 공간 분할형 태그로 적합 -->
+    	<p>라인형 태그</p>
+    		<span>inline1</span>
+    		<span>inline1</span>
+    		<span>inline1</span>
+	</body>
+
+3. 레이아웃 구성 방식
+
+-<div> 태그를 이용한 레이아웃
+	- id나 class 속성을 통해 구역을 구분함 (의미를 명확히 알기 어려움)
+
+	ex) div 레이아웃 예제
+    	<div id="header">
+        	<h1>헤더부분</h1>
+    	</div>
+    	<hr />
+    	<div id="navi">
+        	<ul>
+            		<li>메뉴1</li>
+            		<li>메뉴2</li>
+            		<li>메뉴3</li>
+        	</ul>
+    	</div>
+    	<hr />
+    	<div id="content">
+        	<h3>What is Lorem Ipsum? (정보부분 ; content, section)</h3>
+        	<p>Lorem Ipsum</p>
+    	</div>
+    	<hr />
+    	<div id="footer">
+        	<p>서울시 ㅇㅇ구 ㅇㅇ로 ㅇㅇㅇ, ㅇㅇㅇ (ㅇㅇ동, ㅇㅇ빌딩) | ㅇㅇㅇㅇㅇ(주) ㅇㅇㅇ</p>
+        	<p>대표번호 00-000-0000(0) | 팩스 00-000-000 | 사업자 등록번호 000-00-00000</p>
+        	<p>Copyright © ㅇㅇㅇㅇㅇ Corp. All Rights Reserved.</p>
+    	</div>
+
+
+- HTML5 시멘틱(Semantic) 태그를 이용한 레이아웃
+	- 태그 자체에 의미를 부여하여 웹 브라우저, 개발자, 검색 엔진이 문서의 구조를 쉽게 파악할 수 있도록 함
+	- 주요 시멘틱 태그:
+		* header : 헤더 영역 (상단 로고, 제목 등)
+		* nav : 내비게이션 영역 (메뉴, 링크 등)
+		* section : 주요 콘텐츠의 그룹 영역
+		* article : 독립적인 본문/기사 영역
+		* aside : 사이드바 영역 (광고, 연관 정보 등)
+		* footer : 푸터 영역 (하단 카피라이트, 회사 정보 등)
+
+	ex) 시멘틱 레이아웃 예제
+    	<header>
+        	<h1>헤더부분</h1>
+    	</header>
+    	<hr />
+    	<nav>
+        	<ul>
+            		<li>메뉴1</li>
+            		<li>메뉴2</li>
+            		<li>메뉴3</li>
+        	</ul>
+    	</nav>

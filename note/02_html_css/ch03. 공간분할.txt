@@ -1,0 +1,17 @@
+3장. 공간분할
+
+1. 입력 양식 태그
+ 	- <form action="URL" method="get/post" >
+	- <input>	text (단일행 텍스트), password (비밀번호), button (버튼)
+			checkbox (다중 선택), radio (단일 선택)
+			file (파일 첨부), hidden (화면 비표시 데이터 전달), submit (전송), reset (초기화)
+			HTML5 추가 : date, color, range, url, tel, email
+	- <textarea rows="n" cols="m">, <select name="명">/<option value="값">, <label for="대상ID">, <fieldset>, <legend>
+	- autofocus, placeholder="", required, min / max / step, pattern="r"
+
+2. 공간 분할 태그
+	- <div>, <span>
+
+3. 레이아웃
+	- <div id="header">, <div id="navi">
+	- <header>, <nav>, <section>, <article>, <aside>, <footer>
