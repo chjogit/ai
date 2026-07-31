@@ -1,0 +1,208 @@
+5장. CSS 속성
+
+1. CSS3 단위
+
+- CSS3에서 자주 사용되는 단위(https://pxtoem.com.au/)
+
+  * em : 부모 요소의 폰트 크기를 기준으로 한 상대 단위 (1em = 부모의 font-size)
+  * % : 부모 요소의 크기를 100% 기준으로 계산하는 상대 단위
+  * px : 화소(Pixel) 단위의 절대 크기 지정
+  * pt : 포인트 단위 (주로 인쇄용, 1pt = 1/72 inch, 약 1.33px)
+
+	<style>
+	    #container {
+	        width:500px; margin:0 auto;
+	        border:1px solid gray;
+	        padding: 10px;
+	        text-align:justify; /*양쪽정렬*/
+	    }
+	    #container p:nth-child(2n+1){background-color:pink;}
+	    #container p:nth-child(1){font-size:.8em; /*pxtoem ; 기준값(기본값:16px)의 상대 크기에 대한 단위*/}
+	    #container p:nth-child(2){font-size: 100%;/*size 기본값 : 16px*/}
+	    #container p:nth-child(3){font-size: 24px;}
+	    #container p:nth-child(4){font-size: 24pt; /*point ; 3pt = 4px*/}
+	    span{
+	        display:block;
+	        color:gray;
+	        font-size:.5em;
+	    }
+	</style>
+
+2. CSS 속성
+
+- url() : 외부 파일(이미지, 폰트 파일 등)의 경로를 불러올 때 사용하는 함수
+- @font-face : 외부 폰트 파일을 정의하여 웹에서 사용할 사용자 정의 폰트명을 등록하는 규칙
+- font-family : 요소에 적용할 폰트 패밀리를 지정하며, 쉼표(,)로 우선순위를 다중 설정 가능
+
+	ex) 배경이미지 및 로컬 폰트 적용
+	<style>
+	    @font-face {
+	        font-family: 'GgocNaeEum';
+	        src: url('ch05/NanumGgocNaeEum.ttf');
+	    }
+	    * {
+	        font-family:GgocNaeEum, Arial; /*글꼴 우선순위 설정*/
+	    }
+	    #wrap{
+	        width:600px;
+	        margin:0 auto;
+	        border:1px solid;
+	        height:400px;
+	    }
+	    #content{
+	        border: 1px solid red;
+	        height: 100%;
+	        width: 80%;
+	        margin: 0 auto;
+	        background:url('ch05/sulhyun.jpg') center no-repeat;
+	        background-size:120%; /*img size를 div width size에 맞춰 조정*/
+	        font-size:3em;
+	        text-align:center; /* 가로방향 가운데 정렬 */
+	        color:white;
+	        line-height:400px; /* 텍스트 박스 높이 조정 및 수직 가운데 정렬 효과 */
+	    }
+	</style>
+
+3. display 속성
+
+- 요소가 화면에 나타나는 배치 방식을 설정하는 속성
+
+	* block : 한 줄을 다 차지함(줄바꿈 발생). width/height, margin/padding 적용 가능 (예: div, p, li)
+	* inline : 콘텐츠 크기만큼만 공간을 차지함. width/height 설정 불가, 상하 margin 제한적 (예: span, a, b)
+	* inline-block : inline처럼 한 줄에 흐르듯 배치되면서, block처럼 width/height 및 여백 설정 가능
+	* none : 화면에서 요소를 완전히 제거하여 표시하지 않음 (공간도 사라짐)
+
+	ex) display 활용
+	<style>
+	    div { width:100px; height:100px; border:1px solid;}
+	    div:nth-child(1){background-color:red; margin:10px;}
+	    div:nth-child(2){background-color:green; display:block;}
+	    div:nth-child(3){background-color:blue; display:inline; /*inline : width / height 설정 불가*/
+	                     margin:20px;}
+	    div:nth-child(4){display:none;} /* 화면 미출력 */
+	    div:nth-child(5){background-color:orange; display:inline-block;} /* 'float : left'와 유사하게 가로 배치*/
+	    div:nth-child(6){background-color:yellow; display:inline-block;} /* 유의사항 : 코드상 enter/tab 공백의 영향을 받아 간격 발생 가능 */
+	</style>
+
+4. visibility 속성
+- 요소를 화면에 보일지 말지 시각적 가시성을 제어하는 속성
+	- 'visibility : hidden' : 요소가 안 보이게 투명화되지만, 원래 차지하던 레이아웃 공간은 그대로 유지함
+	- 'display : none' : 요소가 안 보이게 제거되며, 차지하던 공간까지 모두 사라짐
+
+5. opacity 속성
+- 요소의 투명도를 조절하는 속성
+	- 범위 : 0 (완전 투명) ≤ opacity ≤ 1 (완전 불투명)
+	- 자식 요소까지 투명도가 함께 상속되는 특징이 있음
+
+	ex) visibility와 display의 차이
+	<style>
+	    #visibility>div, #display>div {
+	        width:100px; height:100px; background-color:forestgreen;
+	    }
+	    /*투명화*/
+	    #visibility div:nth-child(2){visibility:hidden;} /* 투명화(공간 유지) */
+	    #display div:nth-child(2){display:none;}          /* 투명화(공간 제거) */
+	    /*투명도(0≤opacity≤1)*/
+	    #visibility div:nth-child(3){opacity:.2;}        /* 반투명화 */
+	    #display div:nth-child(3){opacity:.2;}           /* 반투명화 */
+	</style>
+
+6. margin / padding 속성
+- 여백을 지정하는 속성 (top right bottom left 순서 지정 가능)
+	- margin : border 바깥쪽 여백 (타 요소와의 간격)
+	- padding : border 안쪽 여백 (내부 콘텐츠와의 간격)
+
+	ex)
+	<style>
+	    * {
+	        margin:0; padding:0; /* 전체 페이지 여백 초기화 */
+	    }
+	    div {width:100px; height:100px; font-weight:bold;}
+	    #div0 {background-color:red;}
+	    #div1 {background-color:orange; padding:10px;}
+	    #div2 {background-color:yellow; margin:10px;}
+	    #div3 {background-color:green; border:10px solid;}
+	    #div4 {background-color:blue; padding:10px; margin:10px auto; border:10px dashed red;}
+	</style>
+
+7. box-sizing 속성
+- 박스의 크기 계산 방식을 결정하는 속성
+	* content-box (기본값) : width/height에 border 및 padding 크기가 추가되어 전체 박스가 커짐
+	* border-box : 지정한 width/height 안에 border와 padding을 포함시켜 실제 전체 규격을 고정함
+
+8. float 속성
+- 요소를 문서의 일반적인 흐름에서 벗어나 좌/우측으로 띄워 정렬하는 속성
+	* 'float: left' / 'float: right'
+	* 부모 요소에 overflow: hidden 필요
+
+	ex)
+	<style>
+	    * {margin:0; padding:0;}
+	    div { width:100px; height:100px;}
+	    div:nth-child(1){background-color:yellow;}
+	    div:nth-child(2){background-color:green; border:5px solid red; box-sizing:border-box;}
+	    div:nth-child(3){background-color:blue; border:5px solid black; box-sizing:border-box;}
+
+	    ul {overflow:hidden; /* float 자식 요소를 담기 위한 영역 확보 */
+	        width:450px;
+	        margin: 0 auto;
+	    }
+	    li {
+	        float: left; /* 가로 방향 왼쪽 정렬 */
+	        list-style: none;
+	        border: 1px solid black;
+	        box-sizing: border-box;
+	        width: 30.33%;
+	        margin: 1.5%;
+	        height: 100px;
+	        text-align:center;
+	    }
+	    ul li a{
+	        border:1px solid red;
+	        font-size:1.5em;
+	        display:block; /* <a> 내부 영역 전체를 클릭 가능하게 변경 (img가 없을 때 자주 활용) */
+	        height:100%;
+	        width:100%;
+	    }
+	</style>
+
+9. 글자 관련된 속성들
+- 사이트 구축 시 가장 기본적이고 많이 쓰이는 텍스트 스타일링 속성 모음
+	* font-family : 글꼴 종류 설정
+	* font-size : 글자 크기 지정
+	* font-style : 글자 스타일 설정 (italic 등 기울임꼴)
+	* font-weight : 글자 두께 지정 (normal, bold, 100~900 등)
+	* line-height : 줄 간격(행간) 조정 및 한 줄 텍스트의 수직 가운데 정렬 용도
+	* text-align : 텍스트 정렬 (left, right, center, justify)
+	* text-decoration : 텍스트 장식 (none, underline, line-through 등)
+
+10. 폰트 (웹폰트, 로컬폰트)
+- 폰트를 불러오고 적용하는 출처 형태별 구분
+	* 웹 폰트 : @import 또는 <link>를 통해 실시간으로 폰트를 다운로드받아 사용하는 방식
+	* 로컬 폰트 : 서버/프로젝트 내부 폴더에 저장된 폰트 파일(.ttf, .woff 등)을 사용하는 방식
+
+	ex)
+	<style>
+	    /* 로컬 폰트 설정 */
+	    @font-face {
+	        font-family: 'HimNaeRa';
+	        src: url('ch05/NanumHimNaeRaNeunMarBoDan.ttf');
+	    }
+
+	    /* 웹 폰트 불러오기 */
+	    @import url('https://fonts.googleapis.com/css2?family=Diphylleia&display=swap');
+
+	    p.localfont {
+	        font-family: 'HimNaeRa', sans-serif;
+	        font-style: italic;
+	        text-align: center;
+	        text-decoration: underline;
+	        line-height: 40px; /* 행 간격 조절 */
+	    }
+
+	    p.webfont {
+	        font-family: "Diphylleia", serif;
+	        font-weight: 400;
+	        font-style: normal;
+	    }
+	</style>

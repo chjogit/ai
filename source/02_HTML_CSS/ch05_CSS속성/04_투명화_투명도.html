@@ -1,0 +1,27 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        #visibility>div, #display>div {
+            width:100px; height:100px; background-color:forestgreen;
+        }
+        /*투명화*/
+        #visibility div:nth-child(2){visibility:hidden;} /* 투명화(공간 유지) */
+        #display div:nth-child(2){display:none;}         /* 투명화(공간 제거) */
+        /*투명도(0≤opacity≤1)*/
+        #visibility div:nth-child(3){opacity:.2;}        /* 반투명화 */
+        #display div:nth-child(3){opacity:.2;}           /* 반투명화 */
+    </style>
+</head>
+<body>
+    <div id="visibility">
+        <div>기본 불투명</div><div>투명(visibility)</div><div>반투명</div>
+    </div>
+    <div id="display">
+        <div>기본 불투명</div><div>투명(display)</div><div>반투명</div>
+    </div>
+</body>
+</html>

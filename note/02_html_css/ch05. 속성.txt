@@ -1,0 +1,18 @@
+5장. CSS 속성
+
+1. CSS3 단위들 - em, %, px, pt
+2. url() 함수 - background-image: url('경로'), src: url('경로')
+3. display 속성 - inline, block, inline-block, none
+4. visibility 속성 - visible, hidden
+5. opacity 속성 - 0 ~ 1 (수치값)
+6. margin과 padding 속성 - margin, padding (top, right, bottom, left, auto)
+7. box-sizing 속성 - content-box, border-box
+8. 글자 관련 속성
+   - font-family, font-size
+   - font-weight (normal, bold, 100~900)
+   - font-style (normal, italic)
+   - line-height
+   - text-align (left, right, center, justify)
+   - text-decoration (none, underline, line-through)
+9. 폰트 구분 - 웹 폰트 (@import, <link>), 로컬 폰트 (@font-face)
+10. float 속성 - left, right, none
