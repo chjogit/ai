@@ -1,0 +1,23 @@
+6장. 모바일 레이아웃
+
+- 스마트폰 레이아웃 - 뷰포트(Viewport)
+	- viewport : 모바일 웹 브라우저에서 화면 크기, 확대/축소 등 브라우저의 표시 방식을 제어하기 위해 <head> 태그 내에 지정하는 meta 태그
+	- 데스크톱용으로 제작된 일반 웹 페이지가 모바일 기기에서 축소되어 작게 보이는 현상을 방지하고, 기기 너비에 맞게 화면을 꽉 차게 출력함
+
+	ex) 기본적인 모바일 뷰포트 설정 코드
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
+
+	- 뷰포트 주요 속성
+
+  	* width : 화면의 너비를 지정 (device-width로 설정 시 기기의 화면 너비에 맞춤)
+  	* height : 화면의 높이를 지정 (device-height로 설정 시 기기의 화면 높이에 맞춤)
+  	* initial-scale : 페이지가 처음 로드될 때의 초기 확대/축소 비율 (1.0 = 100%)
+  	* user-scalable : 사용자가 손가락으로 화면을 확대/축소할 수 있는지 여부 (yes 또는 no / 1 또는 0)
+  	* minimum-scale : 줄일 수 있는 최소 확대 비율 (기본값: 0.25, 범위: 0 ~ 10.0)
+  	* maximum-scale : 늘릴 수 있는 최대 확대 비율 (기본값: 5.0, 범위: 0 ~ 10.0)
+
+	- 밑줄임 태그 : white-space:nowrap; overflow:hidden; text-overflow:ellipsis; 
+
+
+
+
