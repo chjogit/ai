@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+    <title></title>
+    <style>
+        
+    </style>
+    <script>
+        answer = confirm('확인 취소 중 선택 : 삭제하시겠습니까?');
+        document.write(`결과 : ${answer} - 타입 : ${typeof(answer)} <br>`);
+        /* 
+         * 비교 연산자(==,===)
+         * == : 값의 동일 여부 (타입이 서로 다를 경우, 공통 타입으로 변환한 뒤 값을 비교)
+         * === : 타입이 같은지 먼저 확인한 뒤 값까지 같은지 비교
+         */
+
+        if(answer==0){
+            document.write('취소합니다.')
+        }else {
+            document.write('삭제합니다.')
+        }
+    </script>
+</head>
+<body>
+    
+</body>
+</html>

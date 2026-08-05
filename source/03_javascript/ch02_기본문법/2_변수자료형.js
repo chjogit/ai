@@ -29,10 +29,16 @@ console.log('6.variable type :', typeof(variable), '- value :', variable);
 variable = -3.2323;
 console.log('7.variable type :', typeof(variable), '- value :', variable);
 
-// object - array
-variable = [1, 2, 3];
-console.log('8.variable type :', typeof(variable), '- value :', variable);
-
 // function
 variable = function(){alert('Hello')};
+console.log('8.variable type :', typeof(variable), '- value :', variable);
+
+// 객체 - object
+variable = {'name':'홍길동', 'age':20}
 console.log('9.variable type :', typeof(variable), '- value :', variable);
+console.log('9-1.variable type :', typeof(variable), '- value :', variable['name']);
+
+// array - object
+variable = [1, 2, '홍길동', function(){}, true, [1, 3], {'name':'홍길동'}];
+console.log('10.variable type :', typeof(variable), '- value :', variable);
+console.log('10.variable type :', typeof(variable), '- value :', variable[5]);

@@ -1,0 +1,13 @@
+7장. 규칙과 반응형 웹
+
+1. CSS3 규칙
+- CSS 파일 분리
+- @import 규칙
+  * <link> 태그 대신 외부 CSS를 불러올 때 사용 가능
+  * 반드시 <style> 태그 내부 또는 CSS 파일 내에 위치해야 함
+  * 다른 일반 CSS 스타일 규칙보다 **최상단(맨 위)**에 위치해야 작동함
+- @media 규칙
+  * all, screen, print
+
+2. 반응형 웹
+-  @media screen and (max-device-width:000px) { 'CSS' }

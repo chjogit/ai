@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+    <title></title>
+    <style>
+        table {
+            border-collapse: collapse;
+            margin: 100px auto;
+        }
+        table tr td {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid gray;
+        }
+    </style>
+    <script>
+        // prompt 함수를 이용하여 원하는 구구단 수를 입력받아 해당 구구단을 출력 (2~9)
+        do{
+            var num = parseInt(prompt('원하는 구구단 (2~9)', '2'));
+        }while(isNaN(num) || num<2 || num>9);
+        
+        document.write('<table>');
+        document.write('<tr>');
+        document.write('<th>'+ num +'단</th>');  
+        document.write('</tr>');  
+        let i = num;
+        for(j=2 ; j<10 ; j++) {
+            document.write(`<tr><td>${i} * ${j} = ${j*i}</td></tr>`);
+            }
+        document.write('</table>');
+    </script>
+</head>
+<body>
+    
+</body>
+</html>

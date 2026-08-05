@@ -1,0 +1,11 @@
+6장. 모바일 레이아웃
+
+- viewport 
+- 주요 속성
+  	* width, height, initial-scale(1.0 = 100%), user-scalable(yes 또는 no / 1 또는 0), 
+	* minimum-scale(기본값: 0.25, 범위: 0 ~ 10.0), maximum-scale(기본값: 5.0, 범위: 0 ~ 10.0)
+- 밑줄임 태그 : white-space:nowrap; overflow:hidden; text-overflow:ellipsis; 
+
+
+
+
