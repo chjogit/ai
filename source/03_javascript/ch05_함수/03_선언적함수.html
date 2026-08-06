@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+    <title></title>
+    <style>
+        
+    </style>
+    <script>
+        fun(); // 선언적 함수 ; 함수 정의 상단(전)에서 사용 가능 - script는 선언부를 우선 실행함
+        function fun(){
+            document.write('함수 fun <br>');
+        }
+        fun();
+        function fun(){ // 선언적 함수 수정 시 전역 적용됨
+            document.write(' 수정된 함수 fun <br>');
+        }
+        fun();
+    </script>
+</head>
+<body>
+
+</body>
+</html>

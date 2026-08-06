@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+    <title></title>
+    <style>
+        
+    </style>
+    <script>
+        setTimeout(() => {
+            document.body.innerHTML += '11초 경과<br>'
+        }, 11000);
+
+        var cnt = 0;
+
+        let nowTime = new Date().getTime();
+        while(new Date().getTime() <= nowTime + 2000){
+            cnt++;
+        }
+        document.write(`2초 간 while문 ${cnt}번 수행 <br>`);
+
+
+        clearTimeout(id);
+        document.write('setTimeout 종료');
+    </script>
+</head>
+<body>
+    
+</body>
+</html>

@@ -1,0 +1,98 @@
+3장. 조건문
+
+1. 조건문
+
+ - if문, switch문, 삼항연산자, 단락평가(Short-circuit Evaluation)
+- 비교 연산자 : == (값 비교), === (값과 자료형 비교)
+- 참고 문서 : W3Schools(https://www.w3schools.com/jsref), DevDocs(http://devdocs.io/javascript)
+
+
+1.1. if 조건문
+- 조건식의 평가 결과가 true일 때 블록 내부 코드를 실행
+
+
+1.2. if else 조건문
+- 조건식의 평가 결과가 true이면 if 블록을, false이면 else 블록을 실행
+
+
+1.3. 중첩 조건문
+- 조건문 내부에 또 다른 조건문을 작성하여 세부 조건을 판별
+
+
+1.4. if - else if 조건문
+- 여러 개의 조건을 순차적으로 비교하여 해당하는 블록을 실행
+
+	ex)시간대에 따른 메시지 및 이미지 출력
+		<script>
+			var date = new Date();
+			var hour = date.getHours();
+			if (hour < 12) {
+				alert("상쾌한 오전입니다");
+				document.write('<img src="am.jpg" alt="오전사진">');
+			} else {
+				alert("따스한 오후입니다");
+				document.write('<img src="pm.jpg" alt="저녁입니다">');
+			}
+		</script>
+
+
+2. switch 조건문
+
+- 입력된 값과 일치하는 case 절로 이동하여 해당 문장을 실행 (break 문으로 탈출)
+
+	ex)요일에 따른 배경색 변경
+		<script>
+			document.write("<h3>요일에 따른 바탕화면 변경</h3>");
+			var today = new Date();
+			var week = today.getDay();
+			switch (week) {
+				case 0: 
+					document.body.style = "background-color:#ff0000"; 
+					document.write("즐건 일요일");
+					break;
+				case 1: 
+					document.bgColor = "orange"; 
+					break;
+				case 2: 
+					document.bgColor = "yellow"; 
+					break;
+				case 3: 
+					document.bgColor = "green"; 
+					break;
+				case 4: 
+					document.bgColor = "blue"; 
+					break;
+				case 5: 
+					document.bgColor = "navy"; 
+					break;
+				case 6: 
+					document.bgColor = "purple"; 
+					break;
+			}
+		</script>
+
+
+3. 삼항연산자
+- 조건식의 참/거짓 결과에 따라 서로 다른 값을 반환
+- 구문 : (조건식) ? (참일 때 값) : (거짓일 때 값);
+
+	ex)삼항연산자를 이용한 짝수/홀수 판별
+		let num1 = 20;
+	let num2 = 20;
+
+	let difference = (num1>num2) ? num1-num2 : num2-num1;
+	let msg = (num1>num2) ? `첫번째 수가 ${difference}만큼 더 큽니다.`:
+            	(num2>num1) ? `두번째 수가 ${difference}만큼 더 큽니다.` :
+                	'두 수는 같습니다.';
+
+
+4. 짧은 조건문(단락평가)
+- 논리 연산자(||, &&) 사용 시 첫 번째 피연산자만으로 결과가 확정되면 두 번째 피연산자를 평가하지 않는 특성
+- 짧은 조건문으로 활용 가능
+
+	ex)단락평가 동작 확인
+    	<script>
+        	var su = parseInt(prompt('수를 입력하세요'));
+        	(su%2==0) || alert('홀수입니다.');
+        	(su%2==0) && alert('짝수입니다.');
+    	</script>

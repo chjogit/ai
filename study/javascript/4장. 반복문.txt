@@ -1,0 +1,118 @@
+4장. 반복문
+- 배열, 배열에서의 반복문과 forEach 함수, do~while문, while문, for문, for in, for of, 구조분해할당
+
+1. while 반복문
+- 조건식이 참인 동안 블록 내부 명령문을 반복 실행
+- 구조 : while (조건식) { 실행문 };
+
+1.1 do while 반복문
+- 최초 1회는 무조건 실행한 후, 조건식이 참이면 계속 수행
+- 구문: do { 실행문; } while (조건식);
+
+	ex)while, do~while 반복문
+		var cnt = 0;
+		var startTime = new Date().getTime(); //1970.01.01부터 현재까지의 밀리초(ms) 반환
+
+		while(new Date().getTime()<=startTime+1000) {
+    			cnt++;
+		}
+
+		console.log(
+   			 '1초 동안 while문 수행 횟수 :', cnt
+		);
+
+		cnt = 0;
+		startTime = new Date().getTime();
+		do{
+    			cnt++;
+		}while(new Date().getTime()<=startTime+1000);
+
+		console.log(
+    			'1초 동안 do-while문 수행 횟수 :', cnt
+		);
+
+
+2. for 반복문
+- 초기값, 반복조건, 증감식을 활용한 반복
+- 구문 : for (초기값 ; 반복조건 ; 증감식) { 실행문; }
+
+2.1 for in 반복문 및 순회 방식 비교
+- for in : 배열의 인덱스(key)를 순회 (구문: for (var idx in array) { })
+- for of : 배열의 값(value)을 순회 (구문: for (var data of array) { })
+- forEach() : 배열의 각 요소에 대해 콜백 함수를 실행
+
+	ex)for 문 활용
+	<script>
+        	var arr = [279, 32, '홍길동']; // arr[0], arr[1], arr[2]
+        	arr.push(true); // 배열 추가
+        	arr.pop(true); // 배열 제거
+
+        // 1. 일반 for문 - array
+        	document.write('<h3>1. 일반 for문 이용</h3>');
+        	for(let idx=0 ; idx<arr.length ; idx++) { // arr.length : 배열 요소 개수
+            		document.write(idx + '번째 : ' + arr[idx] + '<br>');}
+
+        // 2. for-in문 - object (array)
+        	document.write('<h3>2. for-in문 이용</h3>');
+        	for(let idx in arr) {
+            		document.write(`${idx}번째 : ${arr[idx]}<br>`);}
+
+        // 3. for-of문 - object (array) ; ECMAScript6 버전에서 추가됨
+        	document.write('<h3>3. for-of문 이용</h3>');
+        	for(let data of arr) {
+        		document.write(data+`<br>`);}
+
+        // 4. forEach 함수 (1)
+        	document.write('<h3>4-1. forEach 함수 이용</h3>');
+        	arr.forEach(function(data, idx){
+            		document.write(idx + '번째 : ' + data + '<br>');});
+
+        // 4. forEach 함수 (2)
+        	document.write('<h3>4-2. forEach 함수 이용</h3>');
+        	arr.forEach(function(data){
+        		document.write(data + '<br>');});
+
+        // 4. forEach + 화살표 함수 (3)
+        	document.write('<h3>4-3. forEach + 화살표  함수 이용</h3>');
+        	arr.forEach((data, idx)=>{
+            		document.write(idx + '번째 : ' + data + '<br>');});
+
+        // 4. forEach + 화살표 함수 (4)
+        	document.write('<h3>4-4. forEach + 화살표  함수 이용</h3>');
+        	arr.forEach((data)=>{
+            		document.write(data + '<br>');});
+    </script>
+
+3. 중첩 반복문
+
+	ex) 중첩 for문
+	</script>
+        	document.write('<table>');
+        	document.write('<tr>');
+        	for(let i=2 ; i<=9 ; i++){
+        	    document.write('<th>'+ i +'단</th>');  
+        	    }
+        	document.write('</tr>');  
+        	for(i=1 ; i<10 ; i++) {
+        	    document.write('<tr>');    
+        		for(j=2 ; j<10 ; j++) {
+            	    	document.write(`<td>${j} * ${i} = ${j*i}</td>`);
+        	    	}
+        	document.write('<br>');
+        	document.write('</tr>');
+        	}
+        
+        	document.write('</table>');
+	</script>
+
+* 배열 (Array)
+
+- 배열 : var array = [];
+- 배열 생성자 : var array = new Array();
+- 배열의 주요 속성 및 메서드
+  	* length : 배열의 길이 반환
+  	* push() : 배열 끝에 요소 추가 (arr[arr.length] = 값 과 동일)
+  	* pop() : 배열 끝 요소 제거
+  	* unshift() : 배열 제일 앞에 요소 추가
+  	* shift() : 배열 제일 앞 요소 제거
+  	* includes() : 배열에 특정 요소가 포함되어 있는지 여부 반환 (boolean)

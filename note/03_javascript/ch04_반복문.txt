@@ -1,0 +1,16 @@
+4장. 반복문
+
+1. while 반복문 while/do-while
+- while (조건식) {실행 블록}
+- do {실행 블록} while (조건식);
+2. for 반복문 : for/for-in/for-of/forEach
+- for (초기값 ; 반복조건 ; 증감식) {실행 블록;}
+- for (let 변수 in 배열) {실행 블록}
+- for (let data of 배열) {실행 블록}
+- 배열.forEach(function(data, idx) {실행 블록;} / 배열.forEach((data, idx)=>{실행 블록;}
+- 배열.forEach(function(data) {실행 블록;} / 배열.forEach((data)=>{실행 블록;}
+3. 중첩 반복문
+- 중첩 for 문
+* 배열
+- 배열 : 변수 = [];, 변수 = new Array();
+- length, push(), pop(), unshift(), shift(), includes()

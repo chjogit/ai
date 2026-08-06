@@ -1,0 +1,20 @@
+2장. 기본문법
+
+1. 변수 선언
+- 기본 자료형: string, number, boolean, object, function, undefined
+- 대화상자 내장함수: alert(), prompt(), confirm()
+- 키워드 : break, case, catch, const, continue .etc
+- 식별자 (변수, 함수, 속성, 메서드), 주석(//, /**/), 출력 (alert();, document.write();)
+- 변수 선언 키워드 : var, let, const
+2. 변수 자료형
+- 자료형 : string, number, boolean, undefined, null, object
+- 자료형 확인 : typeof()
+3. 복합 대입 연산자 & 증감 연산자
+- 복합 대입 연산자 : +=, -=, *=, /=, %=
+- 증감 연산자 : ++, --
+4. 입출력 대화상자 함수
+- alert(message), confirm(message); 확인 : true, 취소 : false 반환
+5. 형변환
+- 숫자 + 문자열 = 문자열
+- 명시적 형변환 함수 : Number()-불가 시 NaN, parseInt(), parseFloat(), String() ,isNaN(value)-불가 시 true
+6. false로 해석되는 값 : 0, NaN, '' (빈 문자열), null, undefined, false

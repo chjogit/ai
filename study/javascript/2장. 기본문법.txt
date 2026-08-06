@@ -1,0 +1,225 @@
+2장. 기본문법
+
+1. 변수 선언
+- 기본 자료형 : string, number, boolean, object, function, undefined
+- 대화상자 내장함수 : alert(), prompt(), confirm()
+- 참고 문서 : W3Schools(https://www.w3schools.com/jsref), DevDocs(http://devdocs.io/javascript)
+
+1.1 표현식과 문장
+- 표현식(Expression) : 값으로 평가되는 코드 단위
+- 문장(Statement) : 실행 단위로, 여러 표현식이 모여 구성되며 끝에 세미콜론(;)을 명시함
+
+1.2 키워드
+- 자바스크립트 엔진에서 특정 동작을 수행하기 위해 예약된 단어 (변수명/함수명으로 사용 불가)
+- 예 : break, case, catch, const, continue, delete, do, else, false, finally, for, function,
+        if, in, instanceof, let, new, null, return, switch, this, throw, true, try, typeof, var, void, while, with 등
+
+1.3 식별자
+- 변수, 함수, 속성, 메서드 등의 이름을 정의할 때 사용하는 문자열
+- 네이밍 규칙 및 관례:
+  * 키워드 사용 불가, 숫자로 시작 불가
+  * 특수문자는 언더스코어(_)와 달러 기호($)만 허용 (공백 포함 불가)
+  * 알파벳 사용이 관례 (예: userName)
+  * 생성자 함수/클래스명은 대문자로 시작, 일반 변수/함수는 소문자로 시작
+
+1.4 주석
+- 코드 실행 시 무시되는 설명문
+- 한 줄 주석: // 주석 내용
+- 블록 주석: /* 주석 내용 */
+
+
+1.5 출력 (Output)
+- alert('Message'); 형태로 팝업 메시지 출력
+- document.write(); 사용 시 브라우저 출력
+
+
+2. 변수 선언 키워드
+- var : 함수 단위 스코프. 변수의 재선언 및 재할당 가능. (전역 변수)
+- let : 블록 단위 스코프. 변수의 재선언 불가, 재할당 가능. (지역 변수 ; 값이 변하는 변수)
+- const : 블록 단위 스코프. 변수의 재선언 및 재할당 불가. (기본 선언 방식, 상수)
+
+	ex)변수 예시
+	var v = 10; // 변수 선언과 할당
+	var v = 20;
+	v++; // v = 21
+
+	let l = 10;
+	// let 2 - 20; 재선언 불가
+	l = 20; // 재할당 가능
+
+	const C = 10;
+	// C = 20; 재선언 및 재할당 불가
+
+	const Carr = [1, 2, 3]; // 배열 (동일 자료형의 집합)
+
+	// const Carr = [2, 1, 3]; 재할당 불가
+
+	Carr[0] = 9; // 배열 내의 자료 수정 가능
+
+2.1. 변수 자료형
+
+2.1.1 자료형 : 문자열 (String)
+
+- 큰따옴표("") 또는 작은따옴표('') 사용
+- 문자열 내부 따옴표 포함 시 따옴표를 교차 사용하거나 이스케이프 문자(\) 사용
+- \n (줄바꿈), \t (탭), \' (작은따옴표), \" (큰따옴표), \\ (역슬래시)
+
+2.1.2 자료형 : 숫자 (Number)
+
+- 정수와 실수를 구분하지 않고 단일 Number 타입으로 처리
+- 사칙연산, 연산자 우선순위, 나머지 연산자(%) 적용 가능
+
+2.1.3 자료형 : 불리언 (Boolean)
+
+- 참(true)과 거짓(false)을 나타내는 자료형
+- 비교 연산자(==, ===, !=, !==, >, <, >=, <=) 및 논리 연산자(!, &&, ||) 활용
+
+2.1.4 자료형 : Undefined
+
+- 변수가 선언되었으나 초기화(값 할당)되지 않았거나, 존재하지 않는 속성에 접근할 때의 타입 및 값
+
+2.1.5 자료형 검사
+
+- typeof() : 피연산자의 데이터 타입을 문자열로 반환함
+
+	ex)종합 예시
+
+	// undefined : 변수 초기화 없을 경우 기본값
+	var variable; // 할당 없이 변수 선언 가능
+	console.log('1.variable type :', typeof(variable), '- value :', variable);
+
+	// null : 할당을 통해 생성된 결측치
+	variable = null;
+	console.log('2.variable type :', typeof(variable), '- value :', variable);
+
+	// " " 내부에 '' 삽입 가능
+	variable = "이름은 '홍길동' 입니다.";
+	console.log('3.variable type :', typeof(variable), '- value :', variable);
+
+	// format 활용 예시
+	let name = '홍길동';
+	variable = `이름은 '${name}' 입니다.`;
+	console.log('4.variable type :', typeof(variable), '- value :', variable);
+
+	// number
+	variable = -3.2323;
+	console.log('5.variable type :', typeof(variable), '- value :', variable);
+
+	// boolean
+	variable = true;
+	console.log('6.variable type :', typeof(variable), '- value :', variable);
+	
+	// function
+	variable = function(){alert('Hello')};
+	console.log('7.variable type :', typeof(variable), '- value :', variable);
+
+	// 객체 - object
+	variable = {'name':'홍길동', 'age':20}
+	console.log('8.variable type :', typeof(variable), '- value :', variable);
+	console.log('8-1.variable type :', typeof(variable), '- value :', variable['name']);
+
+	// array - object
+	variable = [1, 2, '홍길동', function(){}, true, [1, 3], {'name':'홍길동'}];
+	console.log('9.variable type :', typeof(variable), '- value :', variable);
+	console.log('9-1.variable type :', typeof(variable), '- value :', variable[5]);
+
+
+3. 복합 대입 연산자 & 증감 연산자
+
+- 복합 대입 연산자 : +=, -=, *=, /=, %=
+- 증감 연산자 : ++, --
+
+	ex) innerHTML에서의 += 활용
+    	</style>
+    	<script>
+        	// v = {'name':'홍길동'};
+        	// v.name = function(){};
+        	window.onload = function() { // window load 후 자동 호출되는 함수
+            		let list = '';
+            		list += '<ul>';
+            		list += '<li>HTML</li>';
+            		list += '<li>JS</li>';
+            		list += '</ul>';
+            		document.body.innerHTML += list;
+        	};
+    	</script>
+
+
+3.1 동등 연산자(==) vs 일치 연산자(===)
+
+- 동등 연산자 (==) : 값만 비교 (비교 전 암묵적 형변환 수행)
+- 일치 연산자 (===) : 값과 데이터 타입을 모두 비교 (형변환 없음, 사용 권장)
+
+	ex)일치 연산자 비교
+		<script>
+			document.write(('' == false) + ' : ==은 암묵적 형변환 후 값 비교 (true)<br>');
+			document.write(('' === false) + ' : ===은 타입까지 비교 (false)<br>');
+		</script>
+
+
+4. 입출력 대화상자 함수
+
+- alert(message) : 경고 대화상자 표시 (반환값 없음)
+- confirm(message) : 확인/취소 선택 대화상자 표시 (확인 : true, 취소 : false 반환)
+
+	ex)confirm 활용
+		<script>
+			var answer = confirm("[확인] [취소] 중 선택 : 수강신청을 하시겠습니까?");
+			if (answer === true) {
+				alert("등록되었습니다");
+			} else {
+				alert("취소되었습니다. 다시 신청해 주세요");
+			}
+		</script>
+
+- prompt(message, defaultValue) : 입력 창 대화상자 표시 (입력값 문자열 반환, 취소 시 null 반환)
+
+	ex)prompt 활용
+		<script>
+			var name = prompt("이름을 입력하세요", "홍길동");
+			alert(name + "씨 환영합니다");
+		</script>
+
+
+5. 형변환
+
+- 숫자와 문자열 연산
+	- 숫자 + 문자열 연산 시 숫자가 문자열로 암묵적 형변환됨 (예: 52 + '273' -> '52273')
+
+- 명시적 형변환 함수
+	- Number(value) : 다른 자료형을 숫자로 변환 (변환 불가 시 NaN 반환)
+	- parseInt(string, radix) : 문자열을 정수로 변환 (진법 지정 가능)
+	- parseFloat(string) : 문자열을 부동소수점 실수로 변환
+	- String(value) : 다른 자료형을 문자열로 변환
+	- isNaN(value) : 인자가 NaN인지 여부를 검사 (숫자로 변환 불가 시 true 반환)
+
+	ex)NaN 반환 사례
+		<script>
+			var i = Number("a");   // NaN
+			alert(i);
+			var pi = parseInt("a"); // NaN
+			alert(pi);
+		</script>
+
+
+6. false로 해석되는 값
+
+- 0, NaN, '' (빈 문자열), null, undefined, false
+
+	ex)false로 해석되는 값 : 0, NaN, undefined, null, '' /-- 유의 --/ [],' ' = true
+
+	var i;
+
+	//false
+	console.log(Boolean(i));
+	console.log(Boolean(0));
+	console.log(Boolean(NaN));
+	console.log(Boolean(undefined));
+	console.log(Boolean(null));
+	console.log(Boolean(''));
+
+	//true
+	console.log(Boolean(' '));
+	console.log(Boolean([]));
+
+

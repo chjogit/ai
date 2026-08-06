@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+    <title></title>
+    <style>
+        
+    </style>
+    <script>
+        document.write(new Date().toLocaleTimeString());
+        let count = 0;
+        let id = setInterval(() => {
+                count++;
+                document.body.innerHTML = new Date().toLocaleTimeString();
+                if (count >= 10) {
+                    clearInterval(id);
+                    document.body.innerHTML += '<br>setInterval 종료 ';
+                }
+        }, 1000);
+    </script>
+</head>
+<body>
+    
+</body>
+</html>

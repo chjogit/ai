@@ -1,0 +1,8 @@
+5장. 함수
+
+- 익명 함수(함수 표현식, 화살표 함수) : var 함수명 = function() {}; / var 함수명 = () => {};
+- 선언적 함수 : function 함수명 () {};
+- 매개변수와 리턴값
+- 가변 인자 함수(arguments), 내부 함수(함수/변수 이름 충돌 방지), 콜백 함수, 
+- setTimeout(function, millisecond), setInterval(function, millisecond), clearTimeout(), clearInterval()
+
