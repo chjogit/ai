@@ -1,0 +1,13 @@
+6장. 객체
+
+1. 객체 - { key: value } (리터럴), new Object()
+2. 속성 조작  
+	- 접근/추가: obj.key 또는 obj['key'] = value  
+	- 제거 : delete obj.key  
+	- 배열은 숫자 인덱스, 객체는 문자열 키
+3. 속성과 메서드  
+	- obj.method = function() { ... } (화살표 함수 지양)  
+	- this : 일반 함수에서 객체 자신을 가리킴
+4. toString() - 오버라이딩 : obj.toString = function() { return ...; } (출력 시 자동 호출)
+5. 객체 배열 + 동적 메서드 주입: for...in / forEach, function makeObj(...) { return { ... }; }
+
