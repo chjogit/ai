@@ -1,0 +1,128 @@
+7장. 생성자 함수 및 프로토타입
+
+1. 생성자 함수 개요
+
+- 생성자 함수 : 객체를 생성할 때 사용되는 함수 (관례적으로 대문자로 시작)
+- 객체 생성 방식 : var 객체명 = new 생성자함수명(속성값들);
+- 인스턴스 : 생성자 함수를 통해 만들어진 객체
+
+
+2. 프로토타입 (Prototype)
+
+- 필요성 : 객체를 생성할 때마다 내부 메서드를 매번 새로 생성하면 메모리 낭비(효율성 문제)가 발생
+- 프로토타입의 개념 : 생성자 함수로 생성된 모든 객체(인스턴스)가 공통으로 공유하는 공유 메모리 공간
+- 자바스크립트의 모든 함수는 자동으로 prototype 속성을 가짐
+- 속성은 생성자 내부에 정의하고, 메서드는 프로토타입에 정의하는 것이 표준
+
+	ex) 프로토타입을 활용
+		<script>
+			function Student(name, kor, eng, mat) {
+				// 속성은 인스턴스마다 다르게 가짐
+				this.name = name;
+				this.kor = kor;
+				this.eng = eng;
+				this.mat = mat;
+			}
+
+			// 메서드는 프로토타입에 정의하여 공유
+			Student.prototype.getSum = function () {
+				return this.kor + this.mat + this.eng;
+			};
+
+			Student.prototype.getAvg = function () {
+				return (this.getSum() / 3).toFixed(1);
+			};
+
+			Student.prototype.toString = function () {
+				let output = '';
+				for (let key in this) {
+					if (key != 'getSum' && key != 'getAvg' && key != 'toString') {
+						output += key + ':' + this[key] + '&nbsp;';
+					} else if (key == 'getAvg' || key == 'getSum') {
+						output += key.substring(3).toUpperCase() + ':' + this[key]() + '&nbsp;';
+					}
+				}
+				return output;
+			};
+
+			let students = [];
+			students.push(new Student('홍길동', 99, 98, 90));
+			students.push(new Student('마길동', 98, 90, 93));
+			students.push(new Student('김길동', 96, 92, 92));
+
+			students.forEach(element => document.write(element + '<hr>'));
+		</script>
+
+
+3. new 키워드의 역할 및 동작 과정
+
+- new 키워드 실행 시 내부 동작 4단계
+  	* 메모리 공간 생성 : 빈 객체 공간을 메모리에 새로 생성
+  	* this 바인딩 : 생성된 빈 객체를 함수 내부의 this에 바인딩
+  	* 코드 실행: 함수 내부의 코드를 실행하여 this.속성명 = 값 형태로 데이터/속성 추가
+  	* 객체 반환 : 완성된 객체를 자동으로 반환
+
+- new 키워드 유무에 따른 차이
+  	* new 사용 시 : 독립된 인스턴스가 정상 생성되고 this는 해당 인스턴스를 가리킴
+  	* new 미사용 시 (일반 함수 호출)
+   	- 일반 생성자 함수 : 새로운 객체가 생성되지 않고 undefined가 반환되며, this가 전역 객체(window)를 가리켜 전역 변수가 오염됨
+    	- ES6 Class : new 없이 호출할 경우 TypeError가 발생하여 실수를 원천 방지
+
+	ex) new 키워드 유무 비교
+		<script>
+			function Constructor(value) {
+				this.value = value;
+			}
+
+			// 1) new 사용 시: 정상적인 인스턴스 생성
+			var obj1 = new Constructor('Hello');
+			alert(obj1.value); // 'Hello'
+
+			// 2) new 미사용 시: 일반 함수로 호출되어 window.value가 변경됨 (전역 오염)
+			var obj2 = Constructor('Hello'); 
+			alert(obj2); // undefined (반환값 없음)
+			// alert(window.value); // 'Hello' (전역 변수로 할당됨)
+		</script>
+
+
+4. ES6+ Class 문법
+- ES6(ECMAScript 2015)부터 도입
+- constructor() 메서드를 통해 속성을 초기화하며, 클래스 바디 내에 정의한 메서드는 자동으로 프로토타입에 등록됨
+- new 키워드 없이 호출 시 에러가 발생하여 안전한 코딩 가능
+
+	ex) class 활용
+		<script>
+			class Student {
+				// 생성자 (constructor)
+				constructor(name, kor, mat, eng) {
+					this.name = name;
+					this.kor = kor;
+					this.mat = mat;
+					this.eng = eng;
+				}
+
+				// 메서드 (자동으로 Student.prototype에 추가됨)
+				getSum() {
+					return this.kor + this.mat + this.eng;
+				}
+
+				getAvg() {
+					return (this.getSum() / 3).toFixed(1);
+				}
+
+				toString() {
+					return 'name :' + this.name +
+						' kor :' + this.kor +
+						' mat :' + this.mat +
+						' eng :' + this.eng +
+						' sum :' + this.getSum() +
+						' avg :' + this.getAvg();
+				}
+			}
+
+			let hong = new Student('홍길동', 98, 100, 86);
+
+			console.log(hong);
+			console.log(hong.toString());
+			console.log(`${hong}`); // 템플릿 리터럴 문법은 암묵적으로 toString()을 자동 호출함
+		</script>

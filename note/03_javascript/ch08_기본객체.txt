@@ -1,0 +1,6 @@
+Ch 08. 기본 객체 (표준 내장 객체)
+- String 객체 : 주요 문자열 조작 메서드 및 정규표현식을 활용한 유효성 검사
+  length, concat(str), substring(start, end), substr(start, count), indexOf(str)/lastIndexOf(str), trim(), toUpperCase()/toLowerCase(), replace(m, n)/replaceAll(m, n)
+- Array 객체 : 배열 생성, `sort()` 커스텀 정렬 및 객체 배열 정렬/가공
+- Date 객체 : 날짜/시간 생성, 포맷팅 메서드, `getTime()` 및 프로토타입 기반 D-Day/날짜 간격 계산
+- Math 객체 : 수학적 연산을 위한 정적 메서드 활용
