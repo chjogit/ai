@@ -1,0 +1,201 @@
+Ch 09. 브라우저 객체 모델
+
+1. 브라우저 객체 모델(BOM) 및 window 객체
+
+- 브라우저 객체 모델(BOM)의 정의
+	- 웹 브라우저와 관련된 객체들의 집합
+
+- window 객체의 특징
+	- 브라우저 기반 자바스크립트의 최상위 객체
+	- 다른 모든 BOM 객체(document, location, history, navigator, screen)를 하위 속성으로 포함함
+	- alert(), prompt(), confirm() 등의 함수는 모두 window 객체의 메서드임
+
+- 변수 선언 방식에 따른 window 등록 차이
+	- var 키워드로 선언한 전역 변수 및 전역 함수는 자동으로 window 객체의 속성/메서드로 등록됨
+	- let, const는 전역으로 선언해도 window 속성으로 등록되지 않음
+
+- 주요 이벤트 및 리소스 로드 속성
+	- window.onload : 문서 및 모든 리소스(이미지 등) 로드가 완료되었을 때 실행됨
+	- window.onclick : 문서를 클릭했을 때 실행됨
+
+	ex) window 객체의 속성 확인
+	<script>
+		var cnt = 0;
+
+		for (let key in window) {
+			if (key.startsWith('on') || key === 'cnt' || key === 'chk') {
+				document.write(`${++cnt}. ${key} : ${window[key]} <br>`);
+			}
+		}
+
+		document.write('<hr>');
+
+		window.onload = () => {
+			alert('윈도우 로드 완료');
+		};
+
+		window.onclick = () => {
+			alert('클릭 감지');
+		};
+
+		var chk = function () {};
+
+		for (let key in window) {
+			if (key.startsWith('on') || key === 'cnt' || key === 'chk') {
+				document.write(`${++cnt}. ${key} : ${window[key]} <br>`);
+			}
+		}
+	</script>
+
+
+2. 새로운 window 객체 생성
+
+- window.open() 메서드의 특징
+	- 새로운 창(팝업창)을 생성하는 메서드
+	- 생성된 새 창의 window 객체를 반환하므로 반환된 객체를 통해 새 창의 문서나 속성을 직접 제어 가능
+	- 브라우저 설정에 의해 팝업이 차단되면 null을 반환하므로 예외 처리가 필요함
+
+- 문법 : window.open(url, name, features)
+	- url (선택) : 열고자 하는 HTML 페이지 주소 (빈 문자열 '' 입력 시 빈 창 생성)
+	- name (선택) : 윈도우 이름 또는 target 속성값 (_blank, _self, 사용자 정의 창 이름 등)
+		- target 속성을 open()에서 지정한 윈도우 이름으로 설정하면 해당 새 창으로 링크가 연결됨
+	- features (선택) : 팝업창의 크기 및 위치 옵션 (width, height, left, top 등)
+
+- 창 제어 및 상호작용
+	- child.close() 또는 window.close() : 생성된 창 또는 현재 창을 닫음
+	- child.closed : 창이 닫혔는지 여부를 확인하는 속성
+
+	ex 1) 새 창 생성
+
+	<script>
+		var child = open('', '', 'width=450, height=500, left=750, top=250');
+
+		if (child) {
+			child.document.write('<h1>새로운 창이 열렸습니다.</h1>');
+		} else {
+			alert('팝업 차단을 해제해 주세요.');
+		}
+	</script>
+
+
+	ex 2) 윈도우 이름을 활용한 프레임/창 연결
+
+	<head>
+		<meta charset="UTF-8" />
+		<script>
+			const openWin = () => {
+				var child = open('', 'childWin', 'width=1200, height=800');
+				if (!child) {
+					alert('팝업 차단을 해제해 주세요.');
+				}
+				return child;
+			};
+		</script>
+	</head>
+	<body>
+		<button onclick="openWin()">새 창 열기</button>
+		<br />
+		<a href="https://www.daum.net" target="childWin">childWin 창으로 다음 접속</a>
+	</body>
+
+
+	ex 3) 부모-자식 창 간 상호작용
+
+	[ 4_parent.html ]
+	<head>
+		<meta charset="UTF-8" />
+		<script>
+			let child;
+
+			const openLarge = () => {
+				child = open('5_child.html', '', 'width=500, height=610, left=100');
+				if (!child) {
+					alert('팝업 차단을 해제해 주세요.');
+				}
+			};
+
+			const closeLarge = () => {
+				if (child && !child.closed) {
+					child.close();
+				}
+			};
+		</script>
+	</head>
+	<body>
+		<h2>작은 그림의 Parent 창</h2>
+		<img src="ch09_img/small.jpg" alt="작은 그림" onmouseover="openLarge()" onmouseout="closeLarge()" />
+	</body>
+
+	[ 5_child.html ]
+	<head>
+		<meta charset="UTF-8" />
+		<script>
+			setTimeout(() => {
+				window.close();
+			}, 5000);
+		</script>
+	</head>
+	<body>
+		<img src="ch09_img/large.jpg" alt="큰 그림" />
+		<h1>5초 후 큰 그림 창이 자동으로 사라집니다.</h1>
+	</body>
+
+
+3. location 객체
+- 웹 브라우저의 주소 표시줄(URL)과 관련된 정보를 제공하고 제어하는 객체
+
+3.1 페이지 이동 방법
+- location = 'URL'
+- location.href = 'URL' : 가장 보편적으로 사용되는 방식
+- location.assign('URL') : 메서드 호출 방식, 브라우저 히스토리에 기록이 남음 (뒤로 가기 가능)
+- location.replace('URL') : 현재 페이지를 새 페이지로 교체, 브라우저 히스토리에 기록이 남지 않음 (뒤로 가기 불가능, 결제/로그인 등에 사용)
+
+	ex) 타이머 연동 및 페이지 이동
+	<head>
+		<meta charset="UTF-8" />
+		<script>
+			var sec = 0;
+
+			var timerId = setInterval(() => {
+				sec++;
+				document.body.innerHTML += `<h${sec}>${sec}초 경과</h${sec}>`;
+			}, 1000);
+
+			setTimeout(() => {
+				clearInterval(timerId);
+
+				location.href = '7_history.html';
+				// location = '7_history.html';
+				// location.assign('7_history.html');
+				// location.replace('7_history.html');
+			}, 5000);
+		</script>
+	</head>
+	<body>
+		<h1>잠시 후 페이지를 이동합니다.</h1>
+	</body>
+
+
+4. history 객체
+- 사용자가 방문한 웹 페이지의 기록(History)을 제어하는 객체
+
+- 주요 메서드
+	- history.back() : 이전 페이지로 이동 (브라우저의 '뒤로 가기' 버튼과 동일)
+	- history.forward() : 다음 페이지로 이동 (브라우저의 '앞으로 가기' 버튼과 동일)
+	- history.go(n) : 상대적인 위치로 이동
+		* go(-1) : 이전 페이지 이동
+		* go(1) : 다음 페이지 이동
+		* go(0) : 현재 페이지 새로고침
+
+	ex) history 객체를 활용한 뒤로 가기
+	<html lang="ko">
+	<head>
+		<meta charset="UTF-8" />
+	</head>
+	<body>
+		<h2>방문 기록 제어</h2>
+		<button onclick="history.back()">뒤로가기 (back)</button>
+		<button onclick="history.go(-1)">뒤로가기 (go(-1))</button>
+		<button onclick="history.forward()">앞으로가기 (forward)</button>
+	</body>
+	</html>

@@ -1,0 +1,16 @@
+Ch 09. 브라우저 객체 모델
+
+1. 브라우저 객체 모델(BOM) 및 window 객체
+- 브라우저 객체 모델 : document, location, history, navigator, screen 등 포함
+- window : 객체의 메서드 - alert, prompt, confirm 등
+- window.onload (전체 리소스 로드 완료), window.onclick (문서 클릭)
+2. window.open()
+- 문법 : window.open(url, name, features)
+- name, features (width, height, left, top)
+- 창 제어 및 상태 : window.close() / child.close() (창 닫기), child.closed (닫힘 여부 확인, true/false)
+3. location 객체
+- 이동 (뒤로가기 가능) : location = 'URL', location.href = 'URL', location.assign('URL')
+- 교체 (뒤로가기 불가) : location.replace('URL')
+4. history 객체
+- history.back() (이전 페이지), history.forward() (다음 페이지)
+- history.go(-1) (이전), history.go(1) (다음), history.go(0) (새로고침)

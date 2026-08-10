@@ -159,12 +159,12 @@ Ch 08. 기본 객체 (표준 내장 객체)
 
 
 4. Math 객체
-- 수학적인 상수와 함수를 위한 정적(Static) 속성과 메서드를 제공하는 객체 (`new Math()` 인스턴스 생성 불가능)
+- 수학적인 상수와 함수를 위한 정적(Static) 속성과 메서드를 제공하는 객체 (new Math() 인스턴스 생성 불가능)
 - 주요 static 메서드
   * Math.abs(x) : 절대값
-  * `Math.max(x, y, ...)` / `Math.min(x, y, ...)`: 최대값/최소값
-  * `Math.floor(x)`: 내림 / `Math.ceil(x)`: 올림 / `Math.round(x)`: 반올림
-  * `Math.random()`: 0 이상 1 미만의 난수 생성
+  * Math.max(x, y, ...) / Math.min(x, y, ...) : 최대값/최소값
+  * Math.floor(x) : 내림 / Math.ceil(x) : 올림 / Math.round(x) : 반올림
+  * Math.random() : 0 이상 1 미만의 난수 생성
 
 	ex) Math.max 활용
 		<script>
