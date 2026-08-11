@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelector('input[name=id]').addEventListener("keyup", function(){
+                let id = this.value;
+                if(id.length<3 && id.length>0){
+                    document.querySelector('#idConfirmResult').textContent = '아이디는 3글자 이상 입력하세요.';
+                }else if(id.length==0) {
+                    document.querySelector('#idConfirmResult').textContent = '';
+                } else{
+                    let params = new URLSearchParams({id:id});
+                    fetch(`midConfirmNonExists.html?${params}`, {method:'get'})
+                    .then((response)=>{
+                        if (!response.ok) {
+                            throw new Error(`서버 응답 오류 : ${response.status}`);
+                        }
+                        return response.text();
+                    }) // fetch-response
+                    .then((data)=>{ 
+                        document.querySelector('span#idConfirmResult').textContent = data.trim();
+                    }) // fetch-response-data
+                    .catch((error)=>{
+                        alert(error.message);
+                    }); // fetch-response-error
+                    } // if
+            }); // keyup
+        }); // DOM
+    </script>
+</head>
+<body>
+    아이디 <input type="text" name="id" autocomplete="off" autofocus="autofocus">
+    <br>
+    <span id="idConfirmResult"></span>
+</body>
+</html>
