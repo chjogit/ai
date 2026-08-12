@@ -1,4 +1,4 @@
-Ch 08. 기본 객체 (표준 내장 객체)
+8장. 기본 객체 (표준 내장 객체)
 
 1. String 객체
   	- length, concat(str), substring(start, end), substr(start, count)

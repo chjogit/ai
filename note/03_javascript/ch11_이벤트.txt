@@ -1,0 +1,20 @@
+11장. 이벤트
+
+1. 이벤트
+- key/mouse/form/touch
+- click, load, submit / onclick, onload
+- DOMContentLoaded / onload
+
+2. 이벤트 모델
+- 인라인 이벤트 모델
+- 기본 이벤트 모델 : element.onclick = function(){}
+- 표준 이벤트 모델 : element.addEventListener('event', function(){})
+
+3. 이벤트 리스너 내부 this
+
+4. 이벤트 제어 기법
+- 강제 실행 : element.click()
+- 제거 : element.onclick = null
+- 기본 이벤트 제한
+	- 기본 이벤트 모델 : return false
+	- 표준 이벤트 모델 : e.preventDefault()

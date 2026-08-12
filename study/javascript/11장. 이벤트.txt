@@ -1,0 +1,193 @@
+Ch11. 이벤트
+
+
+1. 이벤트 관련 용어 정리
+
+	- 이벤트(Event)
+		- 사용자나 브라우저의 동작(키보드 입력, 마우스 클릭 등)이 다른 요소에 영향을 미치는 사건
+		- DOM을 통해 동적인 화면을 처리하기 위해 사용
+		- 마우스, 키보드, HTML 프레임, HTML 입력 양식, UI, 구조 변화, 터치 이벤트 등
+			* onkeyup : 키보드의 특정 키를 눌렀다가 뗄 때 발생하며, event.keyCode로 해당 키의 고유 코드값을 확인 가능
+
+	- 이벤트 관련 주요 용어
+		- 이벤트 타입 / 이름: 발생한 이벤트의 종류 (예: click, load)
+		- 이벤트 속성 : 이벤트 이름 앞에 on을 붙인 DOM 객체의 속성 변수 (예: onclick, onload)
+		- 이벤트 리스너(핸들러) : 이벤트가 발생했을 때 실행되는 함수 (예: whenClick())
+		- 이벤트 연결 : window 객체의 onload 속성이나 DOM 요소의 이벤트 속성에 함수를 할당하는 과정
+		- 이벤트 모델 : 문서 객체(DOM)에 이벤트를 연결하는 방식
+
+	- 이벤트 모델의 3가지 종류
+		- 인라인 이벤트 모델 : HTML 태그의 이벤트 속성에 자바스크립트 코드를 직접 지정하는 방식
+		- 기본 이벤트 모델 : DOM 객체의 이벤트 속성에 메서드를 직접 할당하는 방식 (이벤트 속성 하나당 하나의 함수만 할당 가능)
+		- 표준 이벤트 모델 : addEventListener 메서드를 이용하여 이벤트를 연결하는 방식 (동일 이벤트에 여러 리스너 등록 가능)
+
+	ex) 인라인 이벤트 모델
+	<style>
+		h1{cursor: pointer; width : 150px; text-align: center;}
+	</style>
+	<script>
+		// 이벤트 이름 : click
+		// 이벤트 속성 변수 : onclick
+		const whenClick = () => {
+			var h1 = document.querySelector('h1');
+			h1.textContent = 'clicked';
+			h1.style.color = 'red';
+			h1.style.border = '1px solid orange';
+		};
+	</script>
+
+	ex) 기본 이벤트 모델
+	<script>
+		onload = () => {
+			var header = document.querySelector('h1');
+			var cnt = 0;
+
+			for (let key in header) {
+				if (key == 'onclick') {
+					document.body.insertAdjacentHTML('beforeend', `${++cnt}.${key} : ${header[key]}<br>`);
+				}
+			}
+
+			header.onclick = function () {
+				this.textContent = 'clicked';
+				this.style.color = 'red';
+				this.style.border = '1px solid orange';
+			};
+		};
+	</script>
+
+	ex) 표준 이벤트 모델
+	<script>
+		document.addEventListener('DOMContentLoaded', function(){
+			var header = document.querySelector('h1');
+
+			header.addEventListener('click', function(){
+				this.textContent = 'clicked';
+				this.style.color = 'red';
+				this.style.border = '1px solid orange';
+			});
+		});
+	</script>
+
+
+- 이벤트 연결 시 주의사항 및 주요 특징
+	- insertAdjacentHTML('beforeend', ...) : 기존 DOM 요소를 파괴하지 않고 body 태그 맨 뒤에 새로운 HTML을 삽입할 때 사용
+	- DOMContentLoaded 이벤트 : HTML 문서 구조(DOM)가 모두 로드되면 발생하며, 외부 자원(이미지 등)의 완료를 기다리지 않아 onload보다 빠르게 실행됨
+	- this 키워드의 동작 : 이벤트 리스너 함수 내부에서 this는 '이벤트가 발생한 HTML 엘리먼트 객체'를 가리킴
+		* 화살표 함수(() => {})를 이벤트 리스너로 사용하면 this가 상위 스코프(window 등)를 가리키므로, 엘리먼트 자신을 참조하려면 일반 function 키워드를 써야 함
+
+
+	ex) this 사용 예시 (여러 요소 제어)
+	<script>
+		onload = () => {
+			const header = document.querySelectorAll('h1.header');
+
+			for (let key in header) {
+				header[key].onclick = function () {
+					if (this.textContent == 'CLICKED') {
+						this.textContent = 'CLICK';
+						this.style.color = 'black';
+					} else {
+						this.textContent = 'CLICKED';
+						this.style.color = 'red';
+					}
+				};
+			}
+		};
+	</script>
+
+
+2. 이벤트 강제 실행
+	- 자바스크립트 코드 내에서 특정 엘리먼트의 이벤트 메서드(.click() 등)를 직접 호출하여 사용자의 실제 동작 없이도 이벤트를 발생시키는 기법
+
+	ex) 이벤트 강제 실행
+	<script>
+		document.addEventListener("DOMContentLoaded", function(){
+			const btnA = document.querySelector("#btnA");
+			const btnB = document.querySelector("#btnB");
+			const countA = document.querySelector("#countA");
+			const countB = document.querySelector("#countB");
+
+			btnA.addEventListener('click', function(){
+				countA.textContent = Number(countA.textContent) + 1;
+				btnB.click();
+			});
+
+			btnB.addEventListener('click', function(){
+				countB.textContent = Number(countB.textContent) + 1;
+			});
+		});
+	</script>
+
+
+3. 기본 이벤트(Default Event) 및 제거
+
+	- 기본 이벤트란 a 태그의 페이지 이동, form 태그의 전송(submit)처럼 일부 HTML 태그가 자체적으로 가지고 있는 기본 동작
+	- 이벤트 제거 : 이벤트 속성에 null을 할당하여 등록된 이벤트 리스너를 해제할 수 있음
+		* 노트의 조건문 예시에서 h1.onclick = "null"; 부분은 문자열이 아닌 h1.onclick = null;로 작성해야 올바르게 이벤트가 제거됨
+
+	ex) 이벤트 제거
+	<script>
+		onload = () => {
+			let n = 0;
+			const h1 = document.querySelector('h1');
+
+			h1.onclick = () => {
+				h1.innerHTML += `<span>♥</span>`;
+				n++;
+
+				if(n >= 7) {
+					h1.onclick = null;
+				}
+			};
+		};
+	</script>
+
+
+4. 기본 이벤트 제한
+
+	- 폼 검증 등 특정 조건을 만족하지 못했을 때 브라우저의 기본 동작을 중단하는 기법
+	- 기본 이벤트 모델에서의 제한 : 이벤트 리스너 함수 내부에서 return false;를 반환함
+	- 표준 이벤트 모델에서의 제한 : 이벤트 객체의 e.preventDefault() 메서드를 호출함
+
+	ex) 디폴트 이벤트 제한 (기본 이벤트 모델)
+	<script>
+		onload = () => {
+			document.querySelector('form').onsubmit = function () {
+				let pw = document.querySelector('input[name=pw]');
+				let pw1 = document.querySelector('input[name=pw1]');
+
+				if (!pw.value){
+					alert('비밀번호를 입력하세요.');
+					pw.focus();
+					return false;
+				} else if (pw.value != pw1.value) {
+					alert('비밀번호가 다릅니다.');
+					pw.focus();
+					return false;
+				}
+
+				return true;
+			};
+		};
+	</script>
+
+	ex) 디폴트 이벤트 제한 (표준 이벤트 모델)
+	<script>
+		document.addEventListener("DOMContentLoaded", function(){
+			document.querySelector('form').addEventListener("submit", (e) => {
+				let pw = document.querySelector('input[name=pw]');
+				let pw1 = document.querySelector('input[name=pw1]');
+
+				if (!pw.value){
+					alert('비밀번호를 입력하세요.');
+					pw.focus();
+					e.preventDefault();
+				} else if (pw.value != pw1.value) {
+					alert('비밀번호가 다릅니다.');
+					pw.focus();
+					e.preventDefault();
+				}
+			});
+		});
+	</script>

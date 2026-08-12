@@ -1,4 +1,4 @@
-Ch 09. 브라우저 객체 모델
+9장. 브라우저 객체 모델
 
 1. 브라우저 객체 모델(BOM) 및 window 객체
 - 브라우저 객체 모델 : document, location, history, navigator, screen 등 포함

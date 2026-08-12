@@ -1,0 +1,200 @@
+Ch12. Ajax 및 비동기 통신
+
+- 개요
+	- Ajax(Asynchronous JavaScript and XML) : 웹 페이지 전체를 새로고침하지 않고, 백그라운드에서 필요한 데이터만 서버에서 가져와 화면 일부만 바꾸는 기술
+	- jQuery 이벤트 모델 : 복잡한 자바스크립트 DOM 조작 및 이벤트 등록을 $() 표기법을 통해 짧고 직관적인 코드로 작성하게 도와주는 라이브러리
+	- Fetch API : 브라우저에 기본 탑재된 최신 자바스크립트 비동기 통신 표준 함수로, 과거의 복잡한 Ajax 기술을 대체하며 서버와 데이터를 주고받을 때 사용
+
+1. jQuery 이벤트 모델
+
+- 기본 이벤트 메서드 (click 등)
+
+	- 가장 자주 쓰이는 클릭 이벤트를 단 한 줄로 등록 가능
+	- $(this) : 클릭 이벤트가 발생한 바로 그 요소(현재 클릭된 요소)를 가리킴
+	- .text() 및 .css() 메서드를 체이닝하여 요소의 텍스트와 스타일을 동적으로 변경함
+
+	ex) jQuery 기본 이벤트
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+	<script>
+		$(document).ready(function() {
+			// 'h1.header' 태그를 클릭했을 때 실행할 동작 등록
+			$('h1.header').click(function() {
+				// $(this): 클릭 이벤트가 발생한 바로 그 요소
+				if ($(this).text() === 'CLICKED') {
+					$(this).text('CLICK').css('color', 'black');
+				} else {
+					$(this).text('CLICKED').css('color', 'red');
+				}
+			});
+		});
+	</script>
+
+- 표준 이벤트 연결/해제 메서드 (on, off)
+
+	- 이벤트를 동적으로 붙이거나(on), 특정 조건 만족 시 더 이상 작동하지 않도록 제거(off)할 때 사용
+		* .on('click', function): 이벤트 연결 (버튼 클릭 시 alert 알림창 띄우기 등)
+		* .off('click') : 이벤트 해제 (3회 이상 클릭 시 클릭 이벤트 감지 중단, 중복 제출 방지, 횟수 제한 등)
+
+	ex) 이벤트 연결/해제 메서드
+	<script>
+		$(function() {
+			// 1. 이벤트 연결 (on): 버튼 클릭 시 알림창 띄우기
+			$('#btn').on('click', function() {
+				alert('버튼 클릭!');
+			});
+
+			// 2. 이벤트 해제 (off): 클릭 횟수 제한 예시
+			let count = 0;
+			$('#limitBtn').on('click', function() {
+				count++;
+				if (count >= 3) {
+					alert('더 이상 클릭할 수 없습니다.');
+					$(this).off('click'); // 3회 이상 클릭 시 클릭 이벤트 감지 중단
+				}
+			});
+		});
+	</script>
+
+- jQuery 디폴트 이벤트 제한
+
+	- form 태그의 제출(submit) 시 페이지가 자동으로 새로고침되는 기본 동작(디폴트 이벤트)을 막고 입력값 유효성 검사 수행
+	- jQuery에서는 return false 또는 e.preventDefault()를 사용하여 새로고침 현상 방지
+		* return false : 페이지 이동 및 제출 차단 (jQuery 전용 간편 방식)
+		* e.preventDefault() : 기본 표준 방식으로 제출 차단
+
+	ex) 디폴트 이벤트 제한
+	<script>
+		$(function() {
+			$('form').on('submit', function(e) {
+				let pw = $('input[name=pw]').val();
+				let pw1 = $('input[name=pw1]').val();
+
+				if (!pw) {
+					alert('비밀번호를 입력하세요.');
+					$('input[name=pw]').focus();
+					return false; // 페이지 이동/제출 차단 (jQuery 전용 간편 방식)
+				} else if (pw !== pw1) {
+					alert('비밀번호가 다릅니다.');
+					$('input[name=pw]').focus();
+					e.preventDefault(); // 기본 표준 방식으로 제출 차단
+				}
+			});
+		});
+	</script>
+
+
+2. Fetch API (비동기 통신 및 이벤트 처리)
+
+- 기본 GET 요청 (데이터 가져오기)
+
+	- 서버에 있는 데이터를 받아와서 페이지 전환 없이 화면 일부만 변경함
+	- 기본 흐름 : fetch(URL) -> response 처리(데이터 해석) -> then(data) (화면에 출력) -> catch(error) (에러 처리)
+
+	- 주요 구성 및 응답 객체(response)
+		* fetch : 비동기 작업의 결과를 Promise 객체 형태로 반환함
+		* URLSearchParams : GET 요청 시 전달할 쿼리 스트링 파라미터를 생성함
+		* response.ok : 서버 응답 성공 여부(true/false)를 반환함
+		* response.status / response.statusText : 서버 응답 상태 코드(예: 200) 및 상태 메시지(예: OK)를 반환함
+		* response.text() : response 객체에서 HTML/텍스트 데이터만 반환함
+		* throw new Error() : response.ok가 false일 경우 서버 응답 오류 예외를 강제로 발생시킴
+		* .catch() : 요청 중 예외 발생 시 error.message를 출력하여 에러 처리함
+
+	ex) Fetch API 기본 GET 요청
+	<script>
+		document.addEventListener("DOMContentLoaded", () => {
+			document.querySelector('button').addEventListener("click", function () {
+				let id = document.querySelector('input[name=id]').value;
+				let params = new URLSearchParams({id: id});
+
+				// fetch : 비동기 작업의 결과를 약속함
+				fetch('midConfirmNonExists.html?' + params, {method: 'get'})
+				.then(function(response){
+					if (!response.ok) {
+						throw new Error('서버 응답 오류 : ' + response.status + ' / ' + response.statusText);
+					}
+					return response.text(); // response에서 html text만 반환
+				})
+				.then(function(data){
+					document.querySelector('span#idConfirmResult').innerHTML = data;
+				})
+				.catch(function(error){
+					alert(error.message);
+				});
+			});
+		});
+	</script>
+
+- POST 요청 + 폼 전송 (비동기 폼 처리)
+
+	- 사용자가 입력한 데이터를 서버로 전송할 때, 페이지가 새로고침되는 것을 막고 비동기로 전달함
+	- e.preventDefault() : 폼 제출 시 기본 동작인 페이지 새로고침을 차단함
+
+	- POST 요청 옵션 설정
+		* method : "POST" 지정
+		* headers : "Content-Type": "application/json"을 지정하여 전송하는 데이터가 JSON 형태임을 서버에 알림
+		* body: JSON.stringify()를 사용하여 객체를 JSON 문자열로 변환하여 전송함
+
+	- response.json() : 서버 응답 데이터를 JSON 객체로 파싱하여 다음 then 블록으로 전달함
+
+	ex) Fetch API POST 요청 + 폼 전송
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			document.querySelector("form").addEventListener("submit", function(e) {
+				// 1. 기본 submit 동작(페이지 새로고침) 차단
+				e.preventDefault();
+
+				let pw = document.querySelector("input[name=pw]").value;
+				let pw1 = document.querySelector("input[name=pw1]").value;
+
+				if (!pw || pw !== pw1) {
+					alert("비밀번호를 확인해주세요.");
+					return;
+				}
+
+				// 2. POST 방식으로 데이터 전송
+				fetch("/api/login", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json" // JSON 형태 데이터임을 알림
+					},
+					body: JSON.stringify({ password: pw }) // 객체를 JSON 문자열로 변환하여 전송
+				})
+				.then(response => response.json())
+				.then(result => {
+					alert("로그인 성공: " + result.message);
+				})
+				.catch(error => {
+					alert("전송 중 오류 발생");
+				});
+			});
+		});
+	</script>
+
+
+- async / await 문법 적용 Fetch
+
+	- .then() 방식보다 코드가 짧고, 동기식 코드처럼 직관적으로 읽기 쉽게 만들어주는 최신 비동기 문법
+	- async 키워드 : 비동기 처리를 수행하는 함수(화살표 함수 등) 앞에 추가함
+	- await 키워드 : 서버 응답 및 데이터 처리가 완료될 때까지 대기함
+	- try ... catch 문 : 비동기 요청 과정에서 발생할 수 있는 에러를 처리함 (에러 발생 시 catch 블록 실행)
+
+	ex) async / await 문법 적용 Fetch
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			const btn = document.querySelector("#asyncBtn");
+
+			// async 키워드를 화살표 함수 앞에 추가
+			btn.addEventListener("click", async () => {
+				try {
+					// await: 서버 응답이 도착할 때까지 대기
+					let response = await fetch("https://jsonplaceholder.typicode.com/posts/1");
+					let data = await response.json();
+
+					console.log("받아온 데이터:", data);
+				} catch (error) {
+					// 에러 발생 시 catch 블록 실행
+					console.error("에러 발생:", error);
+				}
+			});
+		});
+	</script>

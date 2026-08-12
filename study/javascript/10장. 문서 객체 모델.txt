@@ -1,0 +1,436 @@
+Ch 10. 문서 객체 모델
+
+
+1. 문서 객체 모델 관련 용어 정리
+
+- 문서 객체 모델(DOM)
+	- HTML 페이지를 인식하는 방식
+	-  document 객체와 관련된 객체의 집합
+- 핵심 용어 정리
+	- 태그(Tag) : HTML 문서 내에 작성된 요소 (html, head, body, h1, img 등)
+	- 문서 객체(Document Object) : 태그를 자바스크립트에서 제어할 수 있도록 객체화한 것
+	- 노드(Node) : DOM 트리 구조를 구성하는 각 요소 (태그 노드, 텍스트 노드, 속성 노드 등)
+- 문서 객체 생성 방식
+	- 정적 생성 : HTML 페이지에 직접 태그를 작성하여 브라우저가 생성하는 방식
+	- 동적 생성 : HTML 원본에는 없는 요소 및 노드를 자바스크립트 실행 중 생성하는 방식
+
+
+2. 문서 객체 만들기
+
+- 동적 문서 객체 생성 절차
+	- 1) Document 객체의 노드 생성
+		* createElement(태그명) : 요소 노드 생성
+		* createTextNode(텍스트) : 텍스트 노드 생성
+	- 2) 문서 객체 및 속성 연결
+		* appendChild(노드) : 부모 노드의 자식으로 연결
+		* setAttribute(속성명, 값) : 요소의 속성 지정 (src, alt 등)
+- 동적 생성의 3가지 주요 방법
+	- 방법 1 : createElement + createTextNode + appendChild
+		* 요소 노드와 텍스트 노드를 각각 생성 후 순차적으로 연결
+	- 방법 2 : createElement + setAttribute + appendChild
+		* 요소 노드 생성 후 속성을 설정하여 부모 요소에 연결 (img 태그 등)
+	- 방법 3 : insertAdjacentHTML 활용
+		* insertAdjacentHTML('beforeend', 'HTML문자열') 사용
+		* 기존 DOM 요소를 파괴하거나 재구성하지 않아 안전하며, 코드 생성이 간결함
+
+	ex) 동적 문서 객체 생성
+	<!DOCTYPE html>
+	<html lang="ko">
+	<head>
+		<meta charset="utf-8">
+		<title>동적 문서 객체 생성</title>
+		<script>
+			onload = () => {
+				// 방법 1 : h1 생성 -> textNode 생성 -> h1에 연결 -> body에 연결
+				var h1 = document.createElement('h1');
+				var textNode = document.createTextNode('방법 1 - h1 태그 내부의 text');
+				h1.appendChild(textNode);
+				document.body.appendChild(h1);
+
+				// 방법 2 : img 생성 -> src/alt 속성 변경 -> body에 연결
+				var img = document.createElement('img');
+				img.setAttribute('src', 'ch10_img/red.jpg');
+				img.setAttribute('alt', '체리');
+				document.body.appendChild(img);
+
+				// 방법 3 : insertAdjacentHTML 활용 (안전하고 간결한 작성법, 기존 DOM 유지)
+				document.body.insertAdjacentHTML('beforeend', '<h1>방법 3 - insertAdjacentHTML</h1>');
+			};
+		</script>
+	</head>
+	<body>
+		<h1>TEXT NODE</h1>
+		<img src="ch10_img/orange.jpg" alt="오렌지" />
+	</body>
+	</html>
+
+
+3. 문서 객체 가져오기 (DOM 선택자)
+
+- 이미 존재하는 HTML 태그를 자바스크립트로 가져오는 메서드
+
+	- getElementById('id명') : ID가 일치하는 단일 문서 객체를 가져옴
+	- getElementsByClassName('class명') : 클래스명이 일치하는 모든 객체를 유사 배열 객체(HTMLCollection)로 반환
+	- getElementsByName('name명')
+		- name 속성이 일치하는 모든 객체를 유사 배열 객체(NodeList)로 반환
+		- 폼 입력값 검증 시 radio/checkbox의 checked 여부 확인 및 focus() 제어에 활용
+	- getElementsByTagName('태그명') : 지정한 태그명을 가진 모든 객체를 유사 배열 객체로 반환
+	- querySelector('CSS선택자') :  CSS 선택자와 일치하는 첫 번째 단일 문서 객체 반환
+	- querySelectorAll('CSS선택자') : CSS 선택자와 일치하는 모든 문서 객체를 NodeList(배열 형태)로 반환
+
+- 유사 배열 객체 순회 시 주의사항
+
+	- getElementsBy* 계열
+		* HTMLCollection을 반환하므로 순수 배열 전용 메서드인 forEach() 사용 불가
+		* 일반 for 문을 사용하여 순회
+	- querySelectorAll
+		* NodeList를 반환하므로 forEach() 메서드를 직접 사용 가능
+
+	ex) getElementById
+	<script>
+		var clock, btn;
+		var timerId;
+		var timerToggle = 1;
+
+		onload = () => {
+			// # clock에 1초마다 시간 출력
+			clock = document.getElementById('clock');
+			btn = document.getElementById('btn');
+			clock.innerHTML = new Date().toLocaleString();
+
+			timerId = setInterval(() => {
+				clock.innerHTML = new Date().toLocaleString();
+			}, 1000);
+		};
+
+		const toggleFunction = () => {
+			// 타이머가 가동 중이면 멈추고, 멈춰있으면 재가동
+			if(timerToggle) {
+				timerToggle = 0;
+				btn.innerHTML = '타이머 멈춤';
+				clearInterval(timerId);
+				clock.innerHTML = new Date().toLocaleString();
+			} else {
+				timerToggle = 1;
+				btn.innerHTML = '타이머 가동 중';
+				timerId = setInterval(() => {
+					clock.innerHTML = new Date().toLocaleString();
+				}, 1000);
+			}
+		};
+	</script>
+
+	ex) getElementsByClassName
+	<script>
+		onload = () => {
+			// 유사 배열 객체로 반환되므로 인덱스로 접근
+			var clock1 = document.getElementsByClassName('clock1');
+			clock1[0].innerHTML = new Date().toLocaleDateString();
+			clock1[1].innerHTML = '<b>' + new Date().toLocaleTimeString() + '</b>';
+
+			var clock2 = document.getElementsByClassName('clock2')[0];
+			clock2.value = new Date().toLocaleString();
+			clock2.style.color = 'red';
+			clock2.style.backgroundColor = 'yellow';
+			clock2.style.border = '1px solid gray';
+		};
+	</script>
+
+	ex) getElementsByName
+	<script>
+		const loginChk = () => {
+			var id = document.getElementsByName('id')[0];
+			var pw = document.getElementsByName('pw')[0];
+			var gender = document.getElementsByName('gender');
+
+			if(!id.value) {
+				alert('아이디를 입력하세요');
+				id.focus();
+			} else if (!pw.value) {
+				alert('비밀번호를 입력하세요');
+				pw.focus();
+			} else if(!gender[0].checked && !gender[1].checked) {
+				alert('성별을 선택하세요');
+			}
+			return false;
+		};
+	</script>
+
+	ex) getElementsByTagName
+	<script>
+		onload = () => {
+			var header = document.getElementsByTagName('h1');
+
+			// 유사 배열 객체이므로 일반 for문 사용
+			for (var idx = 0; idx < header.length; idx++) {
+				header[idx].innerHTML = '내용 변경 #' + idx;
+			}
+
+			// 주의: getElementsByTagName이 반환한 HTMLCollection은 forEach 사용 불가
+			// header.forEach(element => { element.innerHTML = '내용 변경 #'; }); // 에러 발생
+		};
+	</script>
+
+	ex) querySelector 및 querySelectorAll
+	<script>
+		onload = () => {
+			// querySelector: CSS 선택자와 일치하는 단일 객체 가져오기
+			const header1 = document.querySelector('h1.header');
+			header1.textContent = '첫번째';
+
+			// querySelectorAll: 선택자와 일치하는 전체를 NodeList로 반환 -> forEach 사용 가능
+			const head = document.querySelectorAll('h1');
+			head.forEach(element => {
+				element.style.backgroundColor = 'yellow';
+			});
+
+			const param = document.querySelectorAll('input[type="text"]')[0];
+			param.value = '문서 객체 가져오기 완료';
+		};
+	</script>
+
+	ex) h1 텍스트 토글
+	<!DOCTYPE html>
+	<html lang="ko">
+	<head>
+		<meta charset="UTF-8">
+		<title>텍스트 토글 예제</title>
+		<script>
+			const changeText = () => {
+				const header = document.querySelector('h1');
+				if (header.textContent === 'HEADER') {
+					header.textContent = '바꿔';
+				} else {
+					header.textContent = 'HEADER';
+				}
+			};
+		</script>
+	</head>
+	<body>
+		<h1>HEADER</h1>
+		<button onclick="changeText()">바꿔</button>
+	</body>
+	</html>
+
+
+4. 문서 객체 제거
+
+- removeChild(child)
+	- 부모 노드에서 특정 자식 노드를 제거하는 메서드
+	- 문서 객체가 존재하는지 length 검사 후 제거하는 것이 안전
+
+	ex) removeChild를 활용한 노드 제거
+	<!DOCTYPE html>
+	<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta charset="UTF-8" />
+		<script>
+			let wrap;
+
+			onload = () => {
+				wrap = document.querySelector('div#wrap');
+			};
+
+			const append = () => {
+				// h1 태그 추가
+				var h1 = document.createElement('h1');
+				var textNode = document.createTextNode('HEADER');
+				h1.appendChild(textNode);
+				wrap.appendChild(h1);
+			};
+
+			const remove = () => {
+				// h1 태그 제거
+				var h1 = document.querySelectorAll('h1');
+				if(h1.length > 0){
+					wrap.removeChild(h1[0]);
+				} else {
+					alert('h1 태그가 없습니다.');
+				}
+			};
+		</script>
+	</head>
+	<body>
+		<div id="wrap">
+			<input type="button" value="태그 추가" onclick="append()">
+			<button onclick="remove()">태그 제거</button>
+			<h1>HEADER</h1>
+			<h1>HEADER</h1>
+		</div>
+	</body>
+	</html>
+
+
+5. parent 창에서 넘겨오는 데이터와 현재 팝업창에서 생성된 데이터의 처리
+
+- 부모 창(Parent)과 자식 창(Child / 팝업창) 통신 개념
+	- window.open()
+		* 새 팝업 창을 호출
+		* 열린 창의 객체를 변수로 받아 팝업 차단 여부 체크 (!win 사용)
+	- opener 키워드
+		* 팝업 창(Child)에서 자신을 호출한 부모 창(Parent)의 window 객체를 참조
+		* opener.document.querySelector()로 부모 창의 DOM 요소 접근 및 수정 가능
+	- close() : 현재 팝업 창을 닫는 자바스크립트 함수
+
+	ex) 4_parent.html
+	<!DOCTYPE html>
+	<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+		<title>parent</title>
+		<style>
+			#wrap { width: 300px; margin: 50px auto; }
+			#wrap h1 { width: 250px; padding: 20px 10px; margin: 30px 15px; border: 1px solid red; 
+				background-color: lightpink; border-radius: 10px 40px; text-align: center; font-size: 0.9em; cursor: pointer; }
+			#wrap input, #wrap span { width: 150px; height: 20px; display: inline-block; border: 1px solid pink; text-align: center; }
+			#wrap p { text-align: center; }
+		</style>
+		<script>
+			onload = () => {
+				var insa = document.querySelector('div#wrap > h1');
+				insa.onclick = () => {
+					// open 결과를 변수에 받아서 팝업 차단 체크
+					var win = open('4_child.html', '', 'width=500, height=600, left=750, top=250');
+					if(!win) { alert('팝업 해제'); }
+				};
+			};
+		</script>
+	</head>
+	<body>
+		<div id="wrap">
+			<p>사원 이름 <input type="text" name="name" id="name" /></p>
+			<p>파트 명칭 <span id="part"></span></p>
+			<p>결제 일자 <input type="date" name="date" id="date"/></p>
+			<h1 id="insa">인사 정보 파트 선택</h1>
+		</div>
+	</body>
+	</html>
+
+	ex) 4_child.html
+	<!DOCTYPE html>
+	<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta charset="utf-8" />
+		<title>child</title>
+		<style>
+			#wrap { width: 450px; margin: 0 auto; }
+			#wrap h1 { color: red; margin-top: 50px; text-align: center; }
+			#wrap h3 { padding: 20px; margin: 10px; border: 1px solid red; text-align: center; border-radius: 10px; font-size: .9em; cursor: pointer; }
+		</style>
+		<script>
+			onload = () => {
+				// parent와 child 간의 데이터 통신
+				// opener : 해당 화면을 호출한 부모 창
+				var openerName = opener.document.querySelector('#name').value;
+				var openerDate = opener.document.querySelector('#date').value;
+
+				// 문서객체 가져오기
+				let showName = document.querySelector('div#wrap > h2#showName');
+				var modifyName = document.querySelector('input[type=text]');
+
+				// 부모 창에서 받은 데이터 출력
+				showName.textContent = '넘어온 이름 : ' + openerName;
+				if(openerDate) {
+					showName.textContent += ' 날짜 : ' + openerDate;
+				} else {
+					showName.textContent += ' 날짜 데이터 없음';
+				}
+
+				modifyName.value = openerName;
+			};
+
+			// 클릭 이벤트 함수 추가
+			function sendData(part) {
+				var modifyName = document.querySelector('input[type=text]').value;
+				opener.document.querySelector('#name').value = modifyName;
+				opener.document.querySelector('#part').textContent = part;
+				close();
+			}
+		</script>
+	</head>
+	<body>
+		<div id="wrap">
+			<h1>인사정보 시스템</h1>
+			<hr color="black" />
+			<h2 id="showName"></h2>
+			<h2>이름 수정 가능 : <input type="text" id="modifyName"/></h2>
+			<hr />
+			<h3 onclick="javascript:sendData('인사')">인사</h3>
+			<h3 onclick="javascript:sendData('재무')">재무</h3>
+			<h3 onclick="javascript:sendData('총무')">총무</h3>
+			<h3 onclick="javascript:sendData('개발')">개발</h3>
+		</div>
+	</body>
+	</html>
+
+	ex) 5_join.html
+	<!DOCTYPE html>
+	<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+		<title>회원가입</title>
+		<style>
+			#wrap { width: 450px; margin: 0 auto; }
+			#wrap input[type="text"] { width: 150px; height: 20px; display: inline-block; border: 1px solid gray; text-align: center; margin: 0 10px; }
+			#wrap p { text-align: center; }
+		</style>
+		<script>
+			onload = () => {
+				var idCfm = document.querySelector('#idCfm');
+				idCfm.onclick = () => {
+					var win = open('5_confirm.html', '', 'width=500, height=600, left=750, top=250');
+					if(!win) { alert('팝업 해제'); }
+				};
+			};
+		</script>
+	</head>
+	<body>
+		<div id="wrap">
+			<form method="get">
+				<p>아이디<input type="text" name="id" id="id" /><input type="button" id="idCfm" value="중복확인"></p>
+				<p><input type="submit" value="회원가입"></p>
+			</form>
+		</div>
+	</body>
+	</html>
+
+	ex) 5_confirm.html
+	<!DOCTYPE html>
+	<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+		<title>아이디 중복확인</title>
+		<style>
+			#wrap { width: 450px; margin: 0 auto; }
+			#wrap input[type="text"] { width: 150px; height: 20px; display: inline-block; border: 1px solid gray; text-align: center; margin: 0 10px; }
+			#wrap p { text-align: center; }
+			#wrap span { display: inline-block; padding: 2px; background-color: lightgray; border: 1px solid gray; text-align: center; cursor: default; }
+		</style>
+		<script>
+			onload = () => {
+				var openerID = opener.document.querySelector('#id').value;
+				var modifyId = document.querySelector('#modifyId');
+				modifyId.value = openerID;
+
+				var idCfm = document.querySelector('#idCfm');
+				idCfm.onclick = () => { alert('중복 확인'); };
+			};
+
+			// 클릭 이벤트 함수 추가
+			const sendData = () => {
+				var modifyId = document.querySelector('#modifyId');
+				opener.document.querySelector('#id').value = modifyId.value;
+				close();
+			};
+		</script>
+	</head>
+	<body>
+		<div id="wrap">
+			<p>I D<input type="text" name="name" id="modifyId" /><button id="idCfm">체크</button></p>
+			<p><span onclick="javascript:sendData()">아이디사용</span></p>
+		</div>
+	</body>
+	</html>

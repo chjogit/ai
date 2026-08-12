@@ -1,0 +1,22 @@
+10장. 문서 객체 모델
+
+1. DOM 개념 및 생성 방식
+- 태그, 문서 객체, 노드
+- 정적 생성, 동적 생성
+
+2. 동적 문서 객체 생성 및 연결
+- document.createElement('태그명'), document.createTextNode('텍스트'), element.setAttribute('속성', '값')
+- parentNode.appendChild(childNode)
+- target.insertAdjacentHTML('', '')
+
+3. 문서 객체 가져오기 (DOM 선택자)
+- document.getElementById('id명'), document.querySelector('CSS선택자')
+- document.getElementsByClassName('클래스명'), document.getElementsByTagName('태그명') ;  forEach 사용 불가
+- document.querySelectorAll('CSS선택자'), document.getElementsByName('name명')
+
+4. 문서 객체 제거 - parentNode.removeChild(childNode)
+
+5. 부모-자식 창 DOM 통신 (Parent & Child)
+- var win = open('URL', '이름', '옵션')
+- opener.document.querySelector('선택자')
+- opener DOM 값/ close()
