@@ -1,0 +1,23 @@
+12장. Ajax 및 비동기 통신
+
+- Ajax, jQuery ,Fetch API
+
+1. jQuery
+- 기본 이벤트 : $('선택자').click(function(){}) ($(this)로 현재 이벤트 요소 참조, .text(), .css() 체이닝)
+- 이벤트 연결/해제 : .on('이벤트', 핸들러), .off('이벤트')
+- 디폴트 이벤트 제한 : return false / e.preventDefault()
+
+2. Fetch API
+- 반환값 : Promise 객체 반환
+- GET 요청 파라미터 : new URLSearchParams({키: 값}) 활용
+- Response 객체 주요 속성/메서드 :
+	response.ok, response.status / statusText, response.text(), response.json()
+	예외 처리 : !response.ok / throw new Error() / .catch()
+- POST 요청
+	method : 'POST'
+	headers : {'Content-Type': 'application/json'}
+	body : JSON.stringify(객체)
+
+3. async / await
+- async / await : Promise (fetch, response.json() 앞 배치)
+- 에러 처리 : try { ... } catch (error) { ... } 구문 사용

@@ -1,4 +1,4 @@
-BeautifulSoup 및 Requests 기반 정적 웹 크롤링 정리
+14장. 웹데이터 수집
 
 1. 기본 개념 및 패키지 설치
 	- 패키지 설치 : pip install bs4 (아나콘다 설치 시 자동 포함)
@@ -261,3 +261,275 @@ BeautifulSoup 및 Requests 기반 정적 웹 크롤링 정리
 	result0_df = pd.DataFrame(result0)
 	result1_df = pd.DataFrame(result1)
 	result2_df = pd.DataFrame(result2)
+
+
+- User-Agent 헤더를 추가한 멜론 TOP 100 수집
+		- User-Agent : 접속자의 브라우저 및 운영체제 정보를 담은 헤더(신분증) 값
+		- requests.get(url)이나 urlopen(url)을 기본 상태로 사용하면 User-Agent에 'Python'으로 표시됨
+		- 멜론(Melon) 등 보안이 설정된 사이트는 'Python' 헤더를 봇(Bot)으로 간주하여 접속을 차단함 (Response status 406/403)
+		- 주요 HTTP 상태 코드
+			* 200 (OK) : 성공
+			* 403 (Forbidden) : 접근 권한 없음 (User-Agent 차단)
+			* 406 (Not Acceptable) : 요청 헤더 자격 미달 (Accept, Accept-Language 등 누락)
+			* 429 (Too Many Requests) : 너무 짧은 시간에 많은 요청을 보냄 (time.sleep 필요)
+
+	ex) 멜론 차트 크롤링 (User-Agent 설정)
+	# 방법 1 : requests.get(url) 함수 사용
+	import requests
+	from bs4 import BeautifulSoup
+
+	url = 'https://www.melon.com/chart/'
+	headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36'}
+	response = requests.get(url, headers=headers)
+	soup = BeautifulSoup(response.text, 'html.parser')
+
+	# 방법 2 : urlopen(url) 함수 사용
+	from urllib.request import urlopen, Request
+
+	url = 'https://www.melon.com/chart/'
+	headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36'}
+	request = Request(url, headers=headers)
+	response = urlopen(request)
+	soup = BeautifulSoup(response, 'html.parser')
+
+	# 데이터 파싱 및 저장
+	rank_els = soup.select('div.wrap.t_center > span.rank')[1:]
+	songName_els = soup.select('div.ellipsis.rank01 > span > a')
+	songInfo_els = soup.select('div.wrap > a.song_info')
+	singerName_els = soup.select('div.ellipsis.rank02 > span.checkEllipsis')
+	rank02_els = soup.select('div.ellipsis.rank02 > span.checkEllipsis')
+
+	ranks = [rank.string for rank in rank_els]
+	songNames = [songName.string for songName in songName_els]
+	songLinks = ['https://www.melon.com'+songInfo.attrs.get('href') for songInfo in songInfo_els]
+	singerNames = [singerName.text.strip() for singerName in singerName_els]
+	singerLinks = [", ".join(['https://www.melon.com'+a.get('href') for a in el.select('a')]) for el in rank02_els]
+
+	data = []
+	for rank, songName, songLink, singerName, singerLink in zip(ranks, songNames, songLinks, singerNames, singerLinks):
+		if isinstance(singerName, list):
+			singerName = ", ".join(singerName)
+		if isinstance(singerLink, list):
+			singerLink = ", ".join(singerLink)
+		
+		data.append({
+			'순위' : rank,
+			'곡명' : songName,
+			'곡정보' : songLink,
+			'가수명' : singerName,
+			'가수정보' : singerLink
+		})
+
+5. Open API 웹 데이터 수집 (JSON)
+
+	- API 보안 키 및 환경변수 관리 (.env)
+		- .env 파일 생성 후 CLIENT_ID / CLIENT_SECRET 저장하여 보안 정보 보호
+		- python-dotenv 패키지의 load_dotenv() 및 os.getenv() 함수 사용
+
+	ex) 네이버 지식iN 검색 API 수집
+	import os
+	import urllib.request
+	import json
+	import pandas as pd
+	from dotenv import load_dotenv
+
+	load_dotenv()
+	client_id = os.getenv('CLIENT_ID')
+	client_secret = os.getenv('CLIENT_SECRET')
+
+	encText = urllib.parse.quote("인스파이어아레나")
+	url = f"https://openapi.naver.com/v1/search/kin.json?query={encText}"
+
+	headers = {
+		'X-Naver-Client-Id': client_id,
+		'X-Naver-Client-Secret': client_secret
+	}
+	request = urllib.request.Request(url, headers=headers)
+	response = urllib.request.urlopen(request)
+
+	if response.getcode() == 200:
+		response_body = response.read()
+		data = json.loads(response_body)
+		
+		items = data['items']
+		items_list = []
+		for item in items:
+			title = item['title'].replace('<b>','').replace('</b>','')
+			link = item['link']
+			description = item['description'].replace('<b>','').replace('</b>','')
+			items_list.append([title, link, description])
+
+		pd.DataFrame(items_list, columns=['title','link','description'])
+
+	ex) 네이버 이미지 검색 API 및 로컬 이미지 다운로드
+	import os
+	import requests
+	import json
+	import pandas as pd
+	from dotenv import load_dotenv
+
+	load_dotenv()
+
+	def save_img(attr, idx, link, query):
+		response = requests.get(link)
+		file_ext = link[link.rfind('.'):]
+		
+		quote_index = file_ext.find('?')
+		if quote_index != -1:
+			file_ext = file_ext[:quote_index]
+			
+		quote_index = file_ext.find('%')
+		if quote_index != -1:
+			file_ext = file_ext[:quote_index]
+		
+		valid_ext = [".jpg",".jpeg",".png",".gif",".webp",".avif",".svg",".bmp",".tiff"]
+		file_ext = file_ext if file_ext in valid_ext else '.jpg'
+		
+		img = response.content 
+		with open(f'image/{attr}_{idx:03}_{query}{file_ext}', 'wb') as f:
+			f.write(img)
+
+	def save_file(query):
+		client_id = os.getenv('CLIENT_ID')
+		client_secret = os.getenv('CLIENT_SECRET')
+
+		url = "https://openapi.naver.com/v1/search/image.json"
+		params = {'query': query, 'display': 100}
+		headers = {
+			'X-Naver-Client-Id': client_id,
+			'X-Naver-Client-Secret': client_secret
+		}
+		response = requests.get(url, params=params, headers=headers)
+
+		items = response.json()['items']
+		items_list = []
+		for idx, item in enumerate(items):
+			title = item['title']
+			link = item['link']
+			thumbnail = item['thumbnail']
+			sizeheight = item['sizeheight']
+			sizewidth = item['sizewidth']
+			items_list.append([title, link, thumbnail, sizeheight, sizewidth])
+			
+			save_img('메인', idx, link, query)
+			save_img('썸네일', idx, thumbnail, query)
+			if idx % 20 == 0:
+				print(f'==={idx:02}%===')
+			
+		result = pd.DataFrame(items_list, columns=['title','link','thumbnail','sizeheight','sizewidth'])
+		result.to_csv('image/img_list.csv', index=False)
+		print('이미지 및 CSV 저장 완료')
+		return result
+
+6. XML 웹 데이터 수집
+
+	- RSS 서비스 및 Open API 활용
+		- BeautifulSoup(response.text, 'xml') 파서를 사용하여 XML 노드 요소 수집
+
+	ex) 기상청 날씨 RSS XML 수집
+	import requests
+	import pandas as pd
+	from bs4 import BeautifulSoup
+
+	item_list = []
+	url = 'https://www.kma.go.kr/repositary/xml/fct/mon/img/fct_mon1rss_108_20260813.xml'
+
+	response = requests.get(url)
+	soup = BeautifulSoup(response.text, 'xml')
+
+	locals_ = soup.select('local_ta')
+
+	for local in locals_:
+		local_name = local.select_one('local_ta_name').string.strip()
+		for n in range(1, 5):
+			local_normalYear = local.select_one(f'week{n}_local_ta_normalYear').text
+			local_similarRange = local.select_one(f'week{n}_local_ta_similarRange').text
+			local_minVal = local.select_one(f'week{n}_local_ta_minVal').text
+			local_similarVal = local.select_one(f'week{n}_local_ta_similarVal').text
+			local_maxVal = local.select_one(f'week{n}_local_ta_maxVal').text
+			item_list.append({
+				'주차' : n,
+				'지역' : local_name,
+				'평년기온' : local_normalYear,
+				'예측범위' : local_similarRange,
+				'낮을확률' : local_minVal,
+				'맞을확률' : local_similarVal,
+				'높을확률' : local_maxVal
+			})
+			
+	df = pd.DataFrame(item_list)
+
+	ex) 공공데이터포털 버스 정보 Open API (XML)
+	# 1. 버스 번호의 busRouteId 확인 (getBusRouteList)
+	import requests
+	import os
+	from dotenv import load_dotenv
+	from bs4 import BeautifulSoup
+	from urllib.request import quote
+
+	load_dotenv()
+	route_key = os.getenv('KEY')
+	Bus_No = 5524
+	busNum = quote(f'{Bus_No}')
+
+	url1 = 'http://ws.bus.go.kr/api/rest/busRouteInfo/getBusRouteList?'
+	params = {'ServiceKey': route_key, 'strSrch': busNum, 'resultType': 'xml'}
+
+	response = requests.get(url1, params=params)
+	soup = BeautifulSoup(response.text, 'xml')
+
+	for item in soup.select('itemList'):
+		busRouteNm = item.select_one('busRouteNm').text
+		if busNum == busRouteNm:
+			busRouteId = item.select_one('busRouteId').text
+			break
+
+	print('busRouteId =', busRouteId)
+
+	# 2. busRouteID의 정류장 목록 확인 (getStaionByRoute)
+	import requests
+	import pandas as pd
+	import os
+	from dotenv import load_dotenv
+	from bs4 import BeautifulSoup
+
+	load_dotenv()
+	key = os.getenv('KEY')
+	busId = 100100260
+
+	url2 = 'http://ws.bus.go.kr/api/rest/busRouteInfo/getStaionByRoute?'
+	params = {'ServiceKey': key, 'busRouteId': busId, 'resultType': 'xml'}
+
+	response = requests.get(url2, params=params)
+	soup = BeautifulSoup(response.text, 'xml')
+
+	itemLists = soup.select('itemList')
+	bus_station = []
+
+	for itemList in itemLists:
+		station = itemList.select_one('station').text
+		stationNm = itemList.select_one('stationNm').text
+		gpsX = itemList.select_one('gpsX').text
+		gpsY = itemList.select_one('gpsY').text
+		bus_station.append([station, stationNm, gpsX, gpsY])
+		
+	df_station = pd.DataFrame(bus_station, columns=['ID', '정류소명', '경도', '위도'])
+
+	# 3. busRouteID의 실시간 위치 정보 확인 (getBusPosByRtid)
+	import requests
+	import os
+	from dotenv import load_dotenv
+	from bs4 import BeautifulSoup
+
+	load_dotenv()
+	key = os.getenv('KEY')
+	busId = 100100260
+
+	url3 = 'http://ws.bus.go.kr/api/rest/buspos/getBusPosByRtid?'
+	params = {'ServiceKey': key, 'busRouteId': busId, 'resultType': 'xml'}
+
+	response = requests.get(url3, params=params)
+	soup = BeautifulSoup(response.text, 'xml')
+
+	itemLists = soup.select('itemList')
+	print('운행 중인 버스 수 :', len(itemLists))

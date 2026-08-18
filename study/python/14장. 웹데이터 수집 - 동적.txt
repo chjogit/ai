@@ -1,0 +1,235 @@
+14장. 웹데이터 수집
+
+1. Selenium 기반 동적 웹 크롤링
+
+- Selenium 기본 개념 및 패키지 설치
+	- 동적 웹페이지(JavaScript로 데이터가 실시간 생성되는 페이지)의 상호작용 및 수집 처리
+	- 패키지 설치 : pip install selenium
+	- 웹드라이버(WebDriver)를 통해 브라우저를 직접 제어하고 키보드 및 마우스 입력 이벤트 수행
+	- 주요 권장 패키지 버전 : selenium 4.47.0, requests 2.34.2, urllib3 2.7.0
+
+- 주요 모듈 및 역할
+	- webdriver : 브라우저 실행 및 제어 모듈
+	- By : 요소를 탐색하는 기준 설정
+		* By.NAME, By.CLASS_NAME, By.CSS_SELECTOR, By.ID, By.TAG_NAME, By.LINK_TEXT 등
+	- Keys : 특수 키 입력 제어 (Keys.RETURN, Keys.CONTROL 등)
+	- urlparse : 수집한 URL의 구성 요소 및 도메인 분리 파싱
+
+- Selenium 주요 제어 메서드
+	- webdriver.Chrome() : 새로운 크롬 브라우저 창 생성
+	- dv.get(url) : 생성한 창에 URL 삽입 및 이동
+	- dv.find_element(By, 선택자) : 조건에 맞는 첫 번째 요소 탐색
+	- dv.find_elements(By, 선택자) : 조건에 맞는 전체 요소를 리스트 형태로 반환
+	- el.clear() : 입력 필드 초기화
+	- el.send_keys(...) : input box 등 입력 필드에 텍스트 전달 및 키보드 입력 수행
+	- el.click() : 버튼 또는 링크 클릭
+	- el.text : 요소 내부의 텍스트 추출
+	- el.get_attribute(속성명) : 요소의 특정 속성값(href 등) 추출
+	- dv.current_url : 현재 웹 브라우저의 URL 반환
+	- dv.title : 현재 페이지의 제목 반환
+	- dv.close() : 현재 활성화된 탭 및 창 제거
+	- dv.quit() : 웹드라이버 세션 전체 종료 및 브라우저 창 닫기
+
+	ex) Selenium 기본 제어 및 URL 파싱
+	from selenium import webdriver
+	from selenium.webdriver.common.keys import Keys
+	from selenium.webdriver.common.by import By
+	from urllib.parse import urlparse
+	import time
+
+	dv = webdriver.Chrome()
+	dv.get("http://www.python.org")
+
+	assert "Python" in dv.title 
+
+	el = dv.find_element(By.NAME, "q")
+	el.clear()
+	el.send_keys("pycon")
+	el.send_keys(Keys.RETURN)
+
+	el.send_keys(Keys.CONTROL, "a")
+	el.send_keys('pycon')
+	btn_el = dv.find_element(By.CSS_SELECTOR, 'button#submit')
+	btn_el.click()
+
+	now_url = dv.current_url
+	print('현재 url :', now_url)
+	parsedUrl = urlparse(now_url)
+	print('파싱 url :', parsedUrl)
+	domain = f'{parsedUrl.scheme}://{parsedUrl.netloc}'
+	print('도메인 :', domain)
+
+	dv.close()
+
+
+8. 동적 웹데이터 수집
+
+- 다음 뉴스 검색 및 페이징 처리
+	- 검색어와 수집할 페이지 수를 입력받아 뉴스 탭 이동 및 자동 수집 진행
+	- 페이지 로드 및 동적 데이터 생성을 위해 time.sleep() 대기 시간 적용
+	- BeautifulSoup 객체 없이 Selenium 자체 탐색 메서드(find_elements, find_element)만 사용하여 데이터를 직접 추출
+	- inner_paging 클래스 내부의 페이지 번호 링크를 탐색 및 클릭하여 자동 페이징 조작 처리
+	- 수집된 데이터는 Pandas DataFrame 형태로 구조화
+
+	ex) 다음 뉴스 검색 단일 페이지 수집
+	from selenium import webdriver
+	from selenium.webdriver.common.keys import Keys
+	from selenium.webdriver.common.by import By
+	import time
+
+	dv = webdriver.Chrome()
+	dv.get("http://www.daum.net")
+	time.sleep(0.5)
+
+	word = input('검색할 단어 : ')
+
+	el = dv.find_element(By.NAME, "q")
+	el.send_keys(word)
+	el.send_keys(Keys.RETURN)
+
+	time.sleep(1)
+
+	dv.find_element(By.LINK_TEXT, "뉴스").click()
+
+	bodies = dv.find_elements(By.CSS_SELECTOR, 'div.item-title > strong.tit-g.clamp-g')
+
+	new_list = []
+
+	for body in bodies:
+		a = body.find_element(By.TAG_NAME, 'a')
+		title = a.text
+		link = a.get_attribute('href')
+		new_list.append([title, link])
+
+	page_nav = dv.find_element(By.CLASS_NAME, 'inner_paging')
+	next_page = page_nav.find_element(By.LINK_TEXT, "3")
+	next_page.click()
+
+	dv.quit()
+
+	ex) 다음 뉴스 다중 페이지 자동 수집
+	from selenium import webdriver
+	from selenium.webdriver.common.keys import Keys
+	from selenium.webdriver.common.by import By
+	import pandas as pd
+	import time
+
+	dv = webdriver.Chrome()
+	dv.get("http://www.daum.net")
+	time.sleep(0.5)
+
+	word = input('검색할 단어 : ')
+
+	el = dv.find_element(By.NAME, "q")
+	el.send_keys(word)
+	el.send_keys(Keys.RETURN)
+
+	time.sleep(1)
+
+	dv.find_element(By.LINK_TEXT, "뉴스").click()
+
+	pages = int(input('수집할 페이지 수 : '))
+	time.sleep(1)
+
+	new_list = []
+
+	for page in range(1, 1+pages):
+		bodies = dv.find_elements(By.CSS_SELECTOR, 'div.item-title > strong.tit-g.clamp-g')
+		print('수집 중인 페이지 : ', page)
+		for body in bodies:
+			a = body.find_element(By.TAG_NAME, 'a')
+			title = a.text
+			link = a.get_attribute('href')
+			new_list.append([title, link])
+			
+		time.sleep(3)
+		
+		page_nav = dv.find_element(By.CLASS_NAME, 'inner_paging')
+		next_page = page_nav.find_element(By.LINK_TEXT, str(page+1))
+		next_page.click()
+
+	news_df = pd.DataFrame(new_list, columns=['title', 'link'])
+	print('수집 완료 : news_df', news_df.shape)
+	display(news_df.head())
+
+
+- 네이버 맞춤법 검사기 활용 대량 텍스트 자동 교정
+	- 네이버 맞춤법 검사기의 입력 글자 수 제한(300자)을 극복하기 위한 파일 단위 자동화 처리
+	- txt 파일 읽기 및 전처리 : rfind('\n') 함수를 사용하여 가장 마지막 줄바꿈 위치를 찾아 300자 이내의 문장 단위로 텍스트 분할
+	- txt_gray 클래스의 입력창을 clear() 후 분할 텍스트를 순차 전달하여 검사 실행
+	- 교정 결과 요소(_result_text)의 텍스트를 수집하여 하나의 텍스트 변수로 합친 후 파일로 저장
+
+	ex) 네이버 맞춤법 검사기 단일 문장 교정
+	from selenium import webdriver
+	from selenium.webdriver.common.keys import Keys
+	from selenium.webdriver.common.by import By
+	from bs4 import BeautifulSoup
+	import time
+
+	dv = webdriver.Chrome()
+	dv.get('https://www.naver.com')
+	time.sleep(0.5)
+
+	el = dv.find_element(By.NAME, "query")
+	el.clear()
+	el.send_keys('맞춤법검사기')
+	el.send_keys(Keys.RETURN)
+	time.sleep(0.5)
+
+	chk = dv.find_element(By.CLASS_NAME, "txt_gray")
+	para = input('검사할 문장 : ')
+	chk.send_keys(para)
+	dv.find_element(By.CLASS_NAME, "btn_check").click()
+	time.sleep(0.5)
+
+	rslt = dv.find_element(By.CLASS_NAME, "_result_text")
+	print('맞춤법 교정 결과 : ', rslt.text)
+	dv.quit()
+
+	ex) 파일 기반 대량 텍스트 자동 교정 및 저장
+	from selenium import webdriver
+	from selenium.webdriver.common.keys import Keys
+	from selenium.webdriver.common.by import By
+	import time
+
+	with open('data/ch14_맞춤법검사_전.txt', 'r', encoding='utf-8') as fp:
+		text = fp.read()
+
+	ready_text_list = []
+
+	while len(text)>=300:
+		print(len(text))
+		temp = text[:300]
+		last_dot_index = temp.rfind('
+')
+		ready_text_list.append(text[:last_dot_index+1])
+		text = text[last_dot_index+1:]
+	ready_text_list.append(text)
+
+	dv = webdriver.Chrome()
+	dv.get('https://www.naver.com')
+	time.sleep(0.5)
+
+	el = dv.find_element(By.NAME, "query")
+	el.send_keys('맞춤법검사기')
+	el.send_keys(Keys.RETURN)
+	time.sleep(1)
+
+	chk = dv.find_element(By.CLASS_NAME, "txt_gray")
+	rslts = ''
+
+	for idx, ready_text in enumerate(ready_text_list):
+		print(f'{idx+1}/{len(ready_text_list)}')
+		chk.clear()
+		chk.send_keys(ready_text)
+		dv.find_element(By.CLASS_NAME, "btn_check").click()
+		time.sleep(2)
+		rslt = dv.find_element(By.CLASS_NAME, "_result_text").text
+		rslts += rslt + '
+'
+
+	print('맞춤법 교정 완료')
+	dv.quit()
+
+	with open('data/ch14_맞춤법검사_후.txt', 'w', encoding='utf-8') as f:
+		f.write(rslts)

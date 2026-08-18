@@ -1,0 +1,27 @@
+14장. 웹데이터 수집 (정적, 공공 api)
+
+1. 기본 개념
+- requests(HTTP 요청), bs4(BeautifulSoup, HTML/XML 파싱), dotenv(load_dotenv/os.getenv, 보안키 관리)
+- BeautifulSoup(html_text, 'html.parser') / BeautifulSoup(xml_text, 'xml')
+
+2. requests 라이브러리
+- 요청 메서드 : requests.get(url, headers=..., params=...) (headers로 User-Agent 설정하여 403/406 차단 방지, params로 쿼리 전달)
+- status_code (200: 성공, 403: 접근거부, 406: 헤더거부, 404: 없음, 429: 과도한 요청)	text, content, response.content
+
+3. BeautifulSoup 파싱 메서드 및 엘리먼트 속성
+- select_one(선택자) / find(태그, 속성) : 없으면 None
+- select(선택자) / find_all(태그, 속성) : 없으면 빈 리스트 []
+- el.text (el.string), el.attrs (el.attrs.get('href'), el.name : 태그명 반환
+
+4. 정적 웹 데이터 수집 및 전처리
+- 수집 전 확인 : /robots.txt 사전 확인 (Allow / Disallow)
+- User-Agent 헤더
+- URL 인코딩 : urllib.parse.quote('한글검색어') 활용
+- 반복 요청 시 time.sleep()
+- 데이터 전처리 : 문자열 쉼표 제거(.replace(',', '')), 수치형 변환(int/float), round 처리
+- 데이터 구조화 : 딕셔너리 리스트 / 2차원 리스트 생성 후 pandas.DataFrame 변환
+
+5. Open API 및 XML 데이터 수집
+- API 키 관리 : .env 파일에 CLIENT_ID / SECRET / ServiceKey 저장 후 dotenv로 호출
+- JSON 처리 : response.json() 또는 json.loads()로 파싱 후 dict/list 접근
+- XML 처리 : 'xml' 파서로 BeautifulSoup 객체 생성 후 노드 탐색
