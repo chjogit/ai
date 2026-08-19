@@ -1,0 +1,25 @@
+1장. 오라클 세팅
+
+1. 관리자 접속 (CMD)
+sqlplus / as sysdba
+sqlplus system/비밀번호
+
+2. 계정 생성 및 권한 부여
+CREATE USER scott IDENTIFIED BY tiger;
+GRANT DBA TO scott;
+
+3. 샘플 데이터 로드
+sqlplus scott/tiger
+@sql 파일 경로;
+
+4. 데이터 확인
+SELECT * FROM TAB;
+SELECT * FROM EMP;
+SELECT * FROM DEPT;
+
+5. SQL Developer 접속 설정
+Name: scott
+Username: scott
+Host: localhost
+Port: 1521
+SID: xe (또는 orcl)

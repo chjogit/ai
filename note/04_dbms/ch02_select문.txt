@@ -1,0 +1,19 @@
+2장. SELECT문
+
+- 기본 구문 : SELECT 컬럼명 AS "별칭" FROM 테이블명;
+- 비교 연산자 : = , != , ^= , <> , > , < , >= , <=
+- 논리 연산자 : AND / OR / NOT
+- 산술 연산자 : +, -, *, /
+- 연결 : ||
+- 중복제거 : DISTINCT
+- SQL 연산
+	- BETWEEN A AND B / NOT BETWEEN A AND B
+	- IN (값1, 값2) / NOT IN (값1, 값2)
+	- LIKE '패턴' (%: 0개 이상, _: 1글자) / NOT LIKE '패턴'
+	- IS NULL / IS NOT NULL
+- NULL 처리 : NVL(컬럼, 대체값)
+- 정렬 : ORDER BY 컬럼명 [ASC | DESC]
+- 형변환 함수
+	- TO_CHAR(데이터, '패턴')
+	- TO_DATE('문자열', '패턴')
+		- 날짜/시간 패턴 : YYYY / YY / RR / MM / DD / DY / DAY / HH24 / HH12 / MI / SS

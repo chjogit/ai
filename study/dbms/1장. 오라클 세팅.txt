@@ -1,0 +1,41 @@
+1. 관리자(SYSDBA) 계정 접속
+  * 명령 프롬프트(cmd) 창을 실행한 뒤 아래 명령어 중 하나로 접속합니다.
+
+  c:\~> sqlplus / as sysdba
+  (또는 c:\~> sqlplus system/설치 시 비밀번호)
+
+
+2. scott 계정 생성 및 권한 부여
+  * 실습에 사용할 scott 계정을 생성하고 DBA 권한을 부여합니다.
+
+  SQL> CREATE USER scott IDENTIFIED BY tiger;
+  SQL> GRANT DBA TO scott;
+  SQL> EXIT;
+
+
+3. scott 계정 접속 및 샘플 데이터(demo.sql) 로드
+  * scott 계정으로 접속하여 실습용 스크립트 파일(demo.sql)을 실행합니다.
+  * (주의: c:/ai/lecNote/04_DBMS/demo.sql 경로에 파일이 존재해야 합니다.)
+
+  c:\~> sqlplus scott/tiger
+  SQL> @c:/ai/lecNote/04_DBMS/demo.sql;
+
+
+4. 데이터 정상 로드 여부 확인
+  * 생성이 완료되면 생성된 테이블 및 데이터를 확인합니다.
+
+  SQL> SELECT * FROM TAB;   -- 생성된 전체 테이블 목록 확인
+  SQL> SELECT * FROM EMP;   -- 사원(EMP) 정보 테이블 확인
+  SQL> SELECT * FROM DEPT;  -- 부서(DEPT) 정보 테이블 확인
+  SQL> EXIT;
+
+
+5. SQL Developer 설치 및 GUI 환경 구축
+  1) 오라클 공식 다운로드 페이지 접속:
+     https://www.oracle.com/database/sqldeveloper/technologies/download/
+  2) OS에 맞는 압축 파일 다운로드 후 임의의 폴더에 압축 해제
+  3) sqldeveloper.exe 실행
+  4) 접속 추가(+ 버튼) 클릭 후 계정 정보 입력 및 연결 테스트
+     - Name: scott (자유롭게 입력)
+     - 사용자 이름: scott
+     - 호스트 이름: localhost / 포트: 1521 / SID: xe (또는 orcl)
