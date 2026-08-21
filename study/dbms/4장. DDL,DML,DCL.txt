@@ -1,0 +1,93 @@
+4장. DDL, DML, DCL
+
+1. DDL
+- 테이블 구조를 정의, 변경, 삭제하는 명령어 (ROLLBACK 불가)
+
+1.1 테이블 생성 (CREATE TABLE)
+- ORACLE 주요 데이터 타입
+  	- NUMBER(N, M) : N자리 수의 숫자형 (M은 소수점 자리수)
+  	- DATE : 날짜 및 시간형
+  	- VARCHAR2(N) : N byte 크기의 가변 문자형 (한글 1자 = 3byte)
+  	- CLOB : 대용량 텍스트 데이터형 (최대 4GB)
+
+  	ex) 테이블 생성 예시 (컬럼 수준 및 테이블 수준 기본키 지정)
+  	CREATE TABLE BOOK (
+      		BOOKID    NUMBER(4) PRIMARY KEY,
+      		BOOKNAME  VARCHAR2(30),
+      		PUBLISHER VARCHAR2(30),
+      		RDATE     DATE,
+      		PRICE     NUMBER(8, 2)
+  		);
+
+  	ex) 서브 쿼리를 이용한 테이블 생성 (데이터 복사, 제약 조건은 제외)
+  	CREATE TABLE EMP01 AS SELECT * FROM EMP WHERE DEPTNO > 10;
+
+1.2 테이블 삭제 (DROP TABLE)
+- DROP TABLE [테이블명];
+
+  	ex) FOREIGN KEY가 연결되어 있을 경우
+  	DROP TABLE DEPT01 CASCADE CONSTRAINTS;
+
+
+2. DML & DCL
+- 데이터 추가, 수정, 삭제 및 트랜잭션 제어
+
+2.1 INSERT
+- INSERT INTO [테이블명] VALUES (값1, 값2, ...);
+- INSERT INTO [테이블명] (필드1, 필드2) VALUES (값1, 값2); -- 미지정 필드는 NULL 입력
+
+  	ex) 서브쿼리를 이용한 데이터 입력
+  	INSERT INTO DEPT01 
+      		SELECT * FROM DEPT WHERE DEPTNO > 10;
+
+* DCL (트랜잭션 제어)
+    	- ROLLBACK : 트랜젝션 시작 시점 이후 실행된 DML 작업 취소
+    	- COMMIT : 변경 사항을 데이터베이스에 영구 반영
+
+2.2 UPDATE
+- UPDATE [테이블명] SET 필드명1=값1, 필드명2=값2, .. WHERE [조건문];
+- WHERE절 생략 시 테이블 전체 행이 수정됨
+
+  	ex) 서브쿼리 및 NVL 함수를 활용한 수정
+  	UPDATE EMP01 
+      		SET JOB = 'SALESMAN', 
+          		MGR = (SELECT EMPNO FROM EMP01 WHERE ENAME = 'BLAKE'), 
+          		HIREDATE = SYSDATE, 
+          		SAL = SAL + 500, 
+          		COMM = NVL(COMM, 0) + 500,
+          		DEPTNO = 30
+      		WHERE ENAME = 'SMITH';
+
+2.3 DELETE
+- DELETE FROM [테이블명] WHERE [조건문];
+- WHERE절 생략 시 테이블의 모든 데이터 삭제
+
+  	ex) 조건 삭제
+  	DELETE FROM EMP01 WHERE DEPTNO = 30;
+
+
+3. 제약 조건 (Constraints)
+- 데이터의 무결성을 보장하기 위해 컬럼에 지정하는 규칙
+    	- PRIMARY KEY  : 기본키 ; NULL 불가, 각각의 요소가 각 테이블의 유일한 값
+        	* [필드 정의] PRIMARY KEY
+        	*  PRIMARY KEY(필드명)
+   	- FOREIGN KEY : 외래키 ; 외부 테이블과 연결
+        	* [필드 정의] REFERENCES [연결할_테이블명] (연결할_필드명)
+        	* FOREIGN KEY(필드명) REFERENCES [연결할_테이블명] (연결할_필드명)
+    	- NOT NULL : NULL(빈 값) 입력을 금지
+   	- UNIQUE : 중복 값 금지, 다수의 NULL 허용
+    	- CHECK : 설정한 조건식을 만족하는 데이터만 허용 (NULL은 조건 통과)
+        	* CHECK (조건문)
+- DEFAULT     : 값 미입력 시 자동 저장될 기본값 지정
+
+  ex) 제약 조건 적용 예시
+  CREATE TABLE EMP1 (
+      ENPNO    NUMBER(4) PRIMARY KEY,
+      ENAME    VARCHAR2(10) NOT NULL,
+      JOB      VARCHAR2(9) NOT NULL,
+      MGR      NUMBER(4),
+      HIREDATE DATE DEFAULT SYSDATE,
+      SAL      NUMBER(7,2) CHECK(SAL > 0),
+      COMM     NUMBER(7,2),
+      DEPTNO   NUMBER(2) REFERENCES DEPT1 (DEPTNO)
+  );

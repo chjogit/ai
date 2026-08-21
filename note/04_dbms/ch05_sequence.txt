@@ -1,0 +1,6 @@
+5장. SEQUENCE
+
+- 시퀀스 (SEQUENCE) : 순차적인 번호를 자동으로 생성하는 데이터베이스 객체
+- CREATE SEQUENCE 시퀀스명
+    	- START WITH N, INCREMENT BY M, MAXVALUE N, MINVALUE N, NOCACHE, NOCYCLE
+- .NEXTVAL / .CURRVAL

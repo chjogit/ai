@@ -1,0 +1,61 @@
+5장. SEQUENCE
+- 순차적으로 증가하는 번호를 자동 생성하여 인공키(Primary Key) 등에 활용하는 데이터베이스 객체
+
+1. 시퀀스 (SEQUENCE)
+- 개념 : 순차적인 번호를 자동으로 생성하는 데이터베이스 객체
+- 용도 : 인공키(Artificial PRIMARY KEY) 생성 시 주로 사용
+- 특징
+      	- 하나의 시퀀스를 여러 테이블에서 참조 가능
+      	- 테이블 구조나 데이터 저장 여부와 무관하게 독립적인 객체로 존재
+
+
+2. 시퀀스 생성
+- CREATE SEQUENCE 시퀀스명
+    	- START WITH N   	: N부터 시작 (기본값 : 1)
+    	- INCREMENT BY M 	: M씩 증가 (기본값 : 1)
+    	- MAXVALUE N     	: 최댓값 지정
+    	- MINVALUE N     	: 최솟값 지정
+    	- NOCACHE        	: 메모리 임시 할당 미사용 (서버 비정상 종료 시 번호 건너뜀 방지)
+    	- NOCYCLE        		: 최댓값 도달 시 번호 순환 중지
+
+  ex) 시퀀스 생성 예시
+  CREATE SEQUENCE FRIEND_SEQ
+      START WITH 1
+      INCREMENT BY 1
+      MAXVALUE 9999
+      NOCACHE
+      NOCYCLE;
+
+
+3. 시퀀스 활용
+- 시퀀스명.NEXTVAL : 다음 순번 생성 및 번호 증가
+- 시퀀스명.CURRVAL : 현재 세션의 시퀀스 값 확인 (NEXTVAL을 최소 1회 실행 후 사용 가능)
+
+  ex) 시퀀스 값 확인
+  SELECT FRIEND_SEQ.NEXTVAL FROM DUAL;
+  SELECT FRIEND_SEQ.CURRVAL FROM DUAL;
+
+  ex) 테이블 생성 및 시퀀스를 활용한 INSERT
+  DROP SEQUENCE FRIEND_NO_SEQ;
+  CREATE SEQUENCE FRIEND_NO_SEQ
+      MAXVALUE 999
+      NOCACHE
+      NOCYCLE;
+
+  DROP TABLE FRIEND;
+  CREATE TABLE FRIEND (
+      NO          NUMBER(3)     PRIMARY KEY,
+      NAME        VARCHAR2(20)  NOT NULL,
+      TEL         VARCHAR2(20)  UNIQUE,
+      ADDRESS     VARCHAR2(200),
+      LAST_MODIFY DATE DEFAULT SYSDATE
+  );
+
+  INSERT INTO FRIEND (NO, NAME, TEL, ADDRESS)
+      VALUES (FRIEND_NO_SEQ.NEXTVAL, '홍길동', NULL, '관악구 신림동');
+
+  INSERT INTO FRIEND (NO, NAME, TEL, ADDRESS)
+      VALUES (FRIEND_NO_SEQ.NEXTVAL, '성춘향', '010-9999-9999', '남원');
+
+  SELECT * FROM FRIEND;
+  COMMIT;
