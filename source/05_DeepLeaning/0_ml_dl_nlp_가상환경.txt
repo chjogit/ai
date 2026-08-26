@@ -42,7 +42,7 @@ Jupyter 커널 목록 확인
 jupyter kernelspec list
 
 Jupter 커널 목록에서 삭제
-jupyter kernelspec remove display 이름
+jupyter kernelspec remove "ml-dl-nlp(ipykernel)"
 
 Jupyter lab 실행
 Jupyter lab -notebook-dir=C:\ai\source\05_DeepLeaning

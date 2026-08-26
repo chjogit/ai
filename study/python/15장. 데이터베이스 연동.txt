@@ -1,0 +1,247 @@
+15장. 데이터베이스 연동
+
+1절. SQLite 데이터 베이스 연결
+
+- SQLite 데이터베이스 : 데이터베이스 관리 시스템(DBMS) 서버 설치 없이, 간단한 파일 단위로 SQL을 이용해 데이터에 접근할 수 있는 디스크 기반 데이터베이스
+	- C 언어로 작성된 라이브러리
+	- 프로토타입(시제품) 제작에 활용
+
+	- 프로젝트 단계 : 분석 → 설계 → 구현 → 테스트 → 고객 배포 → 유지보수
+		- 프로토타입 단계 : SQLite (빠르고 가벼운 검증용 DB)
+		- 완제품/실서버 단계 : Oracle, MySQL, MariaDB, PostgreSQL, MSSQL, Amazon AuroraDB 등 (대용량·고성능 처리용 DB)
+
+- SQLite browser 다운로드 및 sqlite3 패키지 로드
+	- DB Browser for SQLite : "DB Browser for SQLite - .zip (no installer) for 64-bit Windows" 다운로드 후 압축 풀기
+	- import sqlite3
+
+- 데이터베이스 연결 순서 및 주요 개념
+	- DB 연결 객체 생성 : 파일이 없으면 자동 생성, 있으면 연결
+	- 커서 객체 생성 : 커서는 SQL문 실행시키고, 결과를 받는 객체
+	- 원하는 로직 수행 (SQL 전송 및 결과 처리)
+	- 커서 객체 해제
+	- DB 연결 객체 해제
+	- INSERT, UPDATE, DELETE문 실행 결과 : cursor.rowcount (변경/삭제/삽입된 행의 개수를 정수로 반환)
+	- commit()과 rollback() : 데이터베이스의 상태를 직접적으로 변경하는 DML 실행 시에만 사용
+
+	- SELECT문 실행 결과를 받는 함수들
+		- fetchone() : 결과에서 한 행만 가져올 때 (데이터가 없으면 None), 튜플 형태로 반환
+		- fetchall() : 조회된 모든 행을 한 번에 가져올 때, 튜플 리스트 형태로 반환
+		- fetchmany(n) : 지정한 n개의 행만 가져올 때, 튜플 리스트 형태로 반환
+
+	- 데이터 소모 특성 : 한 번 읽어서 소모한 데이터는 커서 내에서 다시 접근하거나 재사용할 수 없음
+
+	ex) SQLite
+	import sqlite3
+
+	# DB 연결 (여기서 에러가 날 경우 VC_redist.x64.exe 설치)
+	conn = sqlite3.connect('data/ch15_example.db')
+	cursor = conn.cursor()
+
+	cursor.execute('''
+		CREATE TABLE MEMBER (
+			NAME TEXT,
+			AGE  INT,
+			EMAIL TEXT 
+		)
+	''')
+
+	cursor.execute('DROP TABLE MEMBER')
+
+	sql = 'INSERT INTO MEMBER VALUES ('마길동', 25, 'h@h.com')'
+	cursor.execute(sql)
+	print('insert, update, delete문의 수행 결과 행수 :', cursor.rowcount)
+
+	sql = "INSERT INTO MEMBER VALUES ('신길동', 30, 's@h.com')"
+	cursor.execute(sql) 
+	print('수행 결과 행수 :', cursor.rowcount)
+
+	sql = "INSERT INTO MEMBER VALUES ('신림동', 35, 'sil@h.com')"
+	cursor.execute(sql) 
+	print('수행 결과 행수 :', cursor.rowcount)
+
+	conn.commit()
+
+	cursor.execute("SELECT * FROM MEMBER ORDER BY AGE")
+
+	cursor.fetchall()
+	cursor.fetchall()
+
+	cursor.execute("SELECT * FROM MEMBER ORDER BY AGE")
+	members = cursor.fetchall()
+
+	cursor.execute("SELECT * FROM MEMBER ORDER BY AGE")
+	members = []
+	while True:
+		member = cursor.fetchone()
+		if member is None:
+			break
+		members.append({'name':member[0], 'age':member[1], 'email':member[2]})
+
+	class Member:
+		'Member 테이블의 내용을 받은 객체 타입'
+		def __init__(self, name, age, email):
+			self.name = name
+			self.age  = age
+			self.email = email
+		def __str__(self):
+			return "{}	{}	{}".format(self.name, self.age, self.email)
+
+	m = Member('홍길동', 25, 'h@h.com')
+	print(m)
+
+	dbmember = ('홍길동', 25, 'h@h.com')
+	m = Member(*dbmember)
+	print(m)
+
+	cursor.execute("SELECT * FROM MEMBER ORDER BY AGE")
+	members = []
+	while True:
+		dbmember = cursor.fetchone()
+		if dbmember is None:
+			break
+		member = Member(*dbmember)
+		members.append(member)
+
+	for mem in members:
+		print(mem)
+
+	cursor.execute("SELECT * FROM MEMBER ORDER BY AGE")
+	members = cursor.fetchmany(2)
+
+	cursor.close()
+	conn.close()
+
+
+- SQL 구문에 파라미터 사용하기
+	- qmark 방식 : '?' 형태를 사용하며 DB에 따라 불가한 경우가 있음
+	- named 방식 : ':변수명' 형태를 사용하며 권장되는 방식
+
+	ex) SQL 파라미터 활용
+	conn = sqlite3.connect('data/ch15_example.db')
+	cursor = conn.cursor()
+
+	cursor.execute("SELECT * FROM MEMBER WHERE NAME IN ('홍길동','신길동')")
+	cursor.fetchall()
+
+	name1 = input('검색할 이름1 :')
+	name2 = input('검색할 이름2 :')
+	cursor.execute("SELECT * FROM MEMBER WHERE NAME IN (?, ?)", (name1, name2))
+	cursor.fetchall()
+
+	name1 = input('검색할 이름1 :')
+	name2 = input('검색할 이름2 :')
+	cursor.execute("SELECT * FROM MEMBER WHERE NAME IN (:name1, :name2)", {'name1':name1, 'name2':name2})
+	cursor.fetchall()
+
+	name = input('이름 : ')
+	try:
+		age = int(input('나이(숫자) : '))
+	except:
+		print('유효하지 않은 나이를 입력할 경우 초기화 됩니다')
+		age = 1
+	email = input('이메일 : ')
+
+	cursor.execute("INSERT INTO MEMBER VALUES (:name, :age, :email)", {'name':name, 'age':age, 'email':email})
+	conn.commit()
+	print('수행 결과 행 수 :', cursor.rowcount)
+
+	cursor.close()
+	conn.close()
+
+
+2절. 오라클 데이터베이스 연결
+
+- 오라클 패키지 설치 : pip install cx_oracle (~ 11g), pip install oracledb (12g ~)
+
+- 데이터베이스 연결 및 처리
+	- DSN(Data Source Name) 정보 생성 : makedsn(host, port, sid)을 통한 연결
+	- 위치 기반 인자 전달 : connect(user, password, dsn)
+	- Easy Connect 문자열 사용 : connect('scott', 'tiger', 'localhost:1521/xe') 형식 (에러 발생할 경우 VC_redist.x64.exe 설치)
+	- cursor.fetchone() : 결과가 있으면 해당 데이터를 튜플로, 결과가 없으면 None으로 반환
+
+	ex) Oracle
+	import cx_Oracle
+	import pandas as pd
+
+	oracle_dsn = cx_Oracle.makedsn(host="localhost", port=1521, sid='xe')
+
+	conn = cx_Oracle.connect('scott', 'tiger', oracle_dsn)
+	conn.close()
+
+	conn = cx_Oracle.connect('scott', 'tiger', 'localhost:1521/xe')
+
+	cursor = conn.cursor()
+	sql = "SELECT EMPNO NO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO FROM EMP"
+	cursor.execute(sql)
+	emps = cursor.fetchall()
+
+	emp_df = pd.DataFrame(emps, columns=[descipt[0] for descipt in cursor.description])
+
+	sql = "SELECT * FROM EMP WHERE ENAME=(:ename)"
+
+	ename = input('검색할 이름 : ').upper()
+	cursor.execute(sql, {'ename':ename})
+
+	emp = cursor.fetchone()
+
+	if emp:
+		columns = [descript[0] for descript in cursor.description]
+		df = pd.DataFrame([emp], columns=columns)
+		display(df)
+	else:
+		print('해당 이름이 없습니다')
+
+	for col, data in zip(columns, emp):
+		print("{} : {}".format(col, data if data is not None else '-'))
+
+	cursor.close()
+	conn.close()
+
+
+3절. MySQL 연결
+
+- 라이브러리 특징
+	- mysql-connector-python : MySQL 공식 커넥터, python으로 구현
+	- pyMySQL : 커뮤니티에서 만든 서드파티 라이브러리(경량), python으로 구현, 널리 쓰임
+
+- MySQL 연결 및 데이터 처리 순서
+	- DB 연결 객체 생성 : host (DB 서버 주소), port (기본값 3306), user (계정명), password (비밀번호)
+				      database (사용할 DB), charset (한글/이모지 깨짐 방지), autocommit (DML 자동 커밋 활성화)
+	- 커서 객체 생성
+	- SQL 실행 및 데이터 가져오기 : execute()로 SQL 전송 및 결과 처리 준비, fetchall()로 모든 조회 결과를 튜플 리스트 형태로 받아옴
+	- 자원 해제 : 생성의 역순으로 cursor.close(), conn.close() 실행
+
+	ex) MySQL
+	import pymysql
+	import pandas as pd
+	import numpy as np
+
+	conn = pymysql.connect(
+		host='127.0.0.1',
+		user='root',
+		password='mysql',
+		database='devdb',
+		charset='utf8mb4',
+		autocommit=True
+	)
+
+	cursor = conn.cursor()
+
+	sql = 'SELECT * FROM person'
+	cursor.execute(sql)
+	person = cursor.fetchall()
+
+	print(person)
+
+	cursor.close()
+	conn.close()
+
+	df = pd.DataFrame(person, columns=[descript[0] for descript in cursor.description])
+
+	df.info()
+	df.isna().sum()
+
+	df['hiredate'] = df['hiredate'].astype('datetime64[ns]')
+
+	df = df.astype({'sal':'float64', 'comm':np.float64})
+	df.info()

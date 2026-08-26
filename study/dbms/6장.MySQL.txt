@@ -1,0 +1,69 @@
+6장. MySQL
+- Oracle과 MySQL의 차이점 중심 정리 (DCL, DDL, DML 주요 문법 비교)
+
+
+1. DCL (Data Control Language) 및 데이터베이스 관리
+- 계정 생성, 권한 관리, 데이터베이스 선택 명령어
+
+1.1 DCL (계정 생성 및 권한 제어)
+- CREATE USER '계정명'@'호스트' IDENTIFIED BY '비밀번호';
+- GRANT [권한] ON [DB명].[테이블명] TO '계정명'@'호스트';
+- REVOKE [권한] ON [DB명].[테이블명] FROM '계정명'@'호스트';
+- DROP USER '계정명'@'호스트';
+
+  	ex) 계정 및 권한 부여 예시
+  	CREATE USER userid IDENTIFIED BY 'password'; - 계정 생성
+  	GRANT ALL PRIVILEGES ON *.* TO userid; - 전체 권한 부여
+  	REVOKE ALL ON *.* FROM userid; - 전체 권한 박탈
+  	DROP USER userid; - 계정 삭제
+
+1.2 데이터베이스 관리
+- SHOW DATABASES : 전체 데이터베이스 목록 확인
+- CREATE DATABASE DB명 : 새로운 데이터베이스 생성
+- USE DB명 : 사용할 데이터베이스 선택
+- SHOW TABLES : 현재 데이터베이스 내 전체 테이블 목록 확인
+
+  	ex) 데이터베이스 접속 예시
+  	SHOW DATABASES;
+  	CREATE DATABASE devdb;
+  	USE devdb;
+  	SHOW TABLES;
+
+
+2. DDL (Data Definition Language)
+- MySQL 데이터 타입 및 AUTO_INCREMENT(시퀀스 대체) 활용
+
+2.1 MySQL 주요 데이터 타입
+- 정수형 : TINYINT(1byte), SMALLINT(2byte), INT/INTEGER(4byte), BIGINT(8byte)
+- 실수형 : FLOAT(n, d; 4byte), DOUBLE(n, d; 8byte), NUMERIC/DECIMAL(n, d)
+- 문자형 : CHAR(n), VARCHAR(n), TEXT, LONGTEXT(최대 4GB)
+- 날짜형 : DATE(날짜만), DATETIME(날짜+시간), TIMESTAMP(날짜+시간)
+
+2.2 테이블 생성 및 AUTO_INCREMENT (Oracle 시퀀스 대체)
+- MySQL은 별도의 SEQUENCE 객체가 없으며, `AUTO_INCREMENT` 키워드를 INT 타입의 PK 컬럼에 지정하여 자동 번호 증가 구현
+- 현재 시간 기본값 설정 시 SYSDATE 대신 `NOW()` 사용
+
+  	ex) 테이블 생성 및 데이터 입력
+  	DROP TABLE IF EXISTS friend;
+
+  	CREATE TABLE friend (
+      		no          INT         PRIMARY KEY AUTO_INCREMENT, -- 시퀀스 대신 사용
+      		name        VARCHAR(30) NOT NULL,
+      		tel         VARCHAR(30) UNIQUE,
+      		age         NUMERIC(3)  DEFAULT 1 CHECK (age >= 0),
+      		last_modify DATETIME    DEFAULT NOW()               -- 현재 시간 기본값
+  	);
+
+  	SELECT * FROM friend;
+
+  	INSERT INTO friend (name, tel) VALUES ('홍길동', NULL);
+	INSERT INTO friend (name, tel, age) VALUES ('성춘향', '010-9999-9999', 22);
+
+
+3. 문자열 연결 연산자 (CONCAT)
+- Oracle에서 연결 연산자로 사용하는 ||는 MySQL에서 논리 연산자(OR)로 작동함
+- 문자열을 연결할 때는 반드시 CONCAT() 함수를 사용해야 함
+
+  	ex) 문자열 연결 처리
+  	- Oracle 방식 : SELECT PNAME || '는 ' || JOB || '다' FROM PERSON;
+  	- MySQL 방식 : SELECT CONCAT(PNAME, '는 ', JOB, '다') FROM PERSON;
