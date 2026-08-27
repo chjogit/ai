@@ -1,0 +1,132 @@
+3장. 비지도학습 군집분석
+
+1. 데이터 생성
+
+- 비지도학습 군집분석 : 정답이 없는 데이터에서 유사성을 기반으로 그룹을 형성하는 기법
+- 남여 키와 몸무게 데이터를 생성하여 K-Means 알고리즘의 원리를 직접 구현 및 시각화
+
+	ex)
+	import random
+	import numpy as np
+	import matplotlib.pyplot as plt
+
+	# 1. 데이터 생성 (여자 50명, 남자 50명의 몸무게, 키 데이터)
+	data = []
+	for i in range(50):
+		data.append([random.randint(40, 70), random.randint(140, 170)])
+		data.append([random.randint(60, 95), random.randint(160, 195)])
+
+
+2. K-Means 군집화 로직 구현
+
+- 초기 중심점 지정 : 무작위로 2개의 초기 기준점을 선택
+- 거리 계산 함수 (dist) : 두 점 사이의 거리를 계산
+- 그룹화 (*1) : 각 데이터 포인트를 더 가까운 기준점의 그룹(group0, group1)으로 할당
+- 중심점 이동 (*2) : 각 그룹의 데이터 평균 좌표(meanX, meanY)를 구하여 기준점의 위치를 업데이트
+
+	# 초기 랜덤 지정 2 point
+	random_points = [
+		[random.randint(40, 90), random.randint(140, 195)],
+		[random.randint(40, 90), random.randint(140, 195)]
+	]
+
+	# 두 점 거리를 계산하는 유클리드 거리 함수
+	def dist(a, b):
+		return np.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
+
+	# random_points[0]에 가까운 그룹(group0)과 random_points[1]에 가까운 그룹(group1)으로 분류
+	group0 = []
+	group1 = []
+	for d in data:
+		if dist(random_points[0], d) < dist(random_points[1], d):
+			group0.append(d)
+		else:
+			group1.append(d)
+
+	# group0과 group1 중심점으로 기준점 이동
+	group0_meanX = np.mean([d[0] for d in group0])
+	group0_meanY = np.mean([d[1] for d in group0])
+	random_points[0] = [group0_meanX, group0_meanY]
+
+	group1_meanX = np.mean([d[0] for d in group1])
+	group1_meanY = np.mean([d[1] for d in group1])
+	random_points[1] = [group1_meanX, group1_meanY]
+
+
+3. 군집화 반복 수행 및 시각화
+
+- 그룹 할당 및 중심점 이동 과정을 반복(for문)하여 중심점을 최종 수렴 위치로 이동
+- 각 반복 단계별 중심점의 이동 경로와 최종 그룹화 결과를 차트로 출력
+
+	random_points = [
+		[random.randint(40, 90), random.randint(140, 195)],
+		[random.randint(40, 90), random.randint(140, 195)]
+	]
+	print('초기 지점 : ', random_points)
+
+	# 반복 학습 수행 (그룹화 및 중심점 재계산)
+	for i in range(1, 10):
+		group0 = []
+		group1 = []
+		for d in data:
+			if dist(random_points[0], d) < dist(random_points[1], d):
+				group0.append(d)
+			else:
+				group1.append(d)
+
+		group0_meanX = np.mean([d[0] for d in group0]).round(2)
+		group0_meanY = np.mean([d[1] for d in group0]).round(2)
+		random_points[0] = [group0_meanX, group0_meanY]
+		
+		group1_meanX = np.mean([d[0] for d in group1]).round(2)
+		group1_meanY = np.mean([d[1] for d in group1]).round(2)
+		random_points[1] = [group1_meanX, group1_meanY]
+		
+		print(f'{i}번째 지점 : ', random_points)
+		plt.plot(random_points[0][0], random_points[0][1], 'x', markersize=30, color='y')
+		plt.plot(random_points[1][0], random_points[1][1], 'x', markersize=30, color='g')
+
+	# 최종 결과 시각화
+	plt.plot([d[0] for d in group0], [d[1] for d in group0], 'o', color='b')
+	plt.plot([d[0] for d in group1], [d[1] for d in group1], 'o', color='r')
+	plt.xlim([40, 95])
+	plt.show()
+
+
+4. API(sklearn)를 이용한 군집화
+
+- scikit-learn 모델의 종류 및 주요 메서드
+	- 예측 모델 (지도학습 : 회귀, 분류) : fit(X, y), predict(X)
+	- 군집 모델 (비지도학습 : 군집화) : fit(X), predict(X), fit_predict(X)
+	- 변환 모델 (전처리/차원축소 : Scaler, PCA 등) : fit(X), transform(X), fit_transform(X)
+
+- 넘파이 배열(np.array) 변환의 필요성 : 메모리 연속성을 이용한 고속 연산, 반복문 없는 벡터화 연산 지원, 데이터 타입 고정
+- KMeans 파라미터 상세
+	- n_clusters : 생성할 군집(클러스터)의 개수
+	- init : 중심점(Centroid) 초기 위치 지정 방식 (기본값 'k-means++', 'random' 선택 가능)
+	- n_init : 서로 다른 초기 중심점으로 전체 알고리즘을 반복 실행할 횟수
+	- random_state : 동일한 결과를 재현하기 위한 난수 고정값 (Seed)
+- cluster_centers_ : K-Means 학습 결과로 구해진 각 그룹의 최적 중심점 좌표 배열
+- labels_ : 각 데이터 포인트가 속한 군집 인덱스 번호
+
+	from sklearn.cluster import KMeans
+
+	# 머신러닝 연산을 위해 데이터를 넘파이 배열로 변환
+	data = np.array(data)
+
+	# KMeans 모델 생성 및 학습
+	model = KMeans(
+		n_clusters=2,
+		init='random',
+		n_init=10,
+		random_state=7
+	)
+
+	model.fit(data)
+
+	# 학습 결과 출력
+	print('학습 결과 중심점 좌표 : \n', model.cluster_centers_)
+
+	# 군집 라벨을 이용한 그룹 분리
+	group1 = data[model.labels_ == 1]
+	group0 = data[model.labels_ == 0]

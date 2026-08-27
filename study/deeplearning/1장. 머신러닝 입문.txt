@@ -1,0 +1,126 @@
+1장. 머신러닝 입문
+
+1. 머신러닝/딥러닝 프로그램 과정
+
+- 데이터 확보 및 생성
+- 데이터 전처리 : 스케일 조정, 라벨링 처리, 데이터셋 분할 (훈련 데이터셋, 검증 데이터셋, 시험 데이터셋으로 분할)
+- 모델 구성
+- 모델 학습과정 설정
+- 모델 학습시키기 (학습 데이터셋과 검증 데이터셋 사용)
+- 모델 평가 (시험 데이터셋 사용)
+- 모델 사용 (입력값을 통해 예측값 받기)
+
+
+2. 머신러닝/딥러닝 구현 예제
+
+- 노이즈가 없는 데이터
+
+	- 데이터 생성 및 전처리 : 스케일 조정 (Normalize)
+		- data_C : 입력변수 (독립변수)
+		- data_F : 타겟변수 (종속변수)
+
+	- 모델 구성
+		- Sequential() : 텐서플로우 Keras 모델 생성
+		- Dense() : 전결합 레이어 추가
+			- units : 출력 node 개수 (타겟 변수가 1개)
+			- input_shape : 입력 데이터의 shape (입력 특성이 1개인 1차원 데이터)
+		- summary() : Param # (가중치 W, 편향 b 등 파라미터의 총 개수) 확인
+
+	- 모델 학습과정 설정
+		- 회귀분석 오차함수 : MSE (오차 제곱 평균), RMSE (오차 제곱 평균의 제곱근), MAE (절댓값 평균)
+		- loss : 손실 함수 (실제로 최소화해야 할 최우선 오차 목표)
+		- optimizer : 옵티마이저 (가중치와 편향을 업데이트하는 알고리즘)
+		- metrics : 평가지표 (모니터링용 지표)
+
+	- 모델 학습 및 사용
+		- fit() : 독립변수와 타겟변수를 전달하여 학습 수행 (epochs: 학습 횟수, verbose: 학습 과정의 출력을 제어)
+		- predict() : 학습 후 예측치 산출 (y_hat은 2차원 리스트 형태로 전달되므로, h[0]는 y_hat 리스트의 각 예측 요소를 의미함)
+		- save() : 학습된 모델 저장 (.h5 파일 형태)
+		- load_model() : 저장된 모델 불러오기
+
+	ex)
+	import numpy as np
+	from tensorflow.keras.models import Sequential, load_model
+	from tensorflow.keras.layers import Dense, Input
+
+	# 1. 데이터 확보 및 생성
+	data_C = np.arange(100)
+	data_F = celsius_to_faherenheit(data_C)
+
+	# 2. 데이터 전처리
+	scaled_data_C = data_C / 100
+	scaled_data_F = data_F / 100
+
+	# 3. 모델 구성
+	model = Sequential()
+	model.add(Dense(1, input_shape=(1,)))
+	print(model.summary())
+
+	# 4. 모델 학습과정 설정
+	model.compile(
+		loss='mse',
+		optimizer='rmsprop',
+		metrics=['mae']
+	)
+
+	# 5. 모델 학습시키기
+	hist = model.fit(
+		scaled_data_C,
+		scaled_data_F,
+		epochs=1000,
+		verbose=2
+	)
+
+	# 6. 모델 사용하기 및 저장/로드
+	y_hat = model.predict(np.array([[0], [0.01]]))
+
+	model.save('model/after_learning.h5')
+	model = load_model('model/after_learning.h5')
+
+	# 오차 계산
+	square_error = 0
+	for h, y in zip(y_hat, scaled_data_F):
+		square_error += (h[0] - y) ** 2
+	print(square_error / 100)
+
+
+- 노이즈가 있는 데이터
+
+	- 데이터 생성 및 전처리 : np.random.normal()을 활용하여 정규분포 기반의 노이즈를 생성하고 기존 스케일링 데이터에 추가
+	- 모델 학습과정 설정 : optimizer(추론 알고리즘), loss(손실 함수), metrics(평가 지표) 설정
+
+	ex)
+	import numpy as np
+	from tensorflow.keras.models import Sequential
+	from tensorflow.keras.layers import Dense, Input
+
+	# 1~2. 데이터 생성 및 전처리 (노이즈 추가)
+	np.random.seed(707)
+	noise = np.random.normal(scale=0.1, size=100)
+	noised_scaled_data_F = noise + scaled_data_F
+
+	# 3. 모델 구성
+	model2 = Sequential()
+	model2.add(Dense(units=1, input_shape=(1,)))
+
+	# 4. 모델 학습과정 설정
+	model2.compile(
+		loss='mse',
+		optimizer='rmsprop',
+		metrics=['mae']
+	)
+
+	# 5. 모델 학습시키기
+	hist2 = model2.fit(
+		scaled_data_C,
+		noised_scaled_data_F,
+		epochs=1000,
+		verbose=1
+	)
+
+	# 6. 모델 사용하기 및 오차 계산
+	square_error = 0
+	y_hat = model2.predict([scaled_data_C])
+	for h, y in zip(y_hat, noised_scaled_data_F):
+		square_error += (h[0] - y) ** 2
+	print(square_error / 100)
