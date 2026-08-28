@@ -1,6 +1,6 @@
 15장. 데이터베이스 연동
 
-1절. SQLite 데이터 베이스 연결
+1. SQLite 데이터 베이스 연결
 
 - SQLite 데이터베이스 : 데이터베이스 관리 시스템(DBMS) 서버 설치 없이, 간단한 파일 단위로 SQL을 이용해 데이터에 접근할 수 있는 디스크 기반 데이터베이스
 	- C 언어로 작성된 라이브러리
@@ -149,7 +149,7 @@
 	conn.close()
 
 
-2절. 오라클 데이터베이스 연결
+2. 오라클 데이터베이스 연결
 
 - 오라클 패키지 설치 : pip install cx_oracle (~ 11g), pip install oracledb (12g ~)
 
@@ -198,7 +198,7 @@
 	conn.close()
 
 
-3절. MySQL 연결
+3. MySQL 연결
 
 - 라이브러리 특징
 	- mysql-connector-python : MySQL 공식 커넥터, python으로 구현

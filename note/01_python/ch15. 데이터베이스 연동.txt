@@ -1,0 +1,30 @@
+15장. 데이터베이스 연동
+
+1. SQLite 데이터 베이스 연결
+- SQLite 데이터베이스
+	- 프로젝트 단계 : 분석 → 설계 → 구현 → 테스트 → 고객 배포 → 유지보수
+		- SQLite (빠르고 가벼운 검증용 DB)
+		-  Oracle, MySQL, MariaDB, PostgreSQL, MSSQL, Amazon AuroraDB 등 (대용량·고성능 처리용 DB)
+	- INSERT, UPDATE, DELETE문
+		- fetchone() : 결과에서 한 행만 가져올 때 (데이터가 없으면 None), 튜플 형태로 반환
+		- fetchall() : 조회된 모든 행을 한 번에 가져올 때, 튜플 리스트 형태로 반환
+		- fetchmany(n) : 지정한 n개의 행만 가져올 때, 튜플 리스트 형태로 반환
+	- commit(), rollback()
+- SQL 구문에 파라미터 사용하기
+	- qmark, named
+
+2. 오라클 데이터베이스 연결
+- 데이터베이스 연결 및 처리
+	- DSN(Data Source Name) 정보 생성 : makedsn(host, port, sid)
+	- connect(user, password, dsn)
+	- Easy Connect
+	- cursor.fetchone() : 결과가 없으면 None
+
+3. MySQL 연결
+- 라이브러리 특징
+	- mysql-connector-python
+	- pyMySQL
+- MySQL 연결 및 데이터 처리 순서
+	- host (DB 서버 주소), port (기본값 3306), user (계정명), password (비밀번호), database (사용할 DB), charset (한글/이모지 깨짐 방지), autocommit (DML 자동 커밋 활성화)
+	- execute(), fetchall()
+	- cursor.close(), conn.close()

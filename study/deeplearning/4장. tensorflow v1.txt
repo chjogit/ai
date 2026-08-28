@@ -1,0 +1,210 @@
+4장. tensorflow v1
+
+1. TensorFlow v1 개요 및 주요 개념
+
+- TensorFlow 1.x와 2.x 비교
+
+	- 1.x 구버전 : 정적 그래프 (Define-and-Run) 방식으로, 그래프 설계 후 tf.Session()을 통해 실행하며 C++ 최적화 및 분산 환경 처리에 유리함
+	- 2.x 신버전 : 즉시 실행 (Eager Execution / Define-by-Run) 방식으로, Python/NumPy처럼 코드 선언 즉시 결과가 계산되며 tf.Keras 및 tf.GradientTape 중심의 간결한 구조
+
+- TensorFlow 수치 계산 라이브러리 기초 개념
+
+	- 구성 요소 : Tensor(다차원 배열 데이터 구조), Node(수치 연산 및 동작), Edge(데이터 흐름 및 관계)
+	- Session & Execution : tf.Session()으로 연산 실행 환경을 생성하고, sess.run()으로 실행 및 결과 산출
+	- constant() : 상수 노드 생성 (문자열 출력 시 바이너리 형태이므로 .decode() 사용 필요)
+	- 연산 규칙 : 텐서 연산 시 참여하는 노드 간 데이터 타입(dtype)이 일치해야 함
+	- cast() : 텐서의 데이터 타입을 변환 (예: int16 -> float32)
+	- reduce_mean() : 평균값 계산 (정수형 입력 시 결과도 정수형이 산출되므로 정확한 수치 계산을 위해 실수형 타입 설정 필요)
+	- random_normal() : 평균 0, 표준편차 1인 난수 배열 생성 (기본 타입: float32)
+	- Variable() : 가중치(W) 및 편향(b) 등 학습 파라미터 변수 노드 생성 (sess.run(tf.global_variables_initializer())를 통해 그래프 내 모든 변수 초기화 필수)
+
+	ex)
+	import tensorflow.compat.v1 as tf
+	tf.disable_v2_behavior()
+	import numpy as np
+	import pandas as pd
+
+	# 상수 노드 정의 및 실행
+	node1 = tf.constant('Hello, Tensorflow')
+	sess = tf.Session()
+	print(sess.run(node1))
+	print(sess.run(node1).decode())
+
+	# 연산 노드 및 타입 일치
+	node1 = tf.constant(10, dtype=tf.float16)
+	node2 = tf.constant(20, dtype=tf.float16)
+	node3 = tf.add(node1, node2)
+
+	sess = tf.Session()
+	n1, n2, n3 = sess.run([node1, node2, node3])
+	print(n1, n2, n3)
+
+	# 타입 변경 (tf.cast)
+	node1 = tf.constant(np.array([10, 20, 30]), dtype=tf.int16)
+	node2 = tf.cast(node1, dtype=tf.float32)
+	sess = tf.Session()
+	print(sess.run([node1, node2]))
+
+	# 평균값 계산 (tf.reduce_mean)
+	data = np.array([1., 2, 3, 4])
+	m = tf.reduce_mean(data)
+	sess = tf.Session()
+	print(sess.run(m))
+
+	# 난수 발생 및 변수 초기화 (tf.Variable)
+	w = tf.Variable(tf.random_normal([1]))
+	sess = tf.Session()
+	sess.run(tf.global_variables_initializer())
+	print(sess.run(w))
+
+
+2. tf v1 회귀분석 구현
+
+- 단일 독립변수 회귀분석 및 placeholder
+
+	- tf.placeholder() : 외부 데이터(X, y)를 정적 연산 그래프 내부로 주입하기 위한 노드
+	- feed_dict : sess.run() 실행 시 placeholder 노드에 실제 데이터(Numpy 배열 또는 값)를 주입
+	- GradientDescentOptimizer : 경사하강법을 통해 오차(cost) 최솟값을 도출하는 최적화 알고리즘
+	- 학습 과정 : [현재 W, b] -> [현재 cost] -> [미분/기울기 계산] -> [새로운 W, b 업데이트] 반복 순환
+	
+	ex)
+	# placeholder를 활용한 단일 변수 회귀분석
+	x_data = np.array([1, 2, 3])
+	y_data = np.array([2, 3, 4])
+
+	x = tf.placeholder(dtype=tf.float32)
+	y = tf.placeholder(dtype=tf.float32)
+
+	w = tf.Variable(tf.random_normal([1]), name='weight')
+	b = tf.Variable(tf.random_normal([1]), name='bias')
+
+	H = w * x + b
+	cost = tf.reduce_mean(tf.square(H - y))
+	train = tf.train.GradientDescentOptimizer(learning_rate=0.005).minimize(cost)
+
+	sess = tf.Session()
+	sess.run(tf.global_variables_initializer())
+
+	for step in range(1, 5001):
+		_, cost_val, w_val, b_val = sess.run([train, cost, w, b], feed_dict={x: x_data, y: y_data})
+		if step % 500 == 1:
+			print(f'{step} 번째 cost = {cost_val}, w = {w_val}, b = {b_val}')
+	print(f'{step} 번째 cost = {cost_val}, w = {w_val}, b = {b_val}')
+
+	# 예측 수행 (feed_dict 활용)
+	print(sess.run(H, feed_dict={x: 2.5}))
+
+
+- 데이터 스케일링 (Data Scaling)
+
+	- 스케일링 필요성 : 독립변수와 종속변수 간 데이터 스케일 차이가 크면 손실값(Cost)이 발산하여 nan이 출력될 수 있음
+	- 정규화 (Normalization) : 데이터 범위를 0과 1 사이로 변환 (sklearn.preprocessing.MinMaxScaler)
+	- 표준화 (Standardization) : 평균이 0이고 표준편차가 1인 정규분포 형태로 변환 (sklearn.preprocessing.StandardScaler)
+	- Scaler 사용 규칙 : scikit-learn Scaler는 2차원 배열([Samples, Features]) 형태를 입력을 받으며, 범위 혼용을 방지하기 위해 X와 y 객체를 개별 생성해야 함
+	- inverse_transform() : 스케일링된 상태에서 도출된 예측 결과를 사람이 읽을 수 있는 원본 범위로 복원
+
+	ex)
+	from sklearn.preprocessing import MinMaxScaler, StandardScaler
+
+	# 1) MinMaxScaler (정규화)
+	x_data = np.array([1, 2, 5, 8, 10]).reshape(-1, 1)
+	y_data = np.array([5, 15, 68, 80, 95]).reshape(-1, 1)
+
+	scaler_x = MinMaxScaler()
+	scaler_y = MinMaxScaler()
+
+	norm_scaled_x_data = scaler_x.fit_transform(x_data)
+	norm_scaled_y_data = scaler_y.fit_transform(y_data)
+
+	# 2) StandardScaler (표준화)
+	scaler_x_std = StandardScaler()
+	scaler_y_std = StandardScaler()
+
+	std_scaled_x_data = scaler_x_std.fit_transform(x_data)
+	std_scaled_y_data = scaler_y_std.fit_transform(y_data)
+
+	# 스케일 조정 데이터 학습
+	x = tf.placeholder(dtype=tf.float32)
+	y = tf.placeholder(dtype=tf.float32)
+
+	w = tf.Variable(tf.random_normal([1]), name='weight')
+	b = tf.Variable(tf.random_normal([1]), name='bias')
+
+	H = w * x + b
+	cost = tf.reduce_mean(tf.square(H - y))
+	optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
+	train = optimizer.minimize(cost)
+
+	sess = tf.Session()
+	sess.run(tf.global_variables_initializer())
+
+	for step in range(1, 10001):
+		_, cost_val, w_val, b_val = sess.run([train, cost, w, b], feed_dict={x: norm_scaled_x_data, y: norm_scaled_y_data})
+		if step % 3000 == 1:
+			print(f'{step} 번째 cost = {cost_val}, w = {w_val}, b = {b_val}')
+	print(f'{step} 번째 cost = {cost_val}, w = {w_val}, b = {b_val}')
+
+	# 복원
+	restored_x = scaler_x_std.inverse_transform(std_scaled_x_data)
+	restored_y = scaler_y_std.inverse_transform(std_scaled_y_data)
+
+
+- 다중 독립변수 회귀분석 (Multi-variable Linear Regression)
+
+	- 입력 노드 형상 : X의 shape은 [None, 3]으로 지정하여 특성(Feature)이 3개인 N개(가변적)의 샘플 수용
+	- 가중치 행렬 : 행렬 곱 연산을 위해 W의 shape은 [3, 1]로 설정 (입력 데이터 특성 개수 3과 대응)
+	- 가설 수식 : $H = X \cdot W + b$ (행렬 곱 tf.matmul(X, W) 연산 수행)
+	- 예측 수행 절차 : 입력 데이터를 학습 데이터 기준 Scaler로 변환(transform) -> 모델에 주입하여 스케일링된 예측치 산출 -> inverse_transform()으로 원본 결과 복원
+
+	ex)
+	from sklearn.preprocessing import StandardScaler
+
+	# 다중 독립변수 데이터 준비
+	X_data = np.array([[73, 80, 75],
+					   [93, 88, 93],
+					   [89, 91, 90],
+					   [96, 98, 100],
+					   [73, 66, 70]])
+	y_data = np.array([[152],
+					   [185],
+					   [180],
+					   [196],
+					   [142]])
+
+	# 표준화 스케일링
+	scaler_x = StandardScaler()
+	scaler_y = StandardScaler()
+
+	scaled_X = scaler_x.fit_transform(X_data)
+	scaled_y = scaler_y.fit_transform(y_data)
+
+	# 연산 그래프 구성
+	X = tf.placeholder(shape=[None, 3], dtype=tf.float32)
+	y = tf.placeholder(shape=[None, 1], dtype=tf.float32)
+
+	W = tf.Variable(tf.random_normal([3, 1]))
+	b = tf.Variable(tf.random_normal([1]))
+
+	H = tf.matmul(X, W) + b
+	cost = tf.reduce_mean(tf.square(H - y))
+	train = tf.train.GradientDescentOptimizer(learning_rate=0.01).minimize(cost)
+
+	# 세션 및 학습 실행
+	sess = tf.Session()
+	sess.run(tf.global_variables_initializer())
+
+	for step in range(1, 50001):
+		_, cost_val = sess.run([train, cost], feed_dict={X: scaled_X, y: scaled_y})
+		if step % 5000 == 1:
+			print(f'{step}번째 cost : {cost_val}')
+	print(f'{step}번째 cost : {cost_val}')
+
+	# 예측 및 복원
+	input_data = np.array([[72, 79, 74],
+						   [92, 87, 92]])
+	scaled_input_data = scaler_x.transform(input_data)
+	print('scale 조정된 입력값 : \n', scaled_input_data)
+
+	hat = sess.run(H, feed_dict={X: scaled_input_data})
+	predict_data = scaler_y.inverse_transform(hat)
+	print('예측 점수 : \n', predict_data)
