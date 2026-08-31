@@ -1,0 +1,142 @@
+ch06. 로지스틱 회귀, 분류 (심장병 발병 예측)
+
+1. 로지스틱 회귀 분석
+
+- 데이터 전처리 및 정제
+	- Excel 파일 처리 : openpyxl 라이브러리를 통해 .xlsx 데이터 불러오기
+	- 타겟 비율 유지 : train_test_split() 시 stratify=y 옵션을 설정하여 층화 추출 진행
+
+- 과적합(Overfitting) 방지 기법
+	- Dropout : 지정한 비율의 뉴런을 임의로 비활성화하여 특정 노드 의존도 차단
+	- BatchNormalization : 미니배치 단위 입력값의 평균을 0, 표준편차를 1로 정규화
+		- 파라미터 구조 (출력 노드 N개 기준 총 4N개 생성)
+		- 학습되는 변수 (2N개) : gamma (스케일 조절), beta (이동 조절)
+		- 학습되지 않는 변수 (2N개) : moving_mean, moving_variance
+	- L2 Regularization : kernel_regularizer=l2(0.001)로 가중치 제곱합을 손실에 추가
+	- 레이어 권장 순서 : Dense -> BatchNormalization -> Dropout
+
+- 불균형 데이터 처리 및 학습 기법
+	- compute_class_weight('balanced', ...) : 클래스별 손실 가중치를 다르게 적용하여 50:50 학습 효과 부여
+	- ReduceLROnPlateau 콜백 : 검증 손실(val_loss) 정체 시 학습률(learning_rate)을 0.5배로 자동 감쇠
+
+	ex)
+	import pandas as pd
+	import numpy as np
+	import matplotlib.pyplot as plt
+	from sklearn.model_selection import train_test_split
+	from sklearn.preprocessing import StandardScaler
+	from sklearn.utils.class_weight import compute_class_weight
+	from tensorflow.keras.models import Sequential, save_model, load_model
+	from tensorflow.keras.layers import Dense, Input, BatchNormalization, Dropout
+	from tensorflow.keras.regularizers import l2
+	from tensorflow.keras.metrics import Recall, Precision
+	from tensorflow.keras.callbacks import ReduceLROnPlateau
+
+	# 1. 데이터 로드 및 결측치 정제
+	df = pd.read_excel('data/heart-disease.xlsx')
+	df = df.replace('?', np.nan).dropna(how='any').reset_index(drop=True)
+
+	X = df.iloc[:, :-1].values
+	y = df.iloc[:, -1:].values
+
+	# 2. 스케일링 및 데이터 분할
+	scaler = StandardScaler()
+	scaled_X = scaler.fit_transform(X)
+	X_train, X_test, y_train, y_test = train_test_split(
+		scaled_X, y, test_size=0.2, random_state=7, stratify=y
+	)
+
+	# 3. 클래스 가중치 산출 및 콜백 설정
+	y_train_flat = y_train.flatten()
+	class_weight = compute_class_weight('balanced', classes=np.unique(y_train_flat), y=y_train_flat)
+	class_weight_dict = dict(enumerate(class_weight))
+
+	reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=0.000001)
+
+	# 4. 이진 분류 모델 구축
+	model = Sequential([
+		Input(shape=(13,)),
+		Dense(52, activation='elu', kernel_regularizer=l2(0.001)),
+		BatchNormalization(),
+		Dropout(0.4),
+		Dense(26, activation='relu', kernel_regularizer=l2(0.001)),
+		BatchNormalization(),
+		Dropout(0.4),
+		Dense(13, activation='elu', kernel_regularizer=l2(0.001)),
+		BatchNormalization(),
+		Dropout(0.2),
+		Dense(1, activation='sigmoid')
+	])
+
+	# 5. 컴파일 및 학습
+	model.compile(
+		loss='binary_crossentropy',
+		optimizer='adam',
+		metrics=['accuracy', Recall(name='recall'), Precision(name='precision')]
+	)
+
+	hist = model.fit(
+		X_train, y_train,
+		epochs=200, batch_size=100, validation_split=0.2,
+		class_weight=class_weight_dict, callbacks=[reduce_lr], verbose=0
+	)
+
+	# 6. 평가 및 예측
+	loss, accuracy, precision, recall = model.evaluate(X_test, y_test)
+	print(f'정확도 : {accuracy*100:.2f}%')
+
+	data = [[63, 1, 1, 145, 233, 1, 2, 150, 0, 2.3, 3, 0, 6]]
+	input_data = scaler.transform(data)
+	pred = (model.predict(input_data) >= 0.5).astype(int)[0][0]
+
+
+2. 이진분류
+
+- 이진 타겟의 소프트맥스 변환
+	- 타겟 y를 to_categorical(y, 2)를 사용하여 2차원 원-핫 벡터로 변경
+	- 출력층 : Dense(units=2, activation='softmax') 설정
+	- 손실함수 : loss='categorical_crossentropy'로 설정
+	- 예측결과 변환 : model.predict().argmax(axis=1)을 통해 최대 확률을 가진 인덱스 추출
+
+	ex)
+	from tensorflow.keras.utils import to_categorical
+
+	# 원-핫 인코딩
+	Y_train = to_categorical(y_train, 2)
+	Y_test = to_categorical(y_test, 2)
+
+	# 1. 모델 구축
+	model_multi = Sequential([
+		Input(shape=(13,)),
+		Dense(52, activation='elu', kernel_regularizer=l2(0.001)),
+		BatchNormalization(),
+		Dropout(0.4),
+		Dense(26, activation='relu', kernel_regularizer=l2(0.001)),
+		BatchNormalization(),
+		Dropout(0.4),
+		Dense(13, activation='elu', kernel_regularizer=l2(0.001)),
+		BatchNormalization(),
+		Dropout(0.2),
+		Dense(2, activation='softmax')
+	])
+
+	# 2. 컴파일 및 학습
+	model_multi.compile(
+		loss='categorical_crossentropy',
+		optimizer='adam',
+		metrics=['accuracy', Recall(name='recall'), Precision(name='precision')]
+	)
+
+	hist_multi = model_multi.fit(
+		X_train, Y_train,
+		epochs=200, validation_split=0.2,
+		class_weight=class_weight_dict, callbacks=[reduce_lr], verbose=0
+	)
+
+	# 3. 평가 및 저장
+	loss, accuracy, precision, recall = model_multi.evaluate(X_test, Y_test)
+	save_model(model_multi, 'model/05_heart_1.h5')
+
+	# 4. 예측 수행
+	model_loaded = load_model('model/05_heart_1.h5')
+	pred_cls = model_loaded.predict(input_data).argmax(axis=1)[0]
