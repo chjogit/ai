@@ -1,0 +1,264 @@
+7장. 다중 클래스 분류, 콜백함수 (mnist)
+
+1. 주요 개념 및 코드 동작 설명
+
+- MNIST 데이터셋 특징
+	- 0부터 9까지의 손글씨 숫자 이미지로 구성된 머신러닝 및 딥러닝 분야의 대표적인 표준 벤치마크 데이터셋
+	- 6만 개의 학습 데이터셋과 1만 개의 시험 데이터셋으로 로드 가능
+
+	ex) mnist 활용
+	import os
+	import cv2
+	import numpy as np
+	import pandas as pd
+	import matplotlib.pyplot as plt
+	from tensorflow.keras.datasets import mnist
+	from tensorflow.keras.utils import to_categorical
+	from tensorflow.keras.models import Sequential
+	from tensorflow.keras.layers import Input, Dense, Dropout, BatchNormalization
+	from tensorflow.keras.regularizers import l2
+	from tensorflow.keras.optimizers import SGD
+	from tensorflow.keras.callbacks import Callback, EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+	from sklearn.utils.class_weight import compute_class_weight
+
+- 데이터 읽기 및 이미지 처리
+	- opencv-python(cv2) 라이브러리를 사용하여 컬러 사진을 흑백 모드(cv2.IMREAD_GRAYSCALE)로 읽고 넘파이 배열로 변환 가능
+	- plt.imshow() 함수 활용 시 cmap='gray'를 지정하여 흑백 이미지 출력 가능
+
+	ex) 파일을 통해 불러오기
+	data = np.loadtxt('data/mnist_train_small.csv', delimiter=',', skiprows=1)
+	data.shape
+
+	print('타겟변수 : ', data[0, 0])
+	image = data[50, 1:].reshape(28,28)
+
+	image_array = cv2.imread('data/sample.jpg', cv2.IMREAD_GRAYSCALE)
+	image_array.shape, type(image_array)
+
+	plt.figure(figsize=(3,4))
+	plt.imshow(image_array, cmap='gray')
+	plt.axis('off')
+	plt.show()
+
+	ex) 데이터셋을 통해 가져오기
+	(X_train, y_train),(X_test, y_test) = mnist.load_data()
+
+	ex) 1. 데이터 전처리
+	value, counts = np.unique(y_train, return_counts=True)
+	ratios = counts/y_train.shape[0]
+	dict(zip(value, ratios))
+
+	print(y_test[1])
+	plt.imshow(X_test[1], cmap='gray')
+	plt.show()
+	for row in X_test[1]:
+		for pix in row:
+			print(f"{pix:3.0f}", end='')
+		print()
+
+	X_val = X_train[50000:]
+	y_val = y_train[50000:]
+	X_train = X_train[:50000]
+	y_train = y_train[:50000]
+
+	print('학습 데이터셋 :', X_train.shape, y_train.shape)
+	print('검증 데이터셋 :', X_val.shape, y_val.shape)
+	print('시험 데이터셋 :', X_test.shape, y_test.shape)
+
+	train_X = X_train.reshape(50000, 28*28).astype('float32')/255.0
+	val_X = X_val.reshape(10000, 784).astype('float32')/255.0
+	test_X = X_test.reshape(10000, -1).astype('float32')/255.0
+	train_X.shape, val_X.shape, test_X.shape
+
+	train_Y = to_categorical(y_train, 10)
+	val_Y = to_categorical(y_val)
+	test_Y = to_categorical(y_test)
+	train_Y.shape, val_Y.shape, test_Y.shape
+
+	train_idx = np.random.choice(50000, 700, replace=False)
+	val_idx = np.random.choice(10000, 300, replace=False)
+	train_X = train_X[train_idx]
+	train_Y = train_Y[train_idx]
+	val_X = val_X[val_idx]
+	val_Y = val_Y[val_idx]
+
+	ex) 2. 모델 구성 & 학습과정 설정 & 학습
+	model = Sequential(name="mnist_seq")
+	model.add(Input(shape=(784,)))
+
+	model.add(Dense(units=128, activation='elu', kernel_regularizer=l2(0.01)))
+	model.add(BatchNormalization())
+	model.add(Dropout(0.3))
+
+	model.add(Dense(units=64, activation='elu', kernel_regularizer=l2(0.01)))
+	model.add(BatchNormalization())
+	model.add(Dropout(0.3))
+
+	model.add(Dense(units=10, activation='softmax'))
+
+	model.compile(loss='categorical_crossentropy',
+		optimizer='adam',
+		metrics=['accuracy'])
+
+	hist = model.fit(train_X, train_Y,
+		epochs=200,
+		batch_size=64,
+		validation_data=(val_X, val_Y),
+		verbose=1)
+
+	ex) 3. 모델 시각화 & 평가
+	fig, loss_ax = plt.subplots(figsize=(10,6))
+	loss_ax.plot(hist.history['loss'], 'y', label='train_loss')
+	loss_ax.plot(hist.history['val_loss'], 'r', label='val_loss')
+	loss_ax.set_xlabel('epoch')
+	loss_ax.set_ylabel('loss', rotation=0)
+
+	acc_ax = loss_ax.twinx()
+	acc_ax.plot(hist.history['accuracy'], 'g', label='train_accuracy')
+	acc_ax.plot(hist.history['val_accuracy'], 'b', label='val_accuracy')
+	acc_ax.set_ylabel('accuracy')
+	loss_ax.legend(loc='center right', bbox_to_anchor=(1.5, 0.6), ncol=1)
+	acc_ax.legend(loc='center right', bbox_to_anchor=(1.5, 0.8), ncol=1)
+	plt.show()
+
+	loss, accuracy = model.evaluate(test_X, test_Y)
+	print(f'loss : {loss:.2f}')
+	print(f'정확도 : {accuracy*100:.2f}%')
+
+
+- accuracy control
+	- 데이터 추가 확보 및 모델 구조 변경 (레이어 추가, units 증가)
+	- 과적합 방지 기법: Validation data 활용, ReLU 계열 및 Tahn 활성화 함수 적용, Dropout, 배치 정규화(BatchNormalization), L2 규제 적용
+	- 학습 파라미터 변경: Epoch 수 조정 및 Optimizer 변경
+	- 클래스 불균형 극복: compute_class_weight를 활용하여 클래스별 가중치 부여
+
+	ex) 모델 성능 향상 및 과적합 방지
+	(X_train, y_train),(X_test, y_test) = mnist.load_data()
+
+	X_val = X_train[50000:]
+	y_val = y_train[50000:]
+	X_train = X_train[:50000]
+	y_train = y_train[:50000]
+
+	train_X = X_train.reshape(50000, 28*28).astype('float32')/255.0
+	val_X = X_val.reshape(10000, 784).astype('float32')/255.0
+	test_X = X_test.reshape(10000, -1).astype('float32')/255.0
+
+	train_Y = to_categorical(y_train, 10)
+	val_Y = to_categorical(y_val)
+	test_Y = to_categorical(y_test)
+
+	val_X = val_X[val_idx]
+	val_Y = val_Y[val_idx]
+
+	model = Sequential(name="mnist_seq")
+	model.add(Input(shape=(784,)))
+
+	model.add(Dense(units=256, activation='elu', kernel_regularizer=l2(0.0002)))
+	model.add(BatchNormalization())
+	model.add(Dropout(0.4))
+
+	model.add(Dense(units=128, activation='gelu', kernel_regularizer=l2(0.0002)))
+	model.add(BatchNormalization())
+	model.add(Dropout(0.3))
+
+	model.add(Dense(units=64, activation='elu', kernel_regularizer=l2(0.0002)))
+	model.add(BatchNormalization())
+	model.add(Dropout(0.2))
+
+	model.add(Dense(units=10, activation='softmax'))
+
+	sgd_optimizer = SGD(learning_rate=0.01, momentum=0.9, nesterov=True)
+
+	model.compile(loss='categorical_crossentropy',
+		optimizer=sgd_optimizer,
+		metrics=['accuracy'])
+
+	y_train_sub = y_train[train_idx]
+	unique_classes = np.unique(y_train_sub)
+
+	class_weight = compute_class_weight(
+		class_weight='balanced',
+		classes=unique_classes,
+		y=y_train_sub
+	)
+
+	class_weight_dict = dict(enumerate(class_weight))
+
+	lr_reduce = [
+		ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-6, verbose=0),
+		EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True, verbose=0)
+	]
+
+	hist = model.fit(train_X, train_Y,
+		epochs=200,
+		batch_size=512,
+		validation_data=(val_X, val_Y),
+		class_weight=class_weight_dict,
+		callbacks=[lr_reduce],
+		verbose=0)
+
+	fig, loss_ax = plt.subplots(figsize=(10,6))
+	loss_ax.plot(hist.history['loss'], 'y', label='train_loss')
+	loss_ax.plot(hist.history['val_loss'], 'r', label='val_loss')
+	loss_ax.set_xlabel('epoch')
+	loss_ax.set_ylabel('loss', rotation=0)
+
+	acc_ax = loss_ax.twinx()
+	acc_ax.plot(hist.history['accuracy'], 'g', label='train_accuracy')
+	acc_ax.plot(hist.history['val_accuracy'], 'b', label='val_accuracy')
+	acc_ax.set_ylabel('accuracy')
+	loss_ax.legend(loc='center right', bbox_to_anchor=(1.5, 0.6), ncol=1)
+	acc_ax.legend(loc='center right', bbox_to_anchor=(1.5, 0.8), ncol=1)
+	plt.show()
+
+	loss, accuracy = model.evaluate(test_X, test_Y)
+	print(f'loss : {loss:.2f}')
+	print(f'accuracy : {accuracy*100:.2f}%')
+
+- 콜백 함수
+	- 로그 출력 통제 : CustomHistory 클래스를 상속받아 1 epoch 수행 후 자동 실행되는 on_epoch_end 함수를 오버라이딩하여 특정 에포크마다 로그 출력
+	- 조기 종료 (EarlyStopping) : 검증 성능(val_loss, val_accuracy 등)이 더 이상 개선되지 않을 때 학습을 중간에 중단하여 과적합 방지
+	- 최적 모델 저장 (ModelCheckpoint) : 특정 시점의 모델 가중치 또는 전체 구조를 디스크에 주기적으로 저장하며 save_best_only=True 옵션 적용 가능
+	- 학습률 조정 (ReduceLROnPlateau) : 모델의 성능 향상이 정체되었을 때 학습률(LR)을 자동으로 줄여서 최적점 접근 지원
+
+	ex) 특정 에포크마다 출력하도록 로그 출력을 통제하는 Callback 클래스
+	class CustomHistory(Callback):
+		def __init__(self):
+			self.epoch = 0
+
+		def on_epoch_end(self, batch, logs={}):
+			self.epoch += 1
+			if self.epoch % 10 == 0:
+				print('epoch:{}, loss:{:.4f}, acc:{:.4f}, val_loss:{:.4f}, val_acc:{:.4f}'
+					.format(self.epoch,
+						logs.get('loss', '-'),
+						logs.get('accuracy', '-'),
+						logs.get('val_loss', '-'),
+						logs.get('val_accuracy', '-')
+					)
+				)
+
+	ex) 조기 종료
+	earlyStopping = EarlyStopping(monitor='val_accuracy',
+		patience=30,
+		verbose=0)
+
+	ex) 최적 모델 저장
+	model_save_folder = 'model07/'
+	if not os.path.exists(model_save_folder):
+		os.mkdir(model_save_folder)
+
+	file = model_save_folder + 'mnist_{epoch:03d}_val_{val_accuracy:.4f}.h5'
+
+	modelCheckpoint = ModelCheckpoint(filepath=file,
+		monitor='val_accuracy',
+		verbose=0,
+		save_best_only=True,
+		mode='max')
+
+	ex) 학습률 조정
+	reduce_lr = ReduceLROnPlateau(monitor='val_accuracy',
+		patience=5,
+		factor=0.5,
+		min_lr=1e-6)

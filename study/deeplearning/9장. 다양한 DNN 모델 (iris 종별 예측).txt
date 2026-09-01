@@ -1,0 +1,166 @@
+9장. 다양한 DNN 모델 (iris 종별 예측)
+
+IRIS 꽃 종류 예측
+
+	1. 데이터셋 생성 및 전처리
+		- 데이터셋 불러오기 (seaborn / sklearn)
+		- 독립변수(X)와 종속변수(y) 분리
+		- 종속변수 라벨 인코딩 (LabelEncoder)
+		- 훈련 데이터셋과 검증 데이터셋 분리 (train_test_split 8:2)
+	2. 모델 구성
+		- 입력 4, 출력 3
+		- 은닉층 구조: 4 -> 64 -> 128 -> 60 -> 30 -> 3
+	3. 모델 학습과정 설정
+		- 손실 함수: sparse_categorical_crossentropy
+		- 최적화 알고리즘: adam
+	4. 모델 학습
+		- EarlyStopping, ReduceLROnPlateau, ModelCheckpoint 콜백 활용
+	5. 모델 평가 및 시각화
+	6. 모델 사용
+
+
+1. default DNN - 데이터셋 생성 및 전처리
+
+- seaborn을 통한 데이터셋 생성
+	- seaborn의 load_dataset('iris') 함수를 사용하여 데이터셋 로드
+	- iloc를 사용하여 독립변수(X)와 종속변수(species) 분리
+	- LabelEncoder를 사용하여 문자열 형식의 종속변수를 정수형 라벨로 인코딩.
+
+- sklearn을 통한 데이터셋 생성
+	- sklearn.datasets의 load_iris() 함수를 사용하여 데이터셋 로드
+	- irisData.data(특성)와 irisData.target(라벨)으로 독립변수와 종속변수 추출
+
+- 훈련 데이터셋과 검증 데이터셋 분리
+	- train_test_split을 활용하여 훈련 데이터(80%)와 테스트 데이터(20%)로 분리
+	- stratify=iris_y 옵션을 지정하여 클래스별 비율을 유지하며 분할.
+
+	ex) default DNN - 데이터셋 생성 및 전처리
+	import numpy as np
+	import pandas as pd
+	import matplotlib.pyplot as plt
+	import seaborn as sns
+
+	from sklearn import datasets
+	from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder
+	from sklearn.model_selection import train_test_split
+	from sklearn.metrics import confusion_matrix, recall_score, precision_score
+
+	from tensorflow.keras.models import Sequential, save_model, load_model
+	from tensorflow.keras.layers import Dense, Input, Dropout, BatchNormalization
+	from tensorflow.keras.layers import ReLU, ELU, LeakyReLU
+	from tensorflow.keras.regularizers import l2
+	from tensorflow.keras.initializers import HeNormal
+	from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+	from tensorflow.keras.metrics import Recall, Precision
+
+	# seaborn 데이터셋 사용 예시
+	iris = sns.load_dataset('iris')
+	iris_X = iris.iloc[:, :-1].values
+	label = LabelEncoder()
+	iris_y = label.fit_transform(iris.iloc[:, -1])
+
+	# sklearn 데이터셋 사용 예시
+	irisData = datasets.load_iris()
+	iris_X = irisData.data
+	iris_y = irisData.target
+
+	# 학습 데이터셋과 시험 데이터셋 분리 (8:2)
+	train_X, test_X, train_y, test_y = train_test_split(
+		iris_X, iris_y, test_size=0.2, stratify=iris_y
+	)
+
+	print(train_X.shape, test_X.shape, train_y.shape, test_y.shape)
+
+
+2. 모델 구성 및 학습
+
+- 네트워크 구조 설계
+	- 입력층 : 4개 특성(sepal length, sepal width, petal length, petal width) 입력 받음
+	- 은닉층 및 구조 확장 : Dense(64) -> Dense(128) -> Dense(60) -> Dense(30)
+	- 출력층 : 3개 클래스(setosa, versicolor, virginica)로 분류하는 Softmax 활성화 함수 적용
+
+- 활성화 함수 및 규제 기법
+	- ELU, GELU, ReLU 활성화 함수와 He Normal 가중치 초기화 기법 적용
+	- L2 정규화(l2(0.002))를 적용하여 모델 가중치의 과도한 성장을 방지
+	- BatchNormalization을 통해 각 레이어의 출력을 정규화하여 학습 안정성 확보
+	- Dropout(0.3)을 통해 노드 중 일부를 비활성화하여 과적합 방지
+
+	ex) 모델 구성 및 학습
+	model = Sequential([
+		Input(4),
+		Dense(units=64, activation='elu', kernel_regularizer=l2(0.002), kernel_initializer='he_normal'),
+		Dropout(0.3),
+		Dense(units=128, activation='gelu', kernel_initializer='he_normal'),
+		BatchNormalization(),
+		Dropout(0.3),
+		Dense(units=60, activation='elu', kernel_regularizer=l2(0.002), kernel_initializer='he_normal'),
+		Dropout(0.3),
+		Dense(units=30, activation='relu', kernel_regularizer=l2(0.002), kernel_initializer='he_normal'),
+		Dropout(0.3),
+		Dense(units=3, activation='softmax')
+	], 'seq')
+
+
+3. 모델 학습과정 설정
+
+- 다중 클래스 분류 설정
+	- 손실 함수 : sparse_categorical_crossentropy 사용
+		* 타겟 라벨이 원-핫 인코딩 형태가 아닌 정수 라벨(0, 1, 2) 형태일 때 사용
+	- 최적화 알고리즘 : adam 최적화기 사용
+	- 평가 지표 : accuracy(정확도) 설정
+
+	ex) 모델 학습과정 설정
+	model.compile(
+		loss='sparse_categorical_crossentropy',
+		optimizer='adam',
+		metrics=['accuracy']
+	)
+
+
+4. 모델 학습
+
+	- 콜백 함수(Callbacks) 설정
+		- EarlyStopping : monitor='val_accuracy', patience=30 (검증 정확도가 30 에포크 동안 개선되지 않으면 조기 종료)
+		- ReduceLROnPlateau : factor=0.5, min_lr=1e-6, patience=30 (검증 성과가 정체될 때 학습률을 절반으로 감소)
+		- ModelCheckpoint : filepath='model/iris_{epoch:03d}_val_{val_accuracy:.4f}.h5', monitor='val_accuracy', save_best_only=True, mode='max' (검증 정확도가 최고일 때의 모델만 저장)
+
+	- 학습 실행 조건
+		- epochs=200, batch_size=20
+		- validation_split=0.1 (훈련 데이터의 10%를 검증용으로 분리)
+
+	ex) 모델 학습
+	earlystop = EarlyStopping(monitor='val_accuracy', patience=30)
+	reduce_lr = ReduceLROnPlateau(factor=0.5, min_lr=1e-6, patience=30)
+	file = 'model/iris_{epoch:03d}_val_{val_accuracy:.4f}.h5'
+	modelCheckpoint = ModelCheckpoint(filepath=file, monitor='val_accuracy', verbose=0, save_best_only=True, mode='max')
+
+	hist = model.fit(
+		train_X, train_y,
+		epochs=200,
+		batch_size=20,
+		callbacks=[earlystop, reduce_lr, modelCheckpoint],
+		verbose=2,
+		validation_split=0.1
+	)
+
+
+5. 모델 평가 및 시각화
+
+- 학습 과정 시각화
+	- 에포크에 따른 train_loss, val_loss 및 train_accuracy, val_accuracy 변화 그래프 출력
+
+	ex) 모델 평가 및 시각화
+	fig, loss_ax = plt.subplots(figsize=(10, 6))
+	loss_ax.plot(hist.history['loss'], 'y', label='train_loss')
+	loss_ax.plot(hist.history['val_loss'], 'r', label='val_loss')
+	loss_ax.set_xlabel('epoch')
+	loss_ax.set_ylabel('loss', rotation=0)
+
+	acc_ax = loss_ax.twinx()
+	acc_ax.plot(hist.history['accuracy'], 'g', label='train_accuracy')
+	acc_ax.plot(hist.history['val_accuracy'], 'b', label='val_accuracy')
+	acc_ax.set_ylabel('accuracy')
+
+	loss_ax.legend(loc='center right', bbox_to_anchor=(1.5, 0.6), ncol=1)
+	acc_ax.legend(loc='center right', bbox_to_anchor=(1.5, 0.8), ncol=1)
+	plt.show()

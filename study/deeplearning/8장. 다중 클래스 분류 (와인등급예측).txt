@@ -1,0 +1,246 @@
+8장. 다중 클래스 분류
+- 레드 와인 품질 등급 예측
+
+	1. 데이터셋 확보 & 전처리
+		- 결측치 처리
+		- 독립변수와 종속변수 분리
+		- 독립변수의 스케일 조정 (StandardScaler)
+		- 종속변수의 균형 확인
+		- 종속변수 원-핫 인코딩 (pd.get_dummies)
+		- 훈련 데이터셋과 검증 데이터셋 분리 (train_test_split)
+	2. 모델 구성
+	3. 모델 학습과정 설정 (다중 분류)
+	4. 모델 학습 (callbacks, compute_class_weight 활용)
+	5. 모델 평가 (시각화, 평가, 교차표)
+	6. 모델 사용 (저장, 예측)
+
+
+1. 데이터셋 확보 및 전처리
+
+- 데이터셋 불러오기 및 기본 정보 확인
+	- pandas의 read_csv 함수를 이용하여 구분자(delimiter=';')로 구분된 레드 와인 데이터셋을 로드합니다.
+	- info() 메서드로 각 칼럼의 데이터 타입과 결측치 유무를 확인합니다.
+
+- 독립변수와 종속변수 분리
+	- 독립변수(X): 와인의 화학적 특성 11개 항목 (특성 데이터)
+	- 종속변수(y): 와인의 품질 등급 (타겟 데이터)
+
+- 독립변수의 스케일 조정
+	- StandardScaler를 사용하여 독립변수의 평균을 0, 표준편차를 1로 정규화합니다.
+	- 특성 간 스케일 차이를 줄여 딥러닝 모델의 학습 안정성을 확보합니다.
+
+- 종속변수의 균형 확인 및 원-핫 인코딩
+	- value_counts(normalize=True)를 통해 각 품질 등급별 비율을 확인하여 클래스 불균형 정도를 파악합니다.
+	- pd.get_dummies()를 사용하여 범주형 타겟 데이터를 원-핫 인코딩 형태로 변환합니다.
+
+- 훈련 데이터셋과 검증 데이터셋 분리
+	- train_test_split을 사용하여 훈련 데이터(70%)와 테스트 데이터(30%)로 분리합니다.
+	- stratify=redwine_Y 옵션을 사용하여 타겟 변수의 클래스 비율을 유지하면서 분할합니다.
+	- random_state=12로 지정하여 재현성을 보장합니다.
+
+
+	ex) 데이터셋 확보 및 전처리
+	import pandas as pd
+	import numpy as np
+	from sklearn.preprocessing import StandardScaler
+	from sklearn.model_selection import train_test_split
+
+	# 데이터셋 불러오기
+	redwine = pd.read_csv('data/winequality-red.csv', delimiter=';')
+	redwine.info()
+
+	# 독립변수와 종속변수 분리
+	X_redwine = redwine.iloc[:, :-1].to_numpy()
+	y_redwine = redwine.iloc[:, -1]
+	print(X_redwine.shape, y_redwine.shape)
+
+	# 독립변수의 스케일 조정
+	scaler = StandardScaler()
+	redwine_X = scaler.fit_transform(X_redwine)
+
+	# 종속변수의 원-핫 인코딩
+	redwine_Y = pd.get_dummies(y_redwine)
+
+	# 종속변수의 균형 확인
+	print(y_redwine.value_counts(normalize=True))
+
+	# 독립변수와 타겟변수 크기 확인
+	print(redwine_X.shape, redwine_Y.shape)
+
+	# 훈련 데이터셋과 검증 데이터셋 분리
+	X_train, X_test, Y_train, Y_test = train_test_split(
+		redwine_X, redwine_Y, test_size=0.3, stratify=redwine_Y, random_state=12
+	)
+
+	print(X_train.shape, X_test.shape, Y_train.shape, Y_test.shape)
+
+
+2. 모델 구성
+
+- 네트워크 구조 설계
+	- 입력층: 11개 특성 입력받음
+	- 은닉층 및 구조 확장: Dense(128) -> Dense(64) -> Dense(32) -> Dense(16)
+	- 출력층: 6개 클래스(품질 등급 3~8)로 분류하는 Softmax 활성화 함수 적용
+
+- 가중치 초기화 및 활성화 함수 특징
+	- ReLU 활성화 함수와 He Normal 가중치 초기화 조합 사용
+		* ReLU 계열 활성화 함수 사용 시 He Normal 가중치 초기화를 병행
+		* 기울기 소멸(Gradient Vanishing) 문제를 방지
+		* 신호의 폭주 또는 줄어듦 현상을 막아 학습 안정성을 극대화
+
+	- ELU 활성화 함수와 L2 정규화(l2(0.01)) 조합 사용
+		* 과적합(Overfitting)을 방지하고 가중치 크기를 제한
+
+	- BatchNormalization 적용
+		* 각 레이어의 입력을 정규화하여 학습 속도 향상 및 과적합 완화
+
+	- Dropout(0.3) 적용
+		* 무작위로 30%의 노드를 비활성화하여 과적합을 예방
+
+
+	ex) 모델 구성
+	import tensorflow as tf
+	from tensorflow.keras.models import Sequential
+	from tensorflow.keras.layers import Input, Dense, BatchNormalization, Dropout
+	from tensorflow.keras.initializers import HeNormal
+	from tensorflow.keras.regularizers import l2
+
+	model = Sequential(name='redwine_seq')
+	model.add(Input(shape=(11,)))
+
+	model.add(Dense(units=128, activation='elu', kernel_regularizer=l2(0.01)))
+	model.add(BatchNormalization())
+	model.add(Dropout(0.3))
+
+	model.add(Dense(units=64, activation='relu', kernel_initializer=HeNormal(seed=42)))
+	model.add(Dropout(0.3))
+
+	model.add(Dense(units=32, activation='relu', kernel_initializer='he_normal'))
+	model.add(Dropout(0.3))
+
+	model.add(Dense(units=16, activation='elu', kernel_regularizer=l2(0.01)))
+	model.add(BatchNormalization())
+	model.add(Dropout(0.3))
+
+	model.add(Dense(units=6, activation='softmax'))
+	model.summary()
+
+
+3. 모델 학습과정 설정
+
+	- 다중 클래스 분류 문제 설정
+		- 손실 함수: categorical_crossentropy 사용 (원-핫 인코딩된 라벨에 적합)
+		- 최적화 알고리즘: adam 최적화기 사용
+		- 평가 지표: accuracy(정확도), Recall(재현율), Precision(정밀도) 설정
+
+
+	ex) 모델 학습과정 설정
+	from tensorflow.keras.metrics import Recall, Precision
+
+	model.compile(
+		loss='categorical_crossentropy',
+		optimizer='adam',
+		metrics=['accuracy', Recall(name='recall'), Precision(name='precision')]
+	)
+
+
+4. 모델 학습
+
+- EarlyStopping 콜백 활용
+	- monitor='val_loss': 검증 손실을 모니터링하여 학습 조기 종료 여부 결정
+	- patience=50: 검증 손실이 50 에포크 동안 개선되지 않으면 학습 중단
+	- 과적합을 방지하고 최적의 시점에서 학습을 종료하도록 설정
+
+- 학습 실행 조건
+	- epochs=200, batch_size=128
+	- validation_split=0.2 (훈련 데이터의 20%를 내부 검증용으로 활용)
+
+	
+	ex) 모델 학습
+	from tensorflow.keras.callbacks import EarlyStopping
+
+	earlystop = EarlyStopping(monitor='val_loss', patience=50, verbose=0)
+
+	hist = model.fit(
+		X_train, Y_train,
+		epochs=200,
+		batch_size=128,
+		validation_split=0.2,
+		callbacks=[earlystop],
+		verbose=1
+	)
+
+
+5. 모델 평가
+
+- 학습 과정 시각화
+	- 에포크별 train_loss와 val_loss 변화 추이 확인
+	- train_accuracy, val_accuracy, val_precision, val_recall 시각화
+
+- 평가 지표 계산
+	- 테스트 데이터셋(X_test, Y_test)으로 손실, 정확도, 재현율, 정밀도 측정
+	- 정밀도와 재현율을 활용한 F1-Score 계산: 2 * (Precision * Recall) / (Precision + Recall)
+
+- 교차표(Confusion Matrix / Crosstab) 생성
+	- 예측된 클래스 인덱스에 3을 더하여 실제 와인 품질 등급(3~8)으로 복원
+	- 실제값과 예측값 간의 Crosstab 분석으로 각 클래스별 분류 성능 확인
+
+
+	ex) 모델 평가
+	import matplotlib.pyplot as plt
+
+	# 학습 과정 시각화
+	fig, loss_ax = plt.subplots(figsize=(10, 6))
+	loss_ax.plot(hist.history['loss'], 'y', label='train_loss')
+	loss_ax.plot(hist.history['val_loss'], 'r', label='val_loss')
+	loss_ax.set_xlabel('epoch')
+	loss_ax.set_ylabel('loss', rotation=0)
+
+	acc_ax = loss_ax.twinx()
+	acc_ax.plot(hist.history['accuracy'], 'g', label='train_accuracy')
+	acc_ax.plot(hist.history['val_accuracy'], 'b', label='val_accuracy')
+	acc_ax.plot(hist.history['val_precision'], 'k', label='val_precision')
+	acc_ax.plot(hist.history['val_recall'], 'm', label='val_recall')
+	acc_ax.set_ylabel('accuracy')
+
+	loss_ax.legend(loc='center right', bbox_to_anchor=(1.5, 0.6), ncol=1)
+	acc_ax.legend(loc='center right', bbox_to_anchor=(1.5, 0.8), ncol=1)
+	plt.show()
+
+	# 모델 평가
+	loss, accuracy, recall, precision = model.evaluate(X_test, Y_test, verbose=0)
+
+	f1_score = 2 * (precision * recall) / (precision + recall)
+
+	print(f"정확도 : {accuracy:.4f} ({accuracy*100:.2f}%)")
+	print(f"정밀도 : {precision:.4f} ({precision*100:.2f}%)")
+	print(f"재현율 : {recall:.4f} ({recall*100:.2f}%)")
+	print(f"F1-Score : {f1_score:.4f} ({f1_score*100:.2f}%)")
+
+	# 예측값 및 교차표 확인
+	y_hat = model.predict(X_test).argmax(axis=1) + 3
+	y_test = Y_test.values.argmax(axis=1) + 3
+
+	print(pd.crosstab(y_test, y_hat, rownames=['실제값'], colnames=['예측값']))
+
+
+6. 모델 사용
+
+- 신규 데이터 예측 절차
+	- 입력을 위해 준비된 와인 데이터에 학습 시 사용했던 StandardScaler 적용 (transform)
+	- 모델에 스케일 조정된 데이터를 입력하여 가장 높은 확률을 가진 클래스를 찾고, 인덱스 offset(+3)을 더해 최종 등급 예측
+
+
+	ex) 모델 사용
+	# 첫 번째 Sample 확인
+	print(X_redwine[0])
+
+	# 임의의 신규 와인 샘플 데이터
+	data = [[7.4, 0.7, 0, 1.9, 0.076, 11, 34, 0.9978, 3.51, 0.56, 9.4]]
+
+	# 표준화 스케일러 적용
+	input_data = scaler.transform(data)
+
+	# 등급 예측 (인덱스 + 3)
+	pred_class = model.predict(input_data).argmax(axis=1) + 3
+	print(f"예측된 와인 품질 등급: {pred_class[0]}")
