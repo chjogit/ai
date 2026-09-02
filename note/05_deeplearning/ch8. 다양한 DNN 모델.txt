@@ -1,0 +1,32 @@
+8장. 다양한 DNN 모델 (iris 종별 예측)
+
+1. 일반적인 DNN
+- 데이터셋 생성 및 전처리
+	- seaborn을 통한 데이터셋 생성
+		- seaborn ; load_dataset('iris')
+		- LabelEncoder를 사용하여 문자열 형식의 종속변수를 정수형 라벨로 인코딩
+- 모델 구성 및 학습 : 네트워크 구조 설계
+	- He Normal 가중치 초기화
+- 모델 학습과정 설정
+	- 손실 함수 : sparse_categorical_crossentropy
+-.모델 학습
+	- 콜백 함수(Callbacks) 설정
+	- 학습과정 설정
+- 모델 평가 및 시각화
+	- 학습 과정 시각화
+
+2. sklearn MLP
+- sklearn을 통한 데이터셋 생성
+	- sklearn.datasets ; load_iris()
+	- irisData.data, irisData.target
+- model = MLPClassifier()
+	- hidden_layer_sizes, activation, solver, max_iter, batch_size, alpha, early_stopping=True, n_iter_no_change, validation_fraction, warm_start=True
+
+3. 모델 생성 함수
+
+4. 함수형 API
+- 병렬 처리
+	- concat_ = concatenate([layer1, layer2, layer3])
+
+5. Residual Block
+-  add([dense1, layer2])

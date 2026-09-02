@@ -1,0 +1,14 @@
+1장. 머신러닝 입문
+
+1. 머신러닝/딥러닝 프로그램 과정
+- 데이터 확보 및 생성 - 데이터 전처리 - 모델 구성 - 모델 학습과정 설정 - 모델 학습시키기- 모델 평가 - 모델 사용
+
+2. 사용 코드
+- 모델 구성
+	- Sequential(), Dense(), units, input_shape, summary()
+- 모델 학습과정 설정
+	- 회귀분석 오차함수 : MSE, RMSE, MAE
+	- loss, optimizer, metrics
+- 모델 학습 및 사용
+	- fit() (epochs, verbose)
+	- predict(), save(), load_model()

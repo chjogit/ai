@@ -1,0 +1,18 @@
+4장. tensorflow v1
+1. TensorFlow v1 개요 및 주요 개념
+- TensorFlow 1.x와 2.x 비교
+	- 1.x 구버전 : 정적 그래프 (Define-and-Run) 방식으로, 그래프 설계 후 tf.Session()을 통해 실행하며 C++ 최적화 및 분산 환경 처리에 유리함
+	- 2.x 신버전 : 즉시 실행 (Eager Execution / Define-by-Run) 방식으로, Python/NumPy처럼 코드 선언 즉시 결과가 계산되며 tf.Keras 및 tf.GradientTape 중심의 간결한 구조
+- TensorFlow 수치 계산 라이브러리 기초 개념
+	- Tensor(다차원 배열 데이터 구조), Node(수치 연산 및 동작), Edge(데이터 흐름 및 관계)
+	- Session & Execution : tf.Session(), sess.run()
+	- constant() (문자열 출력 시  .decode())
+	- cast(), reduce_mean(), random_normal(), Variable() (sess.run(tf.global_variables_initializer()))
+2. tf v1 회귀분석 구현
+- tf.placeholder(), feed_dict, GradientDescentOptimizer
+- 학습 과정 : [현재 W, b] -> [현재 cost] -> [미분/기울기 계산] -> [새로운 W, b 업데이트] 반복 순환
+- 데이터 스케일링 (Data Scaling)
+	- 정규화 (Normalization) : sklearn.preprocessing.MinMaxScaler
+	- 표준화 (Standardization) : sklearn.preprocessing.StandardScaler
+	- 복원 : inverse_transform()
+- 다중 독립변수 회귀분석

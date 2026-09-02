@@ -1,0 +1,19 @@
+5장. 로지스틱 회귀, 분류
+
+1. 이진 분류 (Binary Classification)
+- 데이터 읽기 및 전처리
+	- pandas(pd.read_csv) : isna().sum(), value_counts()
+	- numpy(np.loadtxt)
+- Keras Sequential 모델 구축 및 설정
+	- 입력층 : Input(shape=(8,))
+	- 은닉층 : Dense(relu/elu etc.)
+	- 출력층 : Dense(units=1, activation='sigmoid')
+	- 컴파일 : loss='binary_crossentropy', optimizer='adam', metrics=['accuracy']
+
+- 혼동 행렬 (Confusion Matrix) 및 성능 평가 지표
+	- TN (True Negative), FP (False Positive), FN (False Negative), TP (True Positive)
+	- 정확도 (Accuracy), 정밀도 (Precision), 재현율 (Recall), F1-Score
+
+		예측: 0 			예측: 1
+실제: 0  	TN (True Negative) 	FP (False Positive)
+실제: 1  	FN (False Negative) 	TP (True Positive)

@@ -1,0 +1,29 @@
+2장. 딥러닝 입문 분류분석
+
+1. 딥러닝 개요
+- ML/DL의 종류
+	- 지도학습 (입력/독립 변수, 타겟/종속 변수)
+		- 분류 분석, 회귀 분석
+	- 비지도학습 : 군집화 등
+	- 강화학습
+- 지도학습에서의 딥러닝 프로그래밍 절차
+	- 데이터 확보 및 생성 - 데이터 전처리 : 결측치 처리, 스케일 조정, 인코딩 처리 (라벨 인코딩, 원-핫 인코딩), 데이터 분리 (학습, 검증, 시험 데이터셋)
+	- 모델 구성 - 모델 학습 과정 설정 - 모델 학습시키기 - 모델 평가 - 모델 저장 및 사용
+
+2. 데이터셋 확보 및 전처리
+- 인코딩 종류 및 특징
+	- 라벨 인코딩 : fit(), transform(), fit_transform()
+	- 원-핫 인코딩 : to_categorical(), pd.get_dummies()
+
+3. 모델 구성 및 학습 과정 설정
+- 모델 구성 : Input(), Dense(), 활성화 함수(ReLU, elu, Softmax, Sigmoid, tanh(x), Binary step, Gaussian), summary()
+- 모델 학습 과정 설정(compile)
+	- 손실 함수 (loss)
+		- 회귀 분석 : mse, mae, rmse
+		- 다중 분류 : categorical_crossentropy
+		- 이진 분류 : binary_crossentropy
+	- 평가 지표 (metrics) : accuracy, recall, precision
+	- 교차 엔트로피 오차 (Cross Entropy Error) : BCE(Sigmoid), CCE(Softmax)
+- 모델 학습시키기 (fit) : epochs, batch_size, validation_split, validation_data, verbose
+- 모델 평가 및 저장/사용
+	- evaluate(), save(), load_model(), argmax()

@@ -126,7 +126,7 @@
 	print(f'정확도 : {accuracy*100:.2f}%')
 
 
-- accuracy control
+2. accuracy control
 	- 데이터 추가 확보 및 모델 구조 변경 (레이어 추가, units 증가)
 	- 과적합 방지 기법: Validation data 활용, ReLU 계열 및 Tahn 활성화 함수 적용, Dropout, 배치 정규화(BatchNormalization), L2 규제 적용
 	- 학습 파라미터 변경: Epoch 수 조정 및 Optimizer 변경
@@ -216,7 +216,7 @@
 	print(f'loss : {loss:.2f}')
 	print(f'accuracy : {accuracy*100:.2f}%')
 
-- 콜백 함수
+3. 콜백 함수
 	- 로그 출력 통제 : CustomHistory 클래스를 상속받아 1 epoch 수행 후 자동 실행되는 on_epoch_end 함수를 오버라이딩하여 특정 에포크마다 로그 출력
 	- 조기 종료 (EarlyStopping) : 검증 성능(val_loss, val_accuracy 등)이 더 이상 개선되지 않을 때 학습을 중간에 중단하여 과적합 방지
 	- 최적 모델 저장 (ModelCheckpoint) : 특정 시점의 모델 가중치 또는 전체 구조를 디스크에 주기적으로 저장하며 save_best_only=True 옵션 적용 가능

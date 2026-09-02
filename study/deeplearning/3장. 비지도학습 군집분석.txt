@@ -24,6 +24,7 @@
 - 그룹화 (*1) : 각 데이터 포인트를 더 가까운 기준점의 그룹(group0, group1)으로 할당
 - 중심점 이동 (*2) : 각 그룹의 데이터 평균 좌표(meanX, meanY)를 구하여 기준점의 위치를 업데이트
 
+	ex)
 	# 초기 랜덤 지정 2 point
 	random_points = [
 		[random.randint(40, 90), random.randint(140, 195)],
@@ -58,6 +59,7 @@
 - 그룹 할당 및 중심점 이동 과정을 반복(for문)하여 중심점을 최종 수렴 위치로 이동
 - 각 반복 단계별 중심점의 이동 경로와 최종 그룹화 결과를 차트로 출력
 
+	ex)
 	random_points = [
 		[random.randint(40, 90), random.randint(140, 195)],
 		[random.randint(40, 90), random.randint(140, 195)]
@@ -109,6 +111,7 @@
 - cluster_centers_ : K-Means 학습 결과로 구해진 각 그룹의 최적 중심점 좌표 배열
 - labels_ : 각 데이터 포인트가 속한 군집 인덱스 번호
 
+	ex)
 	from sklearn.cluster import KMeans
 
 	# 머신러닝 연산을 위해 데이터를 넘파이 배열로 변환

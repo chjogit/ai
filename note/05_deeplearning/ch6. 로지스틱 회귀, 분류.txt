@@ -1,0 +1,17 @@
+ch06. 로지스틱 회귀, 분류 (심장병 발병 예측)
+
+1. 로지스틱 회귀 분석
+- 데이터 전처리
+	- Excel 파일 : openpyxl 라이브러리
+	- 타겟 비율 유지 : train_test_split() (stratify=y)
+- 과적합(Overfitting) 방지 기법
+	- Dropout, BatchNormalization, L2 Regularization(kernel_regularizer=l2(0.001))
+	- 레이어 권장 순서 : Dense -> BatchNormalization -> Dropout
+- 불균형 데이터 처리 및 학습 기법
+	- compute_class_weight('balanced', ...)
+	- ReduceLROnPlateau 콜백
+2. 이진분류
+- 이진 타겟의 소프트맥스 변환
+	- 출력층 : Dense(units=2, activation='softmax')
+	- 손실함수 : loss='categorical_crossentropy'
+	- model.predict().argmax(axis=1)

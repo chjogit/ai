@@ -1,0 +1,19 @@
+7장. 다중 클래스 분류, 콜백함수
+
+1. 주요 개념 및 코드 동작 설명
+- MNIST 데이터셋
+	- 0부터 9까지의 손글씨 숫자 이미지로 구성된 머신러닝 및 딥러닝 분야의 대표적인 표준 벤치마크 데이터셋
+	- 6만 개의 학습 데이터셋과 1만 개의 시험 데이터셋으로 로드 가능
+- 데이터 읽기 및 이미지 처리
+	- opencv-python(cv2) 라이브러리, 흑백 모드(cv2.IMREAD_GRAYSCALE)
+	- plt.imshow()
+2. accuracy control
+	- 데이터 추가 확보 및 모델 구조 변경 (레이어 추가, units 증가)
+	- 과적합 방지 기법: Validation data 활용, ReLU 계열 및 Tahn 활성화 함수 적용, Dropout, 배치 정규화(BatchNormalization), L2 규제 적용
+	- 학습 파라미터 변경: Epoch 수 조정 및 Optimizer 변경
+	- 클래스 불균형 극복: compute_class_weight를 활용하여 클래스별 가중치 부여
+3. 콜백 함수
+	- 로그 출력 통제
+	- 조기 종료(EarlyStopping)
+	- 최적 모델 저장(ModelCheckpoint) (save_best_only=True)
+	- 학습률 조정(ReduceLROnPlateau)
