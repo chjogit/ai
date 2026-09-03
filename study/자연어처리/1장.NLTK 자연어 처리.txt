@@ -1,0 +1,101 @@
+ch1. NLTK 자연어 처리
+
+- 자연어 처리의 주요 영역
+	- 텍스트 전처리, 단어의 빈도수 측정, 문서 유사도 측정
+	- 연관 분석, 딥러닝, 워드 임베딩, 텍스트 분류
+	- 어휘 데이터베이스 활용, 감정 분석, 분류 분석
+
+1. NLTK 패키지 기초
+- 설치 및 다운로드
+	- NLTK 버전을 지정하여 설치할 수 있음 (pip install nltk==3.7)
+	- nltk.download() 명령어를 실행하면 말뭉치(corpus) 다운로드 인터페이스가 실행됨
+	- nltk.corpus.gutenberg.fileids()를 통해 구텐베르크 프로젝트의 소설 말뭉치 목록을 확인 가능
+
+- 토큰화(Tokenization) 기능
+	- sent_tokenize() : 문장 단위로 분리한 리스트 반환
+	- word_tokenize() : 단어 단위로 분리한 리스트 반환
+	- RegexpTokenizer : 정규표현식을 이용해 원하는 패턴의 단어만 추출
+		* \d+ : 연속된 숫자만 추출함
+		* \w+ : 알파벳, 숫자, 언더스코어 문자를 포함하여 추출
+		* [a-zA-Z]+ : 순수 알파벳 문자만 추출
+
+	ex) 1. 말뭉치 확인 및 토큰화
+	nltk.download()
+	print(nltk.corpus.gutenberg.fileids())
+	
+	emma = nltk.corpus.gutenberg.raw('austen-emma.txt')
+	print(emma[:45])
+	print('type :', type(emma))
+	print('글자 수 :', len(emma))
+	
+	sent_tokens = sent_tokenize(emma)
+	print('문장 수 :', len(sent_tokens))
+	print('첫 문장 :', sent_tokens[0])
+	
+	print(word_tokenize(sent_tokens[0]))
+	
+	ret = RegexpTokenizer(r'\d+')
+	digits = ret.tokenize(emma)
+	print(digits)
+
+	ret1 = RegexpTokenizer(r'\w+')
+	words = ret1.tokenize(sent_tokens[0])
+	print(words)
+	
+	ret2 = RegexpTokenizer(r'[a-zA-Z]+')
+	words2 = ret2.tokenize(sent_tokens[0])
+	print(words2)
+	
+
+2. 형태소 분석 및 어간 추출(Stemming)
+- 어간 추출 종류 및 특성
+	- PorterStemmer : 영어 자연어 처리에 가장 널리 쓰이는 표준적인 어간 추출 알고리즘
+	- LancasterStemmer : 포터 스템머보다 규칙이 엄격하여 어간을 더 짧게 깎아냄
+	- RegexpStemmer : 지정한 정규표현식 패턴(예: ing)을 단어 끝에서 찾아 제거
+
+	ex) 2. 형태소 분석 (어간 추출)
+	stem_words = ['sending', 'cooking', 'files', 'lives', 'crying', 'dying']
+	
+	pst = PorterStemmer()
+	print([pst.stem(word) for word in stem_words])
+	
+	lst = LancasterStemmer()
+	print([lst.stem(word) for word in stem_words])
+	
+	rst = RegexpStemmer('ing')
+	print([rst.stem(word) for word in stem_words])
+
+
+3. 품사 태깅(POS Tagging) 및 명사 추출
+- pos_tag() 기능
+	- word_tokenize()로 나눈 단어 리스트에 품사 태깅 수행
+	- 각 단어와 품사가 튜플 형태로 묶인 리스트 반환
+	- 주요 품사 기호
+		* NNP : 단수 고유명사
+		* NN : 단수 보통명사
+		* NNS : 복수 보통명사
+		* NNPS : 복수 고유명사
+		* JJ : 형용사
+		* VB, VBD, VBP, VBN : 동사 및 변형 형태
+
+	ex) 3. 품사 태깅
+	tagged_list = pos_tag(word_tokenize(sent_tokens[0]))
+	print('품사 태깅 결과 :', tagged_list)
+
+	print([word for word, tag in tagged_list if tag.startswith('NN')])
+
+
+4. 최빈 단어 시각화
+- nltk.Text 클래스
+	- 단어 빈도 분석 및 검색 기능을 제공하는 NLTK의 전용 클래스
+- 시각화 과정
+	- 명사 리스트(nouns_list)를 nltk.Text 객체로 변환
+	- plot(20) 함수를 통해 가장 자주 등장하는 상위 20개 명사의 출현 빈도를 그래프로 출력함
+
+	ex) 4. 최빈 단어 시각화
+	print(nouns_list[:10])
+	
+	emma_text = Text(nouns_list)
+	plt.figure(figsize=(18, 4))
+	emma_text.plot(20)
+	plt.show()	
