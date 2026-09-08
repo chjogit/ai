@@ -56,6 +56,13 @@ pip install python-decouple (Jupyter 환경에서 부적합)
 - 연관 분석
 pip install apyori
 
+- 시계열 데이터 분석
+pip install statsmodels==0.13.5
+
+- 시계열 분석 및 예측 (facebook)
+pip install prophet
+pip install plotly
+
 4. Jupyter Notebook 커널 등록 및 관리
 
 - 가상환경에 ipykernel 설치

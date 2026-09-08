@@ -1,0 +1,194 @@
+5장. LSTM
+- 영화평 감성 분석
+
+1. LSTM 및 감성 분석
+	- RNN의 장기 의존성(Long-term Dependency) 문제 및 기울기 소실/폭주 한계를 극복하기 위해 제안된 순환 신경망 모델
+	- 시퀀스 길이가 길어져도 과거의 중요 정보를 손실 없이 유지하는 셀 상태(Cell State) 메커니즘 제공
+
+- 셀 상태와 은닉 상태
+	- 셀 상태 (Ct) : 과거부터 현재까지 핵심 정보가 손실 없이 흐르는 메인 장부 역할
+	- 은닉 상태 (ht) : 현재 시점에서 외부로 출력되거나 다음 단계로 전달되는 요약 정보
+
+- 4개 연산 레이어 (게이트 구조)
+	- 망각 게이트 (ft) : 과거 기록 중 불필요한 기억을 얼마나 지울지 결정 (0~1)
+	- 입력 게이트 선택 (it) : 오늘 들어온 새 정보 중 얼마만큼 반영할지 선택 (0~1)
+	- 입력 게이트 후보 (C~t) : 과거 맥락과 현재 데이터를 결합해 재해석한 새 정보 후보
+	- 출력 게이트 (ot) : 업데이트된 장부에서 얼마나 외부에 보여줄지 선택 (0~1)
+
+- 동작 순서
+	- 입력 결합 : 현재 시점 단어(xt)와 이전 요약본(ht-1)을 하나로 병합
+	- 지우기 (망각) : 과거 장부(Ct-1)에 망각 게이트 비율(ft)을 곱해 불필요한 기억 제거
+	- 새 정보 채우기 (입력) : 입력 선택 비율(it)과 새 후보 정보(C~t)를 곱해 장부에 추가
+	- 장부 갱신 (Ct) : 지우고 더해진 최종 최신 장부(Ct) 완성
+	- 요약 출력 (ht) : 최신 장부(Ct)에 출력 게이트 비율(ot)을 곱해 최종 출력값(ht) 확정
+
+2. 데이터 전처리 및 인덱스 규칙
+
+- 인덱스 오프셋 (+3) 적용 이유
+	- IMDB 데이터셋은 내부 예약 인덱스가 존재함
+	- idx 1 : 리뷰의 시작 부분에 추가되는 시작 토큰
+	- idx 2 : 잘려진 문자나 단어 사전에 없는 단어(OOV) 대신 들어가는 토큰
+	- idx 3 : 패딩(Padding) 처리를 위한 zero-padding 토큰
+
+- pad_sequences()
+	- maxlen : 시퀀스 최대 허용 길이 (MY_LENGTH)
+	- truncating='post' : 길이를 초과할 경우 뒷부분 제거
+	- padding='pre' : 길이가 부족할 경우 앞쪽에 0 추가 (RNN 계열의 기억 유지에 유리)
+
+
+
+	ex) IMDB 데이터 로드 및 전처리
+
+	# 하이퍼파라미터 설정
+	MY_WORDS = 10000
+	MY_LENGTH = 80
+	MY_EMBED = 32
+	MY_HIDDEN = 64
+	MY_EPOCH = 10
+	MY_BATCH = 200
+	SKIP_TOP = 40
+
+	# 데이터 불러오기
+	(X_train, y_train), (X_test, y_test) = imdb.load_data(
+		num_words=MY_WORDS,
+		skip_top=SKIP_TOP
+	)
+
+	# 단어-인덱스 사전 구축 및 역매핑
+	word_to_id = imdb.get_word_index()
+	id_to_word = {id_val: word for word, id_val in word_to_id.items()}
+
+	# 자연어 텍스트의 정수 인덱스 변환 테스트
+	msg = 'What a wonderful movie'
+	msg = msg.lower().split()
+	data = [1] + [word_to_id.get(m, -1) + 3 for m in msg]
+	data_msg = ' '.join([id_to_word.get(d - 3, '??') for d in data])
+
+	# 디코딩 함수
+	def decoding(review_num):
+		decoded = [id_to_word.get(d - 3, '??') for d in review_num]
+		return ' '.join(decoded)
+
+	# 시퀀스 길이 확인 함수
+	def show_length(X_data=X_train):
+		print('영화평 데이터 5개 단어 길이')
+		for i in range(5):
+			print(f'{i}번째 길이 : {len(X_data[i])}')
+
+	# 시퀀스 패딩 처리
+	X_train = pad_sequences(
+		X_train,
+		maxlen=MY_LENGTH,
+		truncating='post',
+		padding='pre'
+	)
+
+	X_test = pad_sequences(
+		X_test,
+		maxlen=MY_LENGTH,
+		truncating='post',
+		padding='pre'
+	)
+
+
+3. 모델 구축 및 파라미터 옵션
+
+- LSTM 파라미터 옵션
+	- dropout : 입력 데이터에서 LSTM 셀로 들어가는 연결을 무작위로 차단하여 과적합 방지
+	- recurrent_dropout : 이전 은닉 상태의 순환 연결을 무작위로 차단
+	- kernel_regularizer : L2 가중치 규제를 적용하여 가중치 폭주 방지
+	- kernel_initializer='he_normal' : 입력 가중치(W_x) 초기화 방식
+	- recurrent_initializer='orthogonal' : 순환 가중치(W_h)를 직교 초기화하여 기울기 소실 방지
+
+- EarlyStopping 콜백 파라미터
+	- monitor='val_loss': 검증 손실을 기준으로 조기 종료 판단
+	- patience=3: 성능 개선이 없는 에포크를 3회까지 허용
+	- restore_best_weights=True: 조기 종료 시 가장 성능이 좋았던 시점의 가중치로 자동 복원
+
+
+	ex) LSTM 모델
+	model = Sequential(name='seq')
+
+	model.add(Embedding(
+		input_dim=MY_WORDS,
+		output_dim=MY_EMBED,
+		input_length=MY_LENGTH
+	))
+
+	model.add(LSTM(
+		units=MY_HIDDEN,
+		dropout=0.3,
+		recurrent_dropout=0.3,
+		kernel_regularizer=l2(0.001),
+		kernel_initializer='he_normal',
+		recurrent_initializer='orthogonal'
+	))
+
+	model.add(Dense(units=1, activation='sigmoid'))
+	model.summary()
+
+	ex) 학습 설정 및 실행
+	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['acc'])
+
+	earlyStopping = EarlyStopping(
+		monitor='val_loss',
+		patience=3,
+		mode='min',
+		restore_best_weights=True,
+		verbose=1
+	)
+
+	hist = model.fit(
+		X_train, y_train,
+		validation_split=0.2,
+		epochs=MY_EPOCH,
+		batch_size=MY_BATCH,
+		verbose=2,
+		callbacks=[earlyStopping]
+	)
+
+	ex) 모델 평가 및 시각화
+	# 학습 결과 시각화
+	fig, loss_ax = plt.subplots(figsize=(10, 6))
+	loss_ax.plot(hist.history['loss'], 'y', label='train_loss')
+	loss_ax.plot(hist.history['val_loss'], 'r', label='val_loss')
+	loss_ax.set_xlabel('epoch')
+	loss_ax.set_ylabel('loss', rotation=0)
+
+	acc_ax = loss_ax.twinx()
+	acc_ax.plot(hist.history['acc'], 'g', label='train_accuracy')
+	acc_ax.plot(hist.history['val_acc'], 'b', label='val_accuracy')
+	acc_ax.set_ylabel('accuracy')
+
+	loss_ax.legend(loc='center right', bbox_to_anchor=(1.5, 0.6), ncol=1)
+	acc_ax.legend(loc='center right', bbox_to_anchor=(1.5, 0.8), ncol=1)
+	plt.show()
+
+	# 테스트 데이터 평가
+	loss, acc = model.evaluate(X_test, y_test)
+
+	# 혼동 행렬 및 평가지표 산출
+	pred = model.predict(X_test, batch_size=MY_BATCH)
+	y_hat = (pred > 0.5).astype(int)
+
+	print(confusion_matrix(y_test, y_hat))
+	print(pd.crosstab(y_test, y_hat.reshape(-1)))
+
+	print('recall :', recall_score(y_test, y_hat))
+	print('precision :', precision_score(y_test, y_hat))
+	print('f1-score :', f1_score(y_test, y_hat))
+
+	ex) 신규 리뷰 텍스트 감성 예측
+	review = "What a wonderful movie"
+	review = re.sub(r'[^a-zA-Z\s]', ' ', review).lower().split()
+	review = [1] + [word_to_id.get(word, -1) + 3 if (word_to_id.get(word, -1) + 3) < MY_WORDS else 2 for word in review]
+
+	input_data = pad_sequences(
+		[review],
+		maxlen=MY_LENGTH,
+		truncating='post',
+		padding='pre'
+	)
+
+	prediction = (model.predict(input_data) > 0.5).astype(int)
+	print('감성 예측 결과 (1: 긍정, 0: 부정) :', prediction[0][0])

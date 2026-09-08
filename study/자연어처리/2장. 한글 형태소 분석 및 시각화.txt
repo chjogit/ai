@@ -1,0 +1,245 @@
+2장. 한글 형태소 분석 및 시각화
+
+1. 자연어 처리 개요
+
+- 자연어의 정의
+	- 사람이 일상생활에서 사용하는 언어
+
+- 주요 처리 분야
+	- 자연어 이해 : 형태소 분석, 품사 태깅(POS Tagging), 의미 분석, 시각화
+	- 모델 생성 : RNN, LSTM, GRU, seq2seq, Transformer
+
+- 자연어 처리 수행 절차
+	- 분석 후보 생성 : 형태소 분리 및 품사 태깅
+	- 제약 조건 적용 : 언어적 규칙 확인 및 불용어(Stopwords) 처리
+	- 최종 분석 및 활용 : 시각화(워드클라우드, Plot), 유사도 분석, 연관 분석, 딥러닝 모델 적용
+
+2. 한글 형태소 분석 엔진
+
+- 형태소 분석 엔진 공통 함수
+	- morphs() : 문장을 형태소 단위로 분리
+	- pos() : 형태소 단위 품사 태깅
+	- nouns() : 문장에서 명사만 추출
+
+- HanNanum, Kkma, Komoran: Java 기반 분석기 (JAVA_HOME 및 PATH 설정 필수)
+	- HanNanum : analyze() 메서드로 text 분석 후 형태소 및 품사 반환 (ntag=69 기본값)
+	- Kkma : 품사 태깅 시 태그 세트를 56개로 고정하여 제공 (ntags 지정 불가)
+	- Okt : 구 Twitter (2018년 KoNLPy v0.4.5부터 Okt로 명칭 변경), 정제되지 않은 인터넷/SNS 텍스트 처리에 특화, Scala 기반으로 JVM 상에서 구동되며 빠른 속도와 적은 메모리 점유율 제공
+	- MeCab : C++ 기반으로 KoNLPy 대비 5~20배 빠른 압도적 속도와 높은 메모리 효율성 제공, 저사양 환경 및 다국어 바인딩 지원, 실무 NLP 서비스의 표준 (네이버, 카카오, 라인 등 활용)
+	- Konlp : R 언어 전용 자연어 처리 패키지
+
+
+	ex) HanNanum 
+	from konlpy.tag import Hannanum
+
+	text = '''
+	아름답지만 다소 복잡하기도 한 한국어는 전세계에서 13번째로
+	많이 사용되는 언어입니다
+	'''
+
+	hannanum = Hannanum(jvmpath=None, max_heap_size=512)
+	hannanum.analyze(text)
+
+	print(hannanum.morphs(text))
+	print(hannanum.nouns(text))
+	print(hannanum.pos(text, ntags=22))
+
+	tagged_text = hannanum.pos(text, ntags=22)
+
+	words_pa = [token for token, tag in tagged_text if tag == 'PA']
+	print(words_pa)
+
+	tags_noun = ['NC', 'NQ', 'NP', 'NN']
+	words_nouns = [token for token, tag in tagged_text if tag in tags_noun]
+	print(words_nouns)
+
+	words_nc = [token for token, tag in tagged_text if tag == 'NC']
+	print(words_nc)
+
+
+
+	ex) Kkma 
+	from konlpy.tag import Kkma
+
+	kkma = Kkma()
+
+	print(kkma.morphs(text))
+	print(kkma.pos(text))
+
+	tagged_text = kkma.pos(text)
+	words = [token for token, tag in tagged_text if tag in ('NNG', 'NNP', 'NP')]
+	print(words)
+
+	print(kkma.nouns(text))
+
+	ex) Komoran 
+	from konlpy.tag import Komoran
+
+	komoran = Komoran()
+
+	print(komoran.morphs(text))
+	print(komoran.nouns(text))
+
+	tagged_list = komoran.pos(text)
+	print(tagged_list)
+
+	print([token for token, tag in tagged_list if tag in ('NNG', 'NNP')])
+
+	ex) Okt
+	from konlpy.tag import Okt
+
+	okt = Okt()
+
+	print('명사구 추출 :', okt.phrases(text))
+	print('형태소 분석 :', okt.morphs(text))
+	print(okt.nouns(text))
+
+	tagged_list = okt.pos(text)
+	print(tagged_list)
+	print([word for word, tag in tagged_list if tag == 'Noun'])
+
+	ex) MeCab
+	from mecab import MeCab
+
+	mecab = MeCab()
+
+	print(mecab.morphs(text))
+	print(mecab.nouns(text))
+
+	tagged_list = mecab.pos(text)
+	print(tagged_list)
+	print([token for token, tag in tagged_list if tag in ('NNG', 'NNP', 'NP', 'NR')])
+
+	ex) 말뭉치 로드
+	import nltk # 영어 말뭉치
+	from konlpy.corpus import kolaw # 한국어 말뭉치
+
+	emma = nltk.corpus.gutenberg.raw('austen-emma.txt')
+	kolaw_data = kolaw.open('constitution.txt').read()
+
+3. 워드 클라우드 (Word Cloud)
+
+- 주요 개념 및 전처리
+	- 텍스트 내 단어 빈도수를 시각적으로 표현하는 기법
+	- 명사 추출 후 단어들을 공백으로 연결한 단일 문자열 상태로 전달하여 생성
+	- font_path(글자 폰트), width(가로 크기), height(세로 크기), background_color(배경색), max_words(최대 단어 수), relative_scaling(빈도 반응도), colormap(색상 팔레트)
+	- to_file() 함수를 사용하여 가로x세로 크기의 이미지 파일로 저장 가능
+
+- 마스크(Mask) 적용 시 주의사항
+	- 투명 배경(PNG) 이미지를 마스크로 사용할 경우, 알파 채널의 투명 영역(0)을 흰색(255)으로 변환하는 전처리 작업 필요
+
+
+	ex) 영어 워드클라우드
+	import nltk
+	from nltk.tokenize import RegexpTokenizer
+	from nltk.tag import pos_tag
+	from wordcloud import WordCloud
+	from matplotlib import pyplot as plt
+
+	emma = nltk.corpus.gutenberg.raw('austen-emma.txt')
+
+	ret = RegexpTokenizer(r'\w{2,}')
+	words = ret.tokenize(emma)
+	emma_tags = pos_tag(words)
+
+	noun_list = [token for token, tag in emma_tags if tag in ('NN', 'NNS', 'NNP', 'NNPS')]
+	print('추출한 명사 개수 :', len(noun_list), ', 단어 종류 수 :', len(set(noun_list)))
+
+	emma_noun = ' '.join(noun_list)
+
+	wordcloud = WordCloud(
+		font_path='C:/Windows/Fonts/BRLNSDB.TTF',
+		width=800,
+		height=400,
+		background_color='white',
+		max_words=300,
+		relative_scaling=0.8,
+		colormap='twilight_shifted'
+	)
+	wordcloud.generate(emma_noun)
+
+	plt.imshow(wordcloud)
+	plt.axis('off')
+	plt.show()
+
+	wordcloud.to_file('emma.png')
+
+	ex) 마스크 이미지 로드 방법
+	import cv2
+	from PIL import Image
+	import numpy as np
+	from matplotlib import pyplot as plt
+
+	mask_cv = cv2.imread('data/heart.png', cv2.IMREAD_UNCHANGED)
+	plt.figure(figsize=(1, 1), facecolor='white')
+	plt.imshow(mask_cv)
+	plt.axis('off')
+	plt.show()
+
+	img = Image.open('data/heart.png')
+	mask_pil = np.array(img)
+	plt.figure(figsize=(1, 1))
+	plt.imshow(mask_pil)
+	plt.axis('off')
+	plt.show()
+
+	ex) 마스크 지정 워드클라우드 생성
+	from wordcloud import WordCloud
+	from matplotlib import pyplot as plt
+	from PIL import Image
+	import numpy as np
+
+	img = Image.open('data/heart.png')
+	mask_raw = np.array(img)
+
+	mask = mask_raw.copy()
+	if mask.ndim == 3 and mask.shape[2] == 4:
+		transparent_area = (mask[:, :, 3] == 0)
+		mask[transparent_area] = [255, 255, 255, 255]
+
+	kolaw_noun = ' '.join(noun_list)
+
+	wordcloud = WordCloud(
+		font_path='C:/Windows/Fonts/SeoulNamsanEB.ttf',
+		background_color='white',
+		max_words=300,
+		relative_scaling=0.5,
+		stopwords=stopword,
+		mask=mask
+	)
+	wordcloud.generate(kolaw_noun)
+
+	plt.figure(figsize=(2, 2))
+	plt.imshow(wordcloud)
+	plt.axis('off')
+	plt.show()
+
+4. 워드 임베딩 (Word Embedding)
+
+- 주요 개념 및 특징
+	- 단어를 고차원 공간의 벡터(좌표)로 변환하여 단어 간 거리 및 유사도를 계산하는 기법
+	- 분포 가설(Distributional Hypothesis)에 기반하여 문맥적 유사성을 학습
+
+- Word2Vec 핵심 파라미터
+	- sentences : 학습할 2차원 리스트 형태의 텍스트 데이터 (예: 네이버 API 등으로 수집한 뉴스 제목/내용의 명사 리스트)
+	- window : 타깃 단어 양옆(좌우)으로 참조할 맥락 단어의 최대 거리
+	- min_count : 전체 문서에서 최소 등장 빈도수 조건 (이하 단어는 Vocab에서 제외)
+	- workers : 학습에 사용할 CPU 코어 수
+	- sg : 학습 방식 설정 (1 : Skip-gram - 소량 데이터 및 희귀 단어에 유리, 0 : CBOW - 속도가 빠르고 대량 데이터에 유리)
+	- index_to_key : 학습된 단어 목록 확인
+	- most_similar() : 특정 단어와 코사인 유사도가 가장 높은 상위 N개 단어 추출
+
+
+	ex) Word2Vec
+	from gensim.models import Word2Vec
+
+	model = Word2Vec(
+		sentences=news,
+		window=15,
+		min_count=2,
+		workers=4,
+		sg=1
+	)
+
+	print(model.wv.index_to_key)
+	print(model.wv.most_similar('한국', topn=10))

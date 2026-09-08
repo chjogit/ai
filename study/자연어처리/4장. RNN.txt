@@ -1,0 +1,133 @@
+4장. RNN(Recurrent Neural Network ; 순환신경망)
+
+1. 순환신경망 (RNN, Recurrent Neural Network)
+
+- 정의 및 특징
+	- 순서와 맥락이 중요한 시퀀스(Sequence) 데이터를 처리하기 위해 고안된 인공 신경망 구조
+	- 이전 시점의 출력이 다음 시점의 입력으로 연결되는 순환 구조를 가짐
+
+- 주요 활용 사례
+	- 자연어 처리 : 기계 번역, 단어/다음 문맥 예측, 음성 인식
+	- 시계열 예측 : 주가 예측, 날씨 변화 예측 등
+
+
+2. 데이터 전처리 및 주요 옵션
+
+- Tokenizer
+	- fit_on_texts() : 텍스트 데이터를 단어 등장 빈도순으로 학습하여 고유 인덱스 매핑 (word_index 사전 생성)
+	- texts_to_sequences() : 텍스트 문장을 정수 인덱스 시퀀스 리스트로 1차 변환
+
+- pad_sequences() 주요 옵션
+	- maxlen : 입력 규격화를 위한 시퀀스의 최대 길이 지정 옵션
+	- padding='pre' : 시퀀스 앞쪽에 0을 채워 넣는 기본 옵션 (RNN 계열의 장기 의존성 유지에 유리)
+	- padding='post' : 시퀀스 뒤쪽에 0을 채워 넣는 패딩 옵션
+	- truncating='pre' : maxlen 초과 시 시퀀스 앞쪽 단어들을 자르는 옵션 (기본값)
+	- truncating='post' : maxlen 초과 시 시퀀스 뒤쪽 단어들을 자르는 옵션
+	- value : 패딩 시 기본값 0 대신 특정 지정 값을 채우는 옵션
+	- dtype : 패딩 처리 후 반환되는 NumPy 배열의 데이터 타입 지정 옵션
+
+- 독립 변수(X)와 타겟 변수(y) 분리
+	- X : padded_sequences[:, :-1] (마지막 단어를 제외한 시퀀스)
+	- y : padded_sequences[:, -1] (시퀀스의 마지막 단어)
+	- Y : to_categorical()을 이용해 원-핫 인코딩 처리 (0번 패딩 인덱스 포함을 위해 vocab_size + 1 크기 적용)
+
+3. 모델 구조 및 학습/평가 과정
+
+- 모델 구성
+	- Embedding Layer : 정수 시퀀스를 밀집 벡터(Dense Vector)로 변환 (input_dim=vocab_size+1, output_dim, input_length 설정)
+	- SimpleRNN Layer : 순환 레이어 적용 (기본 활성화 함수: tanh)
+	- Dense Layer : 최종 예측 레이어 (단어 사전 크기 대상 확률 출력을 위한 softmax 활성화 함수 적용)
+
+- 학습 설정 및 예측
+	- 손실 함수(loss) : categorical_crossentropy 적용
+	- 옵티마이저(optimizer) : adam 적용
+	- 예측결과 변환 : model.predict() 출력 확률 배열 중 argmax(axis=1)를 통해 가장 확률이 높은 단어 인덱스 추출
+
+
+	ex) 다음 단어 예측 모델 구현
+	import matplotlib.pyplot as plt
+	from keras_preprocessing.text import Tokenizer
+	from tensorflow.keras.layers import Dense, Embedding, SimpleRNN
+	from tensorflow.keras.models import Sequential
+	from tensorflow.keras.preprocessing.sequence import pad_sequences
+	from tensorflow.keras.utils import to_categorical
+
+	text = '''
+	경마장에 있는 말이 뛰고 있다
+	그의 말이 법이다
+	가는 말이 고와야 오는 말이 곱다'''
+
+	# 단어 사전 구축
+	token = Tokenizer()
+	token.fit_on_texts([text])
+
+	# 텍스트 내 부분 시퀀스 생성 (N-gram 기반)
+	sequences = []
+	for line in text.split('\n'):
+		encoded = token.texts_to_sequences([line])[0]
+		for i in range(0, len(encoded) - 1):
+			for j in range(i + 2, len(encoded) + 1):
+				sequences.append(encoded[i:j])
+
+	# 시퀀스 길이 맞추기 (Padding)
+	padded_sequences = pad_sequences(sequences)
+
+	# X, y 분리
+	X = padded_sequences[:, :-1]
+	y = padded_sequences[:, -1]
+
+	vocab_size = len(token.word_index)
+	Y = to_categorical(y, vocab_size + 1)
+
+	# RNN 모델 정의
+	model = Sequential(name='sequential')
+	model.add(Embedding(input_dim=vocab_size + 1, output_dim=8, input_length=X.shape[1]))
+	model.add(SimpleRNN(32, activation='tanh'))
+	model.add(Dense(vocab_size + 1, activation='softmax'))
+	model.summary()
+
+	# 모델 학습 설정 및 실행
+	model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+	hist = model.fit(X, Y, epochs=300, verbose=2)
+
+	# 학습 과정 시각화 (Loss & Accuracy)
+	fig, loss_ax = plt.subplots(figsize=(10, 6))
+	loss_ax.plot(hist.history['loss'], 'y', label='train_loss')
+	loss_ax.set_xlabel('epoch')
+	loss_ax.set_ylabel('loss', rotation=0)
+
+	acc_ax = loss_ax.twinx()
+	acc_ax.plot(hist.history['accuracy'], 'g', label='train_accuracy')
+	acc_ax.set_ylabel('accuracy')
+
+	loss_ax.legend(loc='center right', bbox_to_anchor=(1.5, 0.6), ncol=1)
+	acc_ax.legend(loc='center right', bbox_to_anchor=(1.5, 0.8), ncol=1)
+	plt.show()
+
+	# 단일 단어 예측 실행
+	encoded = token.texts_to_sequences(['말이'])[0]
+	input_data = pad_sequences([encoded], maxlen=5, padding='pre')
+	result = model.predict(input_data, verbose=0).argmax(axis=1)[0]
+
+	print('모델 예측 결과 인덱스 :', result)
+	for key, value in token.word_index.items():
+		if value == result:
+			print('예측 단어 :', key)
+			break
+
+	ex) 이어질 문맥 예측 함수 구현
+	def sentence_generater(model, t, current_word, n):
+		print('입력된 단어 :', current_word)
+		for i in range(1, n + 1):
+			encoded = t.texts_to_sequences([current_word])[0]
+			input_data = pad_sequences([encoded], maxlen=5, padding='pre')
+			result = model.predict(input_data, verbose=0).argmax(axis=1)[0]
+			for key, value in token.word_index.items():
+				if value == result:
+					print(f'{i}번째, {key}:{result}')
+					current_word = current_word + ' ' + key
+					break
+		return current_word
+
+	# '가는 말이' 이후 단어 4개 연속 예측
+	sentence_generater(model, token, '가는 말이', 4)

@@ -1,0 +1,130 @@
+7장. 라이브러리를 이용한 시계열 데이터 분석
+- 일별 평균 대기 오염도 정보
+
+1. 시계열 데이터 분석 및 전처리 
+
+- 데이터 준비 및 결측치 확인
+	- isna(), any(axis=1)을 활용해 특정 열 및 전체 행 단위 결측치 존재 여부 확인
+	- value_counts(), unique(), nunique()를 활용해 결측치가 발생한 측정소별 빈도 및 전체 측정소 개수 파악
+
+- 날짜 데이터 타입 변환 규칙
+	- 숫자형(int) 날짜 데이터를 바로 pd.to_datetime()에 전달하면 millisecond 단위로 잘못 인식될 수 있음
+	- 정수(int) → 문자열(str) → 날짜형(datetime) 순서로 형변환 진행 후 적용
+
+
+	ex) 공공데이터 결측치 및 날짜 형변환 전처리
+	import pandas as pd
+
+	# 데이터 로드
+	df = pd.read_csv('data/일별_평균_대기오염도정보_2025.csv', encoding='cp949')
+	print(df.tail())
+
+	# 특정 열 및 전체 결측치 확인
+	print(df[df['이산화질소농도(ppm)'].isna()])
+	print(df[df.isna().any(axis=1)])
+
+	# 결측치 발생 측정소 정보 확인
+	print(df.loc[df.isna().any(axis=1), '측정소명'].value_counts())
+	print('결측치가 있는 측정소 수 :', len(df.loc[df.isna().any(axis=1), '측정소명'].value_counts()))
+
+	# 전체 측정소 목록 및 개수 확인
+	print(df['측정소명'].unique())
+	print('전체 측정소 수 :', df['측정소명'].nunique())
+
+	# 날짜 데이터 형변환 (int -> str -> datetime)
+	df['측정일시'] = pd.to_datetime(df['측정일시'].astype(str))
+
+	# 특정 측정소 데이터 필터링
+	loc_name = '서울숲'
+	df_flt = df[df['측정소명'] == loc_name]
+	print(df_flt.head())
+
+
+2. statsmodels
+	- 시계열 데이터가 가진 트렌드(Trend), 계절성(Seasonal), 잔차(Residual)를 수학적으로 분리하여 주기적 특성을 파악하는 도구
+
+- 데이터 전처리 및 필수 조건
+	- 중복 제거, 결측치 처리 및 빈도(간격) 설정 필요
+	- 날짜/시간 데이터를 반드시 데이터프레임의 인덱스(Index)로 지정하여 전달
+
+- 시계열 분해 모델 종류 (model 옵션)
+	- 덧셈 모델 (model='additive') : 실제값 = 추세 + 계절성 + 잔차 (변동 폭이 일정할 때 사용)
+	- 곱셈 모델 (model='multiplicative') : 실제값 = 추세 × 계절성 × 잔차 (시간 흐름에 따라 변동 폭이 커질 때 사용)
+
+- seasonal_decompose()
+	- observed : 실제값 (원본 시계열 데이터)
+	- trend : 추이 (계절성 및 무작위 노이즈가 제거된 장기 변동 흐름)
+	- seasonal : 계절성 (지정한 period 주기에 따라 반복되는 패턴 수치)
+	- resid : 잔차 (이벤트성 무작위 노이즈 데이터)
+
+	
+	ex) statsmodels
+	import matplotlib.pyplot as plt
+	from statsmodels.tsa.seasonal import seasonal_decompose
+
+	# 날짜 컬럼을 인덱스로 설정
+	df_flt2 = df_flt[['측정일시', '미세먼지농도(㎍/㎥)']]
+	ts = df_flt2.set_index('측정일시')
+
+	# 시계열 데이터 분해 (30일 주기, 덧셈 모델)
+	rslt = seasonal_decompose(
+		ts['미세먼지농도(㎍/㎥)'],
+		period=30,
+		model='additive'
+	)
+
+	# 분해 결과 4가지 요소 시각화 (Observed, Trend, Seasonal, Resid)
+	fig, axes = plt.subplots(nrows=4, ncols=1, figsize=(25, 12))
+	axes[0].plot(rslt.observed)
+	axes[0].set_title('Observed')
+	axes[1].plot(rslt.trend)
+	axes[1].set_title('Trend')
+	axes[2].plot(rslt.seasonal)
+	axes[2].set_title('Seasonal')
+	axes[3].plot(rslt.resid)
+	axes[3].set_title('Resid')
+
+
+3. Prophet
+	- Meta(구 Facebook)에서 개발한 오픈소스 시계열 예측 라이브러리
+	- 트렌드, 강력한 계절성, 휴일 효과(Holiday Effects) 분석에 특화
+	- 결측치나 불규칙한 시간 간격이 존재하는 데이터도 별도 전처리 없이 예측 가능
+
+- 필수 데이터 구조 조건
+	- 데이터프레임 컬럼명을 반드시 날짜 컬럼 'ds', 타겟 변수 컬럼 'y'로 변경해야 함
+
+- 예측 수행 순서
+	- Prophet() 모델 객체 생성 후 fit()으로 학습 진행
+	- make_future_dataframe(periods=N) : 기존 날짜 이후 N일간의 미래 날짜 데이터프레임 생성
+	- predict() : 미래 시점 포함 예측 수행
+	- plot() : 원본 데이터 및 예측값 시각화
+	- plot_components() : 트렌드, 요일/연간 계절성 등 세부 구성요소 시각화
+
+
+	ex) Prophet
+	from prophet import Prophet
+
+	# 컬럼명 변경 필수 ('ds', 'y')
+	df_flt2.columns = ['ds', 'y']
+
+	# Prophet 모델 생성 및 학습
+	p_model = Prophet()
+	p_model.fit(df_flt2)
+
+	# 미래 30일 데이터프레임 생성 및 예측
+	future = p_model.make_future_dataframe(periods=30)
+	forecast = p_model.predict(future)
+
+	# 예측 결과 시각화
+	fig1 = p_model.plot(forecast)
+	plt.show()
+
+	# 구성 요소(트렌드, 계절성) 시각화
+	fig2 = p_model.plot_components(forecast)
+	plt.show()
+
+
+4. 시계열 분석 도구별 용도 비교
+- seasonal_decompose : 통계적 패턴 및 추이 분석
+- RNN / LSTM / GRU / Seq2Seq : 딥러닝 기반 시계열 예측
+- Prophet : 트렌드 분석 및 미래 시계열 예측

@@ -1,0 +1,130 @@
+8장. attention(GNMT)
+- 스마트 번역기
+- GNMT (Google Neural Machine Translation) : 인공신경망 기반 기계 번역 시스템
+
+1. Seq2Seq 및 Attention 메커니즘
+
+- 기본 Seq2Seq의 한계
+	- 인코더가 전체 입력 문장을 단 하나의 고정된 크기 벡터(Context Vector)로 압축하므로 문장이 길어질수록 정보 손실(Information Bottleneck) 발생
+
+- Attention 메커니즘의 해결 방식
+	- 디코더가 매 시점(time step)마다 예측을 수행할 때, 인코더의 모든 시점 출력(ENC_OUT) 중 관련된 단어에 가중치(어텐션 점수)를 부여하여 집중 탐색
+	- 정보 손실 방지 및 디코더의 예측 정확도 향상
+
+2. 어텐션 레이어
+
+- LSTM return_sequences=True 설정
+	- 인코더 : 모든 시점의 은닉 상태를 어텐션 레이어에 전달하기 위해 필수 지정
+	- 디코더 : 시퀀스의 매 시점마다 어텐션 컨텍스트 벡터와 결합하기 위해 필수 지정
+
+- 어텐션 및 결합 과정
+	- Attention()([DEC_MID, ENC_OUT]) : 디코더 은닉 상태(DEC_MID)를 Query로, 
+							   인코더 전체 은닉 상태(ENC_OUT)를 Key/Value로 사용하여 가중치 계산 후 어텐션 컨텍스트 벡터(CONTEXT_VECTOR) 생성
+	- Concatenate()([CONTEXT_VECTOR, DEC_MID]) : 생성된 어텐션 컨텍스트 벡터와 디코더 자체 출력을 결합하여 Dense 레이어에 입력
+
+
+	ex) Seq2Seq + Attention 모델 구축 예시
+
+	# 데이터 로드 및 알파벳 사전 구축
+	raw = pd.read_csv('data/translate.csv')
+	eng_kor = raw.values.tolist()
+
+	e_alpha = [c for c in 'SEPabcdefghijklmnopqrstuvwxyz']
+	korean = ''.join([data[1] for data in eng_kor])
+	k_alpha = list(set([ch for ch in korean]))
+	k_alpha.sort()
+
+	alpha = e_alpha + k_alpha
+	alpha_total_size = len(alpha)
+
+	char_to_num = {ch: i for i, ch in enumerate(alpha)}
+
+	# 하이퍼파라미터 설정
+	MY_HIDDEN = 128
+	MY_EPOCH = 200
+
+	# 데이터 전처리 함수
+	def encoding(eng_kor_data=eng_kor):
+		enc_in = []
+		dec_in = []
+		dec_out = []
+
+		for data in eng_kor_data:
+			eng = [char_to_num.get(ch) for ch in data[0]]
+			eng_one = to_categorical(eng, num_classes=alpha_total_size)
+			enc_in.append(eng_one)
+
+			kor = [char_to_num.get(ch) for ch in 'S' + data[1]]
+			kor_one = np.eye(alpha_total_size)[kor]
+			dec_in.append(kor_one)
+
+			kor_target = [[char_to_num.get(ch)] for ch in data[1] + 'E']
+			dec_out.append(kor_target)
+
+		return np.array(enc_in), np.array(dec_in), np.array(dec_out)
+
+	X_enc, X_dec, Y_dec = encoding(eng_kor)
+
+	# 인코더 구조
+	ENC_IN = Input(shape=(4, alpha_total_size))
+	ENC_OUT, state_h, state_c = LSTM(
+		units=MY_HIDDEN,
+		return_state=True,
+		return_sequences=True
+	)(ENC_IN)
+
+	# 디코더 구조
+	DEC_IN = Input(shape=(3, alpha_total_size))
+	DEC_MID, _, _ = LSTM(
+		units=MY_HIDDEN,
+		return_state=True,
+		return_sequences=True
+	)(DEC_IN, initial_state=[state_h, state_c])
+
+	# 어텐션 레이어 및 결합
+	CONTEXT_VECTOR = Attention()([DEC_MID, ENC_OUT])
+	CONTEXT_AND_LSTM = Concatenate()([CONTEXT_VECTOR, DEC_MID])
+
+	# 최종 출력층
+	OUT = Dense(units=alpha_total_size, activation='softmax')(CONTEXT_AND_LSTM)
+
+	# 모델 정의
+	model = Model(
+		inputs=[ENC_IN, DEC_IN],
+		outputs=OUT,
+		name='model1'
+	)
+	model.summary()
+
+	# 학습 및 평가
+	model.compile(
+		loss='sparse_categorical_crossentropy',
+		optimizer='rmsprop',
+		metrics=['accuracy']
+	)
+
+	hist = model.fit(
+		[X_enc, X_dec], Y_dec,
+		epochs=MY_EPOCH,
+		verbose=0
+	)
+
+	model.evaluate([X_enc, X_dec], Y_dec)
+
+	# 번역 예측 테스트
+	easy_test = [
+		['down', 'pp'],
+		['desk', 'pp'],
+		['love', 'pp'],
+		['wood', 'pp']
+	]
+
+	enc_in_test, dec_in_test, _ = encoding(easy_test)
+
+	pred = model.predict([enc_in_test, dec_in_test])
+
+	for i in range(len(pred)):
+		eng = easy_test[i][0]
+		hat = pred[i].argmax(axis=-1)
+		kor = ''.join([alpha[num] for num in hat[:-1]])
+		print(f'{eng} : {kor}')

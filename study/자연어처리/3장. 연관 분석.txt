@@ -1,0 +1,98 @@
+3장. 연관 분석
+
+1. 연관 분석 개요
+
+- 연관 분석의 정의
+	- 데이터 간의 서로 다른 사건이나 거래에서 함께 발생하는 규칙과 관계를 발견하는 데이터 마이닝 기법
+
+- 대표 활용 사례
+	- 유통/커머스 : 상품 진열 위치 최적화, 교차 판매 추천
+	- 금융/보험 : 보험 사기 적발, 이상 거래 감지
+- 주요 개념
+	- 조건 (LHS, item_base) : 원인이 되는 항목 (예: 오렌지 주스)
+	- 결과 (RHS, item_add) : 결과가 되는 항목 (예: 와인)
+- 연관 분석 주요 지표
+	- 지지도 (Support) : 전체 거래 중 항목 A와 B가 동시에 포함된 거래의 비율
+		- support(A->B) = P(A ∩ B) / 전체 거래 수
+	- 신뢰도 (Confidence) : 항목 A가 구매된 거래 중 항목 B도 함께 구매된 비율 (조건부 확률)
+		- confidence(A->B) = P(A ∩ B) / P(A)
+	- 향상도 (Lift) : A의 구매가 B의 구매 확률을 얼마나 증가시키는지를 나타내는 비율
+		- lift(A->B) = P(A ∩ B) / (P(A) * P(B))
+			- Lift > 1: 양의 연관성 (A와 B를 함께 구매할 확률이 상호 독립일 때보다 높음)
+			- Lift = 1: 상호 독립 (A와 B 사이에 아무런 연관성이 없음)
+			- Lift < 1: 음의 연관성 (상호 독립일 때보다 A와 B를 함께 구매할 확률이 낮음)
+
+2. 연관 분석 구현
+
+- Apriori 원리
+	- 한 항목집합이 빈발하다면, 그 항목집합의 모든 부분집합도 빈발하다는 원리를 이용하여 탐색 범위를 줄임
+
+- 라이브러리 설치 및 불러오기
+	- pip install apyori 명령어로 패키지 설치
+	- apyori 모듈에서 apriori 함수를 가져와 사용
+
+- apriori 함수 주요 파라미터
+	- min_support : 규칙 생성을 위한 최소 지지도 기준 설정 (예: 0.15 = 15% 이상)
+	- min_confidence : 규칙 생성을 위한 최소 신뢰도 기준 설정 (예: 0.1 = 10% 이상)
+	- min_lift: 규칙 생성을 위한 최소 향상도 기준 설정 (예: 1.00001 = 향상도가 1보다 큰 양의 연관성 데이터만 필터링)
+
+- 결과 처리 방식
+	- apriori 함수 반환값은 Generator 타입이므로 list() 형태로 변환하여 사용
+	- 반환된 규칙 데이터 구조 : 규칙 객체 내 index 1은 support, index 2는 ordered_statistics 목록 포함
+	- ordered_statistics 내부 구조 : item[0]은 조건(lhs), item[1]은 결과(rhs), item[2]는 confidence, item[3]은 lift 정보 담음
+	- 추출된 조건/결과 집합은 ', '.join() 함수를 사용하여 문자열 형태로 변환 및 정형화
+	- 딕셔너리 리스트 구조로 변환 후 pandas DataFrame으로 로드하여 조건별 데이터 테이블 생성
+
+	ex) Apriori 연관분석
+	import pandas as pd
+	from apyori import apriori
+
+	# 연관 규칙 학습 (Generator 반환)
+	rules = apriori(
+		transaction,
+		min_support=0.15,
+		min_confidence=0.1,
+		min_lift=1.00001
+	)
+
+	# 제너레이터 타입을 리스트로 변환
+	rules = list(rules)
+
+	# 특정 규칙 항목 확인 예시 (6번째 규칙)
+	rule = rules[5]
+
+	# 세부 항목 데이터 추출 및 출력
+	support = rule[1]
+	ordered_st = rule[2]
+	for item in ordered_st:
+		lhs = item[0]
+		lhs = ', '.join([x for x in lhs])
+		rhs = item[1]
+		rhs = ', '.join([y for y in rhs])
+		confidence = item[2]
+		lift = item[3]
+		print(f'{lhs} → {rhs} | confidence : {item[2]} \t lift : {item[3]}')
+
+	# 전체 규칙을 딕셔너리 리스트 구조로 변환
+	rules_lst = []
+	for rule in rules:
+		support = rule[1]
+		ordered_st = rule[2]
+		for item in ordered_st:
+			lhs = item[0]
+			lhs = ', '.join([x for x in lhs])
+			rhs = item[1]
+			rhs = ', '.join([y for y in rhs])
+			confidence = item[2]
+			lift = item[3]
+			rules_lst.append({
+				'lhs': lhs,
+				'rhs': rhs,
+				'support': support,
+				'confidence': round(confidence, 2),
+				'lift': round(lift, 2)
+			})
+
+	# Pandas 데이터프레임으로 변환
+	df_rules = pd.DataFrame(rules_lst, columns=['lhs', 'rhs', 'support', 'confidence', 'lift'])
+	print(df_rules)
