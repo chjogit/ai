@@ -1,4 +1,4 @@
-6징. LSTM기반 Seq2Seq
+6장. LSTM기반 Seq2Seq
 - 스마트 번역기
 
 1. Seq2Seq (Sequence-to-Sequence) 

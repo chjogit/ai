@@ -1,0 +1,15 @@
+8장. attention(GNMT)
+- 스마트 번역기
+- GNMT (Google Neural Machine Translation) : 인공신경망 기반 기계 번역 시스템
+
+1. Attention 메커니즘
+- 디코더가 매 시점(time step)마다 예측을 수행할 때, 인코더의 모든 시점 출력(ENC_OUT) 중 관련된 단어에 가중치(어텐션 점수)를 부여하여 집중 탐색
+- 정보 손실 방지 및 디코더의 예측 정확도 향상
+
+2. 어텐션 레이어
+- LSTM return_sequences=True 설정
+	- 인코더 : 모든 시점의 은닉 상태를 어텐션 레이어에 전달하기 위해 필수 지정
+	- 디코더 : 시퀀스의 매 시점마다 어텐션 컨텍스트 벡터와 결합하기 위해 필수 지정
+- 어텐션 및 결합 과정
+	- Attention()([DEC_MID, ENC_OUT])
+	- Concatenate()([CONTEXT_VECTOR, DEC_MID])

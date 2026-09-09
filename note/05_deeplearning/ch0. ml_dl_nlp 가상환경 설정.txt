@@ -1,86 +1,55 @@
- Conda 가상환경 구축 및 NLP 개발 환경 가이드
+Conda 가상환경 구축 및 NLP 개발 환경 가이드
 
-1. 가상환경 조회 및 생성
 
-- 목록 확인
+# 1. 가상환경 생성 및 활성화
+
+# 기존 가상환경 목록 확인
 conda env list
-또는
-conda info --envs
 
-- 가상환경 생성 (-n은 --name의 약어)
+# 신규 가상환경 생성 (Python 3.10 기준)
 conda create -n ml-dl-nlp python=3.10 -y
 
-
-- 가상환경 활성화
+# 가상환경 활성화
 conda activate ml-dl-nlp
 
-2. 패키지 관리자 및 기초 라이브러리 설치
 
-- pip 최신 버전 업그레이드
-python -m pip install --upgrade pip
+# 2. Jupyter Notebook 커널 등록 및 연결
 
-
-- 데이터 분석 및 머신러닝 라이브러리 (버전 고정)
-pip install jupyter numpy==1.23.5 pandas==1.5.3 matplotlib==3.7.0 seaborn==0.12.2 scikit-learn==1.2.1
-
-
-- 딥러닝 패키지
-pip install tensorflow==2.10
-
-
-3. 도메인별 필수 패키지 설치
-
-- 엑셀 파일 데이터 로드 (`.xlsx` 지원)
-pip install openpyxl==3.1.5
-
-
-- 컴퓨터 비전 및 이미지 처리 (MNIST 등)
-pip install opencv-python==4.8.1.78
-
-
-- 자연어 처리 (NLP) 및 시각화
-
-- 영어 NLP
-pip install nltk==3.7
-
-- 한국어 NLP (Java 기반 / C++ 기반)
-pip install konlpy python-mecab-ko
-
-- 워드 임베딩 (Word2Vec 등) 및 시각화
-pip install gensim wordcloud
-
-- .env 읽어오기
-pip install python-dotenv
-pip install python-decouple (Jupyter 환경에서 부적합)
-
-- 연관 분석
-pip install apyori
-
-- 시계열 데이터 분석
-pip install statsmodels==0.13.5
-
-- 시계열 분석 및 예측 (facebook)
-pip install prophet
-pip install plotly
-
-4. Jupyter Notebook 커널 등록 및 관리
-
-- 가상환경에 ipykernel 설치
+# 가상환경에 ipykernel 설치
 conda install ipykernel -y
 
-- Jupyter에 커널 등록 (노트북에서 가상환경 선택 가능)
+# Jupyter Notebook에 커널 연결
 python -m ipykernel install --user --name ml-dl-nlp --display-name "ml-dl-nlp(ipykernel)"
 
-- 등록된 커널 목록 확인
+# 등록된 커널 목록 확인
 jupyter kernelspec list
 
 
-5. 커널 삭제 및 가상환경 제거 (필요 시)
+# 3. 패키지 관리자 및 필수 라이브러리 설치
 
-- Jupyter 커널 목록에서 삭제
-(주의 : remove 뒤에는 --display-name이 아니라 등록할 때 사용했던 실제 시스템 커널명(--name 값)인 ml-dl-nlp를 지정해야 정상적으로 삭제됩니다.)
+# pip 최신 버전 업그레이드
+python -m pip install --upgrade pip
+
+# 데이터 분석, 머신러닝 및 딥러닝 패키지
+pip install jupyter numpy==1.23.5 pandas==1.5.3 matplotlib==3.7.0 seaborn==0.12.2 scikit-learn==1.2.1 tensorflow==2.10
+
+# 데이터 및 파일 관리 (Excel, Env)
+pip install openpyxl==3.1.5 python-dotenv
+
+# 컴퓨터 비전 (CV)
+pip install opencv-python==4.8.1.78
+
+# 자연어 처리 (NLP) 및 시각화
+pip install nltk==3.7 konlpy python-mecab-ko gensim wordcloud
+
+# 시계열 분석 및 연관 분석
+pip install apyori statsmodels==0.13.5 prophet plotly
+
+
+# 4. 커널 삭제 및 가상환경 제거 (초기화 필요 시)
+
+# Jupyter 커널 삭제 (--name으로 지정했던 실제 커널명 입력)
 jupyter kernelspec remove ml-dl-nlp
 
-
-- Conda 가상환경 완전 삭제
+# Conda 가상환경 완전 삭제
 conda env remove -n ml-dl-nlp

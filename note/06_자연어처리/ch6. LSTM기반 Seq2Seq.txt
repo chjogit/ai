@@ -1,0 +1,20 @@
+6장. LSTM기반 Seq2Seq
+- 스마트 번역기
+
+1. Seq2Seq (Sequence-to-Sequence) 
+- 입력 시퀀스를 받아 다른 형태의 출력 시퀀스로 변환하는 신경망 구조 (예: 구글 GNMT 등 기계 번역)
+- 인코더(Encoder)와 디코더(Decoder) 두 개의 RNN/LSTM 레이어가 연결된 구조
+- 특수 토큰 : S (Start) - 디코더 문장 시작 토큰, E (End) - 디코더 문장 종료 토큰, P (Padding) - 공백 패딩 토큰
+
+2. 데이터 전처리
+- 알파벳 및 글자 집합 구성
+	- 특수 토큰(S, E, P) 및 영문 알파벳, 한글 고유 문자 세트를 추출하여 통합 단어 사전(alpha) 구성
+	- char_to_num: 문자별 고유 정수 인덱스를 매핑한 딕셔너리
+- 원-핫 인코딩 기법 : to_categorical(data, num_classes), np.eye(total_size)[data]
+- 인코더/디코더 입력 및 출력 생성 함수 (encoding)
+	- 인코더 입력 (enc_in) : 영어 데이터 → 정수 인덱스 → 원-핫 인코딩
+	- 디코더 입력 (dec_in) : 'S' + 한글 데이터 → 정수 인덱스 → 원-핫 인코딩
+	- 디코더 출력 (dec_out) : 한글 데이터 + 'E' → 정수 인덱스
+
+3. 모델 생성 및 학습
+- 다중분류 LSTM : return_state=True, return_sequences=True, sparse_categorical_crossentropy

@@ -39,9 +39,8 @@
 - 결과 처리 방식
 	- apriori 함수 반환값은 Generator 타입이므로 list() 형태로 변환하여 사용
 	- 반환된 규칙 데이터 구조 : 규칙 객체 내 index 1은 support, index 2는 ordered_statistics 목록 포함
-	- ordered_statistics 내부 구조 : item[0]은 조건(lhs), item[1]은 결과(rhs), item[2]는 confidence, item[3]은 lift 정보 담음
+	- ordered_statistics 내부 구조 : item[0] - 조건(lhs), item[1] - 결과(rhs), item[2] - confidence, item[3] - lift
 	- 추출된 조건/결과 집합은 ', '.join() 함수를 사용하여 문자열 형태로 변환 및 정형화
-	- 딕셔너리 리스트 구조로 변환 후 pandas DataFrame으로 로드하여 조건별 데이터 테이블 생성
 
 	ex) Apriori 연관분석
 	import pandas as pd

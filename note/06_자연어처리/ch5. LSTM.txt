@@ -1,0 +1,27 @@
+5장. LSTM
+- 영화평 감성 분석
+
+1. LSTM : 시퀀스 길이가 길어져도 과거의 중요 정보를 손실 없이 유지하는 셀 상태(Cell State) 메커니즘 제공
+- 셀 상태(Ct), 은닉 상태(ht)
+- 4개 연산 레이어 (게이트 구조)
+	- 망각 게이트 (ft) (0~1)
+	- 입력 게이트 선택 (it) (0~1)
+	- 입력 게이트 후보 (C~t)
+	- 출력 게이트 (ot) (0~1)
+- 동작 순서 : 입력 결합 - 지우기 (망각)- 새 정보 채우기 (입력) - 장부 갱신 (Ct) - 요약 출력 (ht)
+
+2. 데이터 전처리 및 인덱스 규칙
+- 인덱스 오프셋 (+3)
+	- IMDB 데이터셋은 내부 예약 인덱스 존재
+	- idx 1 : 시작 토큰
+	- idx 2 : 잘려진 문자나 단어 사전에 없는 단어 대신 들어가는 토큰
+	- idx 3 : zero-padding 토큰
+- pad_sequences()
+	- maxlen, truncating='post', padding='pre' 적용
+
+3. 모델 구축 및 파라미터 옵션
+- LSTM 파라미터 옵션
+	- dropout, recurrent_dropout, kernel_regularizer, kernel_initializer='he_normal', recurrent_initializer='orthogonal'
+
+- EarlyStopping 콜백
+	- monitor='val_loss', patience=3, restore_best_weights=True

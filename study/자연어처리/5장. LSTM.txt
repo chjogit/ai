@@ -101,9 +101,9 @@
 	- recurrent_initializer='orthogonal' : 순환 가중치(W_h)를 직교 초기화하여 기울기 소실 방지
 
 - EarlyStopping 콜백 파라미터
-	- monitor='val_loss': 검증 손실을 기준으로 조기 종료 판단
-	- patience=3: 성능 개선이 없는 에포크를 3회까지 허용
-	- restore_best_weights=True: 조기 종료 시 가장 성능이 좋았던 시점의 가중치로 자동 복원
+	- monitor='val_loss' : 검증 손실을 기준으로 조기 종료 판단
+	- patience=3 : 성능 개선이 없는 에포크를 3회까지 허용
+	- restore_best_weights=True : 조기 종료 시 가장 성능이 좋았던 시점의 가중치로 자동 복원
 
 
 	ex) LSTM 모델

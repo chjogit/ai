@@ -1,0 +1,18 @@
+3장. 연관 분석
+
+1. 연관 분석
+- 데이터 간의 서로 다른 사건이나 거래에서 함께 발생하는 규칙과 관계를 발견하는 데이터 마이닝 기법
+	- 조건 (LHS, item_base)
+	- 결과 (RHS, item_add)
+- 지지도 support(A->B) = P(A ∩ B) / 전체 거래 수
+- 신뢰도 confidence(A->B) = P(A ∩ B) / P(A)
+- 향상도 lift(A->B) = P(A ∩ B) / (P(A) * P(B))
+	- Lift > 1: 양의 연관성
+	- Lift = 1: 상호 독립
+	- Lift < 1: 음의 연관성
+
+2. 연관 분석 구현
+- Apriori 원리
+- min_suppor, min_confidence, min_lift
+- apriori 함수 반환값은 Generator 타입이므로 list() 형태로 변환하여 사용
+- ordered_statistics 내부 구조 : item[0] - 조건(lhs), item[1] - 결과(rhs), item[2] - confidence, item[3] - lift

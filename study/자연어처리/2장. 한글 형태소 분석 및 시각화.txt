@@ -24,9 +24,9 @@
 - HanNanum, Kkma, Komoran: Java 기반 분석기 (JAVA_HOME 및 PATH 설정 필수)
 	- HanNanum : analyze() 메서드로 text 분석 후 형태소 및 품사 반환 (ntag=69 기본값)
 	- Kkma : 품사 태깅 시 태그 세트를 56개로 고정하여 제공 (ntags 지정 불가)
-	- Okt : 구 Twitter (2018년 KoNLPy v0.4.5부터 Okt로 명칭 변경), 정제되지 않은 인터넷/SNS 텍스트 처리에 특화, Scala 기반으로 JVM 상에서 구동되며 빠른 속도와 적은 메모리 점유율 제공
-	- MeCab : C++ 기반으로 KoNLPy 대비 5~20배 빠른 압도적 속도와 높은 메모리 효율성 제공, 저사양 환경 및 다국어 바인딩 지원, 실무 NLP 서비스의 표준 (네이버, 카카오, 라인 등 활용)
-	- Konlp : R 언어 전용 자연어 처리 패키지
+- Okt : 구 Twitter (2018년 KoNLPy v0.4.5부터 Okt로 명칭 변경), 정제되지 않은 인터넷/SNS 텍스트 처리에 특화, Scala 기반으로 JVM 상에서 구동되며 빠른 속도와 적은 메모리 점유율 제공
+- MeCab : C++ 기반으로 KoNLPy 대비 5~20배 빠른 압도적 속도와 높은 메모리 효율성 제공, 저사양 환경 및 다국어 바인딩 지원, 실무 NLP 서비스의 표준 (네이버, 카카오, 라인 등 활용)
+- Konlp : R 언어 전용 자연어 처리 패키지
 
 
 	ex) HanNanum 

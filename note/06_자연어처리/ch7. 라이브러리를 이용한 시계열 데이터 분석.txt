@@ -1,0 +1,22 @@
+7장. 라이브러리를 이용한 시계열 데이터 분석
+- 일별 평균 대기 오염도 정보
+
+1. 시계열 데이터 분석 및 전처리 
+- 데이터 준비 및 결측치 확인
+- 날짜 데이터 타입 변환 : 정수(int) → 문자열(str) → 날짜형(datetime)
+
+2. statsmodels
+- 시계열 데이터가 가진 트렌드(Trend), 계절성(Seasonal), 잔차(Residual)를 수학적으로 분리하여 주기적 특성을 파악하는 도구
+- 시계열 분해 모델 종류 (model 옵션)
+	- 덧셈 모델 (model='additive') : 실제값 = 추세 + 계절성 + 잔차
+	- 곱셈 모델 (model='multiplicative') : 실제값 = 추세 × 계절성 × 잔차
+- seasonal_decompose() : observed - 실제값, trend - 추이, seasonal - 계절성, resid - 잔차
+
+3. Prophet
+- 결측치나 불규칙한 시간 간격이 존재하는 데이터도 별도 전처리 없이 예측 가능
+- 예측 수행 순서 : Prophet() 모델 객체 생성, make_future_dataframe(periods=N), predict(), plot(), plot_components()
+
+4. 시계열 분석 도구별 용도 비교
+- seasonal_decompose
+- RNN / LSTM / GRU / Seq2Seq
+- Prophet

@@ -1,0 +1,30 @@
+9장. Transformer
+
+트랜스포머 주요 개념 및 용어 정리
+
+1. 핵심 개념 및 구성 요쇼
+	- 위치 인코딩 (PE - 순서 번호표), Q, K, V 행렬 (정보 대조군), 인코더 출력 (H_enc - 문맥 종합 보고서), 디코더 은닉 상태 (h_dec - 생성용 진행 상태)
+2. 주요 연산 레이어 (핵심 부서)
+	- 셀프 어텐션 (Self-Attention), 멀티 헤드 어텐션 (Multi-Head Attention), 마스크드 셀프 어텐션 (Masked Self-Attention)
+	- 인코더-디코더 어텐션 (Cross-Attention), 피드포워드 네트워크 (FFN)
+3. 동작 방식 및 순서 (인코더 ➔ 디코더 전체 흐름)
+	[1. 위치 표시 및 병렬 입력] ──► [2. 인코더 문맥 분석] ──► [3. 인코더 보고서 완성] ──► [4. 디코더 단어 생성 & 마스킹] ──► [5. 교차 참조 및 최종 예측]
+
+
+- 입력층 : 문장 길이 MY_LENGTH 규격의 입력 형태 정의
+- 임베딩층 및 위치 인코딩
+	- 입력 단어 대상 위치(Position) 인덱스 생성 및 위치 임베딩 구성
+	- 위치 인코딩(PE)을 통한 병렬 입력 단어 대상 순서 정보 번호표 부여 및 임베딩 추가
+	- 단어 임베딩과 위치 임베딩 결합을 통한 위치 정보 포함 입력(POS_ENC_OUTPUT) 형성
+- 셀프 어텐션 (Self-Attention)
+	- MultiHeadAttention 활용 다각도(Head) 단어 간 연관성 계산
+	- 자기 자신(POS_ENC_OUTPUT)의 Query, Key, Value 동시 전달을 통한 Self-Attention 적용
+- 잔차 연결 및 레이어 정규화 (Add & Norm)
+	- 입력 데이터와 어텐션 결과 결합을 통한 기울기 소실 문제(Gradient Vanishing) 방지 및 LayerNormalization 적용
+- 피드포워드 네트워크 (FFN)
+	- 어텐션 수집 관계 정보의 개별 단어 단위 다층 Dense 레이어 정립
+	- L2 정규화 및 Dropout(0.3) 적용을 통한 과적합 방지
+	- FFN output 대상 잔차 연결 및 레이어 정규화 재수행
+- 1D 축약 및 최종 출력층
+	- GlobalAvgPool1D 활용 시퀀스 전체 정보의 대표 벡터 축약
+	- 긍정/부정 판단 이진 분류 출력을 위한 Sigmoid 활성화 함수 적용
