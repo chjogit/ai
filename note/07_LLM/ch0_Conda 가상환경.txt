@@ -35,7 +35,10 @@ jupyter kernelspec list
 
 3. 패키지 설치
 
-** 허깅페이스
+- Matplotlib 라이브러리
+pip install matplotlib
+
+** 허깅페이스 **
 
 - PyTorch cpu 버전 설치
 pip install torch==2.6.0 torchvision==0.21.0 --index-url 
@@ -54,6 +57,25 @@ pip install hf_xet
 
 - 영-한 번역 품질 향상
 pip install sacremoses
+
+- ENV 응용 도구
+pip install python-dotenv
+
+- 이미지 및 영상 전처리 도구
+pip install opencv-python==4.10.0.84
+
+** ollama LangChain **
+
+- LangChain 응용 도구
+pip install -q langchain-ollama
+
+- Claude 유료 모델
+pip install langchain-anthropic
+
+** OpenAI API **
+
+- GPT 유료 모델
+pip install langchain-openai
 
 
 4. 커널 삭제 및 가상환경 제거 (필요 시)
