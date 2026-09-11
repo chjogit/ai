@@ -1,0 +1,14 @@
+1장. 허깅페이스 모델 사용
+- 허깅페이스 모델
+	- pipeline() / Inference API
+- 허깅페이스의 주요 Task
+	- text-classification (sentiment-analysis)
+	- zero-shot-classification
+	- text-generation
+	- fill-mask
+	- ner (token-classification)
+	- question-answering
+	- summarization
+	- translation
+	- image-to-text
+	- image-classification

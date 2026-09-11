@@ -1,0 +1,9 @@
+2장. Ollama - LLM 활용의 기본 개념 (LangChain)
+- Ollama에서 다운로드 및 실행 가능한 경량 모델
+	- ollama 모델 : 공식적인 한글 지원 x ; ollama pull llama3.2:1b
+	- exaone 모델 : 공식적인 한글 지원 o ; ollama pull exaone3.5:2.4b
+- 프롬프트 : PromptTemplate, Message-based Prompt, ChatPromptTemplate
+	- BaseMessage 상속 주요 클래스 : SystemMessage, HumanMessage, AIMessage, ToolMessage
+- LLM(ChatOpenAI, ChatOllama)
+- 출력 파서 : StrOutputParser, JsonOutputParser
+- 체인 및 RAG 확장

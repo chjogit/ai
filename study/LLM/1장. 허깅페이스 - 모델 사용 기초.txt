@@ -1,0 +1,339 @@
+1장. 허깅페이스 모델 사용
+
+- 허깅페이스 모델 사용 방식
+	- pipeline() : 모델을 로컬에 다운 후 결과를 출력하는 로컬 사용 방식
+	- Inference API : HTTP 요청으로 결과만 받아오는 방식
+		* 처음 모델 사용 시 "C:/Users/Admin/.cache/huggingface" 경로에 다운로드하여 시간 소요가 발생함
+
+- 주요 Task 목록
+	- text-classification (sentiment-analysis) : 감정 분석, 뉴스 분류, 리뷰 분류 등 문장 분류
+	- zero-shot-classification : 레이블에 대한 별도 학습 없이 후보 레이블 중에서 분류
+	- text-generation : GPT 계열 모델을 이용한 텍스트 생성
+	- fill-mask : 문장 안의 빈칸(마스크)에 들어갈 단어 예측
+	- ner (token-classification) : 개체명 인식(사람, 조직, 장소 등 라벨링)
+	- question-answering : 주어진 지문(context)을 근거로 질문에 답변
+	- summarization : 긴 문서를 짧게 요약
+	- translation : 서로 다른 언어 간 번역
+	- image-to-text : 이미지 내용을 설명하는 문장 생성
+	- image-classification : 이미지가 어떤 대상인지 분류
+
+
+	ex) 환경 설정 및 경고 제어
+	import warnings
+	import os
+	import logging
+
+	warnings.filterwarnings('ignore')
+	logging.getLogger("transformers").setLevel(logging.ERROR)
+
+	os.environ['HF_HUB_DISABLE_SYMLINKS_WARNING'] = '1'
+	os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+
+1. TEXT 기반 감정 분석
+
+- 감성 분석(Sentiment Analysis) : 텍스트에 들어있는 작성자의 태도, 의견, 감정 상태(긍정, 부정, 중립 등)를 컴퓨터가 자동으로 판별해내는 자연어 처리(NLP) 기술
+	- pipeline() 내부 처리 파이프라인 : 토큰화 → 워드 임베딩 → 모델 → 예측
+
+- 감정 분석
+	- 다수의 문장을 처리할 때에는 리스트 형태로 전달함
+	- 영어로 학습된 모델에 한국어를 입력할 경우 분석 정확도가 다소 낮아짐
+
+	ex) 모델 사용 예시
+	from transformers import pipeline
+	classifier = pipeline(
+		task="text-classification",
+		model="distilbert-base-uncased-finetuned-sst-2-english")
+	classifier("I've been waiting for a Hugging face course my whole life")
+
+	from transformers import AutoModel
+	model = AutoModel.from_pretrained("distilbert-base-uncased-finetuned-sst-2-english")
+
+	total_params = sum(p.numel() for p in model.parameters())
+
+	from transformers import pipeline
+	classifier = pipeline(
+		task="sentiment-analysis",
+		model="distilbert-base-uncased-finetuned-sst-2-english")
+
+	classifier([
+		"I've been waiting for a Hugging face course my whole life",
+		"I hate this"
+	])
+
+	classifier([
+		"I've been waiting for a Hugging face course my whole life",
+		"이 영화는 재미 없었어요"
+	])
+
+
+- 한국어 감정 분석
+	- 한국어 전용 분류 모델(daekeun-ml/koelectra-small-v3-nsmc)을 사용하여 한국어 문장의 긍정/부정 여부를 판별함
+
+	ex)
+	classifier = pipeline(
+		task="sentiment-analysis",
+		model="daekeun-ml/koelectra-small-v3-nsmc")
+	text = ['힘들어요','오늘 기분 좋은데','너 싫어','내가 최고야']
+
+	for text, result in zip(text, classifier(text)):
+		label = "긍정" if result['label']=='1' else '부정'
+		print(f"'{text}' → {label} {result['score']:.2%}")
+
+
+2. Zero-shot 분류
+
+- 사전 학습 과정에서 본 적 없는 새로운 범주의 데이터를 추가 학습이나 훈련 데이터(Zero-shot = 0개의 학습 데이터) 없이 분류해내는 머신러닝 기법
+- candidate_labels 매개변수를 통해 분류하고자 하는 주제/후보 레이블을 제시함
+
+	ex)
+	classifier = pipeline(
+		task='zero-shot-classification',
+		model='facebook/bart-large-mnli')
+
+	classifier(
+		"I have a problem with my i-phone that needs to be resolved asap!!",
+		candidate_labels=['phone', 'urgent', 'tablet', 'computer']
+	)
+
+	classifier(
+		"This is a course about the Tranformers library",
+		candidate_labels=['education','business','phone']
+	)
+
+
+3. TEXT 생성
+- openai-community gpt2 : 자기회귀적 언어 모델
+
+- 트랜스포머 디코더(Transformer Decoder) 기반 구조
+	- 무감독 학습(Unsupervised Pre-training)
+	- 파라미터 규모 확장의 유효성을 증명함
+
+- 파인 튜닝(Fine-tuning) 메모리 주의사항
+	- 파인 튜닝 시에는 단순히 모델 자체를 메모리(VRAM)에 올릴 때보다 최소 3~4배 이상의 추가 GPU 메모리가 필요함
+	- 추가 메모리가 필요한 요인
+		* 그래디언트
+		* 옵티마이저 상태
+		* 활성화 값
+		* 임시 버퍼 및 메모리 파편화
+
+- 생성 매개변수 설정
+	- device : GPU 사용 시 0, CPU 사용 시 -1 설정
+	- max_new_tokens : 새롭게 생성할 단어(토큰)의 최대 개수를 제한함
+	- do_sample : 다양한 단어를 선택하는 샘플링 방식 활성화
+	- top_k : 상위 K개 확률 단어 중에서만 선택함
+	- top_p : 누적 확률 P 내 단어 중에서 선택함
+	- temperature : 1.0보다 낮으면 더 창의적이고 정돈된 문장을 생성함
+	- repetition_penalty : 중복/반복 문구 생성을 억제함
+
+
+	ex)
+	from transformers import AutoModel
+	model = AutoModel.from_pretrained("gpt2")
+
+	total_params = sum(p.numel() for p in model.parameters())
+	print(f"전체 파라미터 수: {total_params:,}")
+	print(f"전체 파라미터 용량: {total_params/1024/1024:.3f}MB")
+
+	generator = pipeline(
+		task="text-generation",
+		model="gpt2")
+
+	generator("In this course, We will teach you how to",
+		pad_token_id=generator.tokenizer.eos_token_id)
+
+	result = generator(
+		"In this course, We will teach you how to",
+		pad_token_id=generator.tokenizer.eos_token_id)
+	print(result[0]['generated_text'])
+
+	from transformers import pipeline
+	generator = pipeline(
+		task="text-generation",
+		model="skt/kogpt2-base-v2",
+		device = -1
+	)
+
+	prompt = "이 과정은 다음과 같은 것을 훈련합니다."
+
+	result = generator(
+		prompt,
+		pad_token_id=generator.tokenizer.eos_token_id,
+		max_new_tokens=20,
+		do_sample=True,
+		top_k=50,
+		top_p=0.92,
+		temperature=0.8,
+		repetition_penalty=1.2
+	)
+	print(result[0]['generated_text'])
+
+
+4. 마스크 채우기
+
+- 로컬 사용 방식
+	- 문장 내 마스크 위치에 들어갈 최적의 단어를 예측함
+	- 고용량의 모델(google-bert/bert-base-uncased 등)은 일부 리소스 환경에서 활용이 어려울 수 있음
+	- 다국어 지원 모델(google-bert/bert-base-multilingual-cased)을 이용해 한국어를 포함한 다국어 마스크 채우기가 가능함
+
+	ex)
+	unmasker = pipeline(
+		task="fill-mask",
+		model="distilbert/distilroberta-base"
+	)
+
+	unmasker("I'm going to hospital and meet a <mask>", top_k=2)
+
+	unmasker("병원에서 <mask>를 만날 예정이에요")
+
+	unmasker = pipeline(
+		task="fill-mask",
+		model="google-bert/bert-base-uncased"
+	)
+
+	unmasker("Hello, I'm a [MASK] model.", top_k=2)
+
+
+- Inference API 사용 방식 : 실시간으로 모델의 예측 및 생성 결과를 받아볼 수 있게 해주는 서비스
+
+	ex)
+	import os
+	from dotenv import load_dotenv
+	load_dotenv()
+
+	from huggingface_hub import InferenceClient
+	client = InferenceClient(
+		provider='hf-inference',
+	#	api_key=os.getenv('HF_TOKEN')
+	)
+	result = client.fill_mask("Hello, I'm a [MASK] model.",
+		model='google-bert/bert-base-uncased')
+
+	from transformers import pipeline
+
+	unmasker = pipeline(
+		"fill-mask",
+		"google-bert/bert-base-multilingual-cased"
+	)
+
+	result = unmasker('안녕하세요, 저는 [MASK] 연구원 입니다.', top_k=3)
+
+	[r['sequence']for r in result]
+
+
+5. 개체명 인식(NER)
+
+- NER(Named Entity Recognition): 텍스트 내에서 인물, 조직, 장소 등의 개체명을 인식하고 분류하는 작업
+- grouped_entities=True 옵션을 사용하여 동일한 개체에 속하는 토큰들을 그룹화함
+
+	ex)
+	ner = pipeline(
+		"ner",
+		"dbmdz/bert-large-cased-finetuned-conll03-english",
+		grouped_entities=True
+	)
+
+	ner('My name is Sylvain and I work at Hugging Face in Brooklyn.')
+
+
+6. 질의 응답
+- 주어진 지문(context) 내에서 입력된 질문(question)에 대한 답을 찾아 출력함
+
+	ex)
+	q_a = pipeline(
+		"question-answering", 
+		"distilbert/distilbert-base-cased-distilled-squad"
+	)
+
+	q_a(
+		question="Where do I work?",
+		context="My name is Sylvain and I work at Hugging Face in Brooklyn."
+	)
+
+7. 문서 요약
+
+- 긴 본문 텍스트를 핵심 내용 중심으로 축약함
+	- max_length : 요약문의 최대 길이 설정
+	- min_length : 요약문의 최소 길이 설정
+	- do_sample : 샘플링 방식을 통한 다양성 확보
+
+	ex)
+	summarizer = pipeline("summarization",
+		"facebook/bart-large-cnn")
+	summary = summarizer('''
+	Nuri Rocket Prepares for Next Launch with 15 Satellites Assembled at Naro Space Center
+	''',
+		max_length=150,
+		min_length=30,
+		do_sample=True)
+
+
+8. 번역
+
+- 서로 다른 언어 간의 텍스트 변환을 수행함
+- 언어쌍 전용 모델(예: ko-en, en-ko)을 지정하여 양방향 번역을 지원함
+
+	ex)
+	translator = pipeline(
+		"translation",
+		"Helsinki-NLP/opus-mt-fr-en"
+	)
+
+	translator('Ce cours est produit par Hugging Face')
+
+	ko2en = pipeline("translation", model="Helsinki-NLP/opus-mt-ko-en")
+	en2ko = pipeline("translation", model="Helsinki-NLP/opus-mt-tc-big-en-ko")
+
+	ko_sentence = "이 문장을 영어로 번역해주세요"
+	en_sentence = "I enjoy learning about AI"
+
+	ko2en(ko_sentence)[0]['translation_text']
+	en2ko(en_sentence)[0]['translation_text']
+
+	result = ko2en([
+		'안녕하세요, 즐거운 하루 보내세요',
+		'내일부터 OpenAI API를 학습합니다',
+		'사용 결제를 위한 체크카드를 지참해주세요'
+	])
+
+	[r['translation_text'] for r in result]
+
+
+9. 이미지를 설명하는 텍스트 생성
+- 입력된 이미지 URL 또는 이미지 데이터를 바탕으로 캡션을 생성함
+- requests 라이브러리의 stream=True 옵션을 이용해 원시 이미지 데이터를 받아와 처리 가능함
+
+	ex)
+	from transformers import pipeline
+
+	url = "http://images.cocodataset.org/val2017/000000039769.jpg"
+
+	imagetotext = pipeline(
+		"image-to-text",
+		"ydshieh/vit-gpt2-coco-en"
+	)
+
+	imagetotext(url, max_new_tokens=30)
+
+	response = requests.get(
+		url, 
+		stream=True,
+	).raw
+
+	image = Image.open(response)
+	imagetotext(url, max_new_tokens=300)
+
+
+10. 이미지 분류
+- 이미지 데이터를 입력받아 해당 이미지가 어떤 클래스/대상에 속하는지 예측함
+
+	ex)
+	image = Image.open('images/cat.jpg')
+	image.resize((200,200))
+
+	imgclassifier = pipeline(
+		"image-classification",
+		"google/vit-base-patch16-224"
+	)
+
+	imgclassifier(image)
