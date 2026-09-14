@@ -38,6 +38,7 @@ jupyter kernelspec list
 - Matplotlib 라이브러리
 pip install matplotlib
 
+
 ** 허깅페이스 **
 
 - PyTorch cpu 버전 설치
@@ -64,6 +65,7 @@ pip install python-dotenv
 - 이미지 및 영상 전처리 도구
 pip install opencv-python==4.10.0.84
 
+
 ** ollama LangChain **
 
 - LangChain 응용 도구
@@ -72,9 +74,13 @@ pip install -q langchain-ollama
 - Claude 유료 모델
 pip install langchain-anthropic
 
+
 ** OpenAI API **
 
 - GPT 유료 모델
+pip install openai
+
+- GPT 렝체인
 pip install langchain-openai
 
 
