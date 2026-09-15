@@ -1,0 +1,9 @@
+4장. OpenAI image API
+
+- 이미지 모델 : gpt-image-1-mini (생성, Inpainting, Outpainting) ; DALL-E 2/3 API 폐기
+- 기본 이미지 생성 : client.images.generate()
+	- 주요 옵션 : size (1024x1024, 1536x1024 등 ; 소형 256/512 x) ; quality (low, high, auto)
+	- 반환 및 처리 : b64_json (Base64 데이터 ; URL 지원 x) ; base64.b64decode() 디코딩
+- 이미지 편집 : client.images.edit()
+	- 주요 기능 : 인페인팅 (내부 영역 수정) ; 아웃페인팅 (외부 영역 확장)
+	- 규격 요구사항 : 원본 이미지 (<50MB, RGBA) ; 마스크 이미지 (PNG, <4MB, alpha=0 영역 편집)

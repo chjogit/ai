@@ -1,0 +1,8 @@
+5장. OpenAI TTS API
+
+- 클라이언트 설정 : python-dotenv ; OpenAI ; OPENAI_API_KEY
+- 음성 변환 : client.audio.speech.create() ; with_streaming_response.create()
+	- 모델 : tts-1 (실시간 최적화) ; tts-1-hd (고품질)
+	- 옵션 : voice (alloy, echo, fable, nova, onyx, shimmer) ; speed (0.25~4.0) ; response_format (mp3, wav, aac, flac)
+- 다국어 지원 : 한국어 지원 o ; 문장부호 활용 억양 조절
+- 파일 처리 : response.content (wb 저장) ; stream_to_file() ; IPython.display.Audio (재생) ; os.remove() (삭제)

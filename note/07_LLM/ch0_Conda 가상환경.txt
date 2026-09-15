@@ -83,6 +83,9 @@ pip install openai
 - GPT 렝체인
 pip install langchain-openai
 
+- 마이크 녹음 및 파일 전송
+pip install sounddevice scipy
+
 
 4. 커널 삭제 및 가상환경 제거 (필요 시)
 

@@ -1,0 +1,9 @@
+6장. OpenAI Whisper API
+
+- 클라이언트 설정 : python-dotenv ; OpenAI ; OPENAI_API_KEY
+- 핵심 모델 및 포맷 : whisper-1 ; MP3/WAV/MP4 등 다양한 오디오 지원
+- 주요 기능
+	- 필사 : client.audio.transcriptions.create() (원어 필사 ; language 지정 시 정확도 o)
+	- 번역 : client.audio.translations.create() (영어 번역만 지원 ; 타 언어 번역은 Chat API 연동)
+- 응답 포맷 : response_format (json, text, srt, vtt, verbose_json ; 타임스탬프 및 세그먼트 추출)
+- 마이크 입력 처리 : sounddevice (sd.rec, sd.wait) ; scipy.io.wavfile (WAV 저장) ; os.remove() (삭제)

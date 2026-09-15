@@ -1,0 +1,10 @@
+3장. Chat completions API
+
+- 환경 및 모델 : API 키 설정 (python-dotenv) ; 추론 모델 (gpt-5, o시리즈) vs 비추론 모델 (gpt-4o, gpt-4.1)
+- 메시지 구성 (role) : system (페르소나/지침) ; user (사용자) ; assistant (모델 응답)
+- 주요 매개변수 : temperature, frequency_penalty (비추론) ; reasoning_effort (추론)
+- 주요 기능
+	- 대화 연속성 : Stateless 특성 ; 이전 메시지(messages) 누적 재전달
+	- 응답 형식 : JSON 객체 반환 (response_format={'type': 'json_object'}) ; json.loads()
+	- 스트리밍 : 실시간 순차 출력 (stream=True) ; delta.content 추출
+- 최적화 및 에러 : max_tokens, Batch API, response.usage ; 예외 처리 (openai.OpenAIError)

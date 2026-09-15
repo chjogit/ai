@@ -1,0 +1,154 @@
+4장. OpenAI image API
+
+1. gpt-image-1-mini 모델
+
+- OpenAI API 기반 이미지 생성 및 편집(Inpainting/Outpainting) 기능 구현
+
+- gpt-image 계열 : OpenAI 개발 최첨단 이미지 생성 AI 모델
+	- 텍스트 설명 바탕의 신규 이미지 생성 수행
+	- DALL-E 2 및 DALL-E 3 모델의 2026년 5월 API 서비스 폐기
+
+2. OpenAI API 클라이언트 생성
+
+- dotenv 모듈 활용 환경 변수 로드 및 OpenAI 클라이언트 객체 생성
+
+	ex)
+	from openai import OpenAI
+	from dotenv import load_dotenv
+
+	load_dotenv()
+	client = OpenAI()
+
+
+3. 기본 이미지 생성
+
+3.1 이미지 생성 요청하기
+
+- client.images.generate() 메서드 활용 프롬프트 기반 이미지 생성
+
+- 주요 매개변수 설정
+	- model : 이미지 생성 모델 지정 (gpt-image-1-mini)
+	- prompt : 생성 대상 이미지 서술 텍스트 입력
+	- n : 생성 이미지 수량 지정
+	- size : 이미지 해상도 설정 (기본값: auto)
+		* 지원 해상도 : 1024x1024, 1536x1024, 1024x1536, auto
+		* 소형 정사각형 해상도(256x256, 512x512) 미지원
+	- quality : 생성 퀄리티 설정 (low, medium, high, auto / 기본값: auto)
+		* quality 설정 저하 시 토큰 사용량 및 비용 절감
+
+- 응답 결과 처리
+	- b64_json 형태의 base64 인코딩 이미지 데이터 반환 (URL 방식 미제공)
+	- base64.b64decode() 디코딩 수행 후 파일 저장 및 화면 표시
+
+	ex)
+	import base64
+	from IPython.display import display, Image
+
+	prompt_text = '숲이 보이는 밝은 자연 이미지를 그려줘'
+	model_img = 'gpt-image-1-mini'
+
+	# 기본 이미지 생성 요청
+	response = client.images.generate(
+		model=model_img,
+		prompt=prompt_text,
+		n=1,
+		size='1024x1024'
+	)
+
+	# base64 디코딩 및 파일 저장
+	b64_data = response.data[0].b64_json
+	image_bytes = base64.b64decode(b64_data)
+
+	with open('data/ch4_forest.png', 'wb') as f:
+		f.write(image_bytes)
+	print('이미지 저장 완료')
+
+	display(Image(image_bytes, width=200))
+
+	# quality="low" 옵션 적용 이미지 생성 요청
+	response = client.images.generate(
+		model=model_img,
+		prompt=prompt_text,
+		n=1,
+		size='1024x1024',
+		quality='low'
+	)
+
+	b64_data = response.data[0].b64_json
+	image_bytes = base64.b64decode(b64_data)
+
+	with open('data/ch4_forest.png', 'wb') as f:
+		f.write(image_bytes)
+	print('이미지 저장 완료')
+
+3.2 quality 옵션으로 고품질 이미지 생성하기
+
+- GPT 이미지 계열 모델(gpt-image-1-mini, gpt-image-1, gpt-image-1.5) 사용
+- gpt-image-1-mini 모델의 높은 토큰 가성비 특징
+- quality='high' 옵션 설정을 통한 고품질 이미지 생성
+- PIL(Pillow) 라이브러리 및 BytesIO 활용 이미지 리사이징 처리
+
+	ex)
+	from PIL import Image
+	from io import BytesIO
+
+	# quality="high" 옵션 적용 고품질 이미지 생성 요청
+	response = client.images.generate(
+		model=model_img,
+		prompt=prompt_text,
+		n=1,
+		size='1024x1024',
+		quality='high'
+	)
+
+	b64_data = response.data[0].b64_json
+	image_bytes = base64.b64decode(b64_data)
+
+	with open('data/ch4_forest.png', 'wb') as f:
+		f.write(image_bytes)
+	print('이미지 저장 완료')
+
+	# 이미지 리사이징 및 표시
+	image = Image.open(BytesIO(image_bytes))
+	image.resize((150, 150))
+
+4. 이미지 편집
+
+- 이미지 편집(edit) 주요 기능
+	- 인페인팅(Inpainting) : 이미지 내부 특정 영역 대체 및 수정
+	- 아웃페인팅(Outpainting) : 이미지 외부 영역 맥락 기반 확장 생성
+
+- client.images.edit() 메서드 활용 이미지 인페인팅 수행
+
+- 입력 데이터 및 규격 요구사항
+	- 원본 이미지 : PNG, WEBP, JPG 형식 (50MB 미만, RGBA 지원)
+		* 최대 16장의 원본 이미지 동시 전달 가능
+	- 마스크 이미지 : PNG 형식 (4MB 미만, 원본과 동일 크기)
+		* 완전히 투명한 영역(alpha=0)을 편집 대상 영역으로 인식
+
+- 처리 프로세스 : 원본/마스크 이미지 및 변경 프롬프트 동시 전달을 통한 영역 채움 수행
+
+- 결과 반환 : response.data[0].b64_json 형태의 base64 인코딩 데이터 반환
+
+	ex)
+	import base64
+	from IPython.display import display, Image
+
+	# 원본 이미지 및 마스크 이미지 로드
+	original_image = open('data/ch4_original.png', 'rb')
+	mask_image = open('data/ch4_mask.png', 'rb')
+
+	# 이미지 편집(인페인팅) 요청
+	response = client.images.edit(
+		model=model_img,
+		image=original_image,
+		mask=mask_image,
+		prompt='하늘의 구름을 없애줘.',
+		n=1,
+		size='1024x1024'
+	)
+
+	# 편집 결과 디코딩 및 출력
+	b24_data = response.data[0].b64_json
+	image_bytes = base64.b64decode(b24_data)
+	display(Image(image_bytes, width=300))

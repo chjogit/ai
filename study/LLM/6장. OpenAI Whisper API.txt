@@ -1,0 +1,197 @@
+6장. OpenAI Whisper API
+
+1. 환경 설정 및 API 클라이언트 인스턴스 생성
+
+- python-dotenv 패키지를 통한 .env 파일 내 환경 변수 로드 처리
+- OPENAI_API_KEY 환경 변수 사전 설정 또는 client 생성 시 api_key 매개변수를 통한 명시적 키 전달 필요성
+- API 키 미지정 시 OpenAIError 예외 발생
+- openai.OpenAI 클래스 인스턴스 생성을 통한 API 클라이언트 구성
+
+	ex)
+	from dotenv import load_dotenv
+	from openai import OpenAI
+
+	load_dotenv()
+	client = OpenAI()
+
+
+2. Whisper API 소개 및 기본 음성-텍스트 변환
+
+- OpenAI Whisper API의 두 가지 주요 엔드포인트(Transcriptions, Translations) 제공
+	* Transcriptions 엔드포인트: 음성 파일의 원어 텍스트 필사 기능
+	* Translations 엔드포인트: 음성 파일의 영어 번역 텍스트 반환 기능
+
+- whisper-1 대형 모델 기반 처리 및 다양한 오디오 형식(MP3, MP4, WAV 등) 지원
+- client.audio.transcriptions.create 함수를 통한 음성 파일 필사 요청 수행
+- response_format 파라미터를 활용한 text 포맷 반환 설정
+
+- open/close 및 with 구문을 활용한 오디오 파일 다루기 방식 적용
+- IPython.display.Audio 모듈 활용을 통한 Jupyter Notebook 내 오디오 재생 기능
+
+	ex)
+	# 1. 음성 파일 열기
+	audio_file = open('data/speech.mp3', 'rb')
+
+	# 2. 음성 파일 필사 요청
+	response = client.audio.transcriptions.create(
+		model='whisper-1',
+		file=audio_file,
+		response_format='text' # 단순 텍스트 형태의 결과 반환 옵션 지정
+	)
+
+	# 3. 변환된 텍스트 출력
+	print(response)
+	audio_file.close()
+
+	from IPython.display import Audio
+	Audio(filename='data/speech.mp3', autoplay=True)
+
+	# with 구문 사용
+	with open('data/speech.mp3', 'rb') as audio_file:
+		response = client.audio.transcriptions.create(
+			model='whisper-1',
+			file=audio_file,
+			response_format='text'
+		)
+		
+	print(response)
+
+
+3. 다양한 언어의 음성 인식 및 언어감지
+
+- 90개 이상의 언어 데이터 기반 다국어 음성 인식 지원
+
+	ex)
+	# 스페인어 필사
+	with open('data/spanish_audio.mp3','rb') as file:
+		response = client.audio.transcriptions.create(
+			model='whisper-1',
+			file=file,
+			response_format='text',
+			language='es' # 자동 판별 가능하나, 지정 시 정확도 상승
+		)
+
+	print(response)
+
+	# 스페인어 해석
+	with open('data/spanish_audio.mp3','rb') as file:
+		response = client.audio.translations.create(
+			model='whisper-1',
+			file=file,
+			response_format='text'
+		)
+
+	print(response)
+
+	# 타국어 음성 -> 한국어 해석 시 해석 - 번역 단계 필요
+	with open('data/spanish_audio.mp3','rb') as file:
+		transcription = client.audio.transcriptions.create(
+			model = 'whisper-1',
+			file = file,
+			response_format='text',
+			language='es'
+		)
+		
+	print('오디오 해석 진행 중')
+	translation = client.chat.completions.create(
+		model='gpt-4.1-nano',
+		messages=[{'role':'user','content':f'이 문장을 한국어로 번역해줘 : {transcription}'}]
+	)
+
+	print(translation.choices[0].message.content)
+
+
+4. 타임스탬프 포함 자막 및 세부 출력
+
+- 응답 포맷 조절 및 세부 메타데이터 추출
+	- response_format 파라미터
+		* json : 기본 객체 반환 포맷
+		* text : 순수 변환 텍스트 반환 포맷
+		* srt : 문장별 시간 코드가 포함된 SubRip 자막 형식 반환 포맷
+		* vtt : WebVTT 웹 표준 자막 형식 반환 포맷
+		* verbose_json : 세그먼트, 타임스탬프, 확률 등 상세 메타데이터 포함 반환 포맷
+	- response_format="srt" : 시간 구간별 자막 포맷 출력
+	- response_format="verbose_json"  : 세그먼트별 타임스탬프(start, end) 및 구조적 메타데이터 추출
+
+	ex)
+	with open('data/speech.mp3', 'rb') as file:
+		transcript = client.audio.transcriptions.create(
+			model='whisper-1',
+			file=file
+		)
+	print(transcript)
+
+	Audio('data/speech.mp3', autoplay=True)
+
+	with open('data/speech.mp3', 'rb') as file:
+		transcript = client.audio.transcriptions.create(
+			model='whisper-1',
+			file=file,
+			response_format='srt'
+		)
+	print(transcript)
+
+	with open('data/ch5_Shimmer_ko_hd.mp3', 'rb') as file:
+		transcript = client.audio.transcriptions.create(
+			model='whisper-1',
+			file=file,
+			response_format='verbose_json',
+			language='ko'
+		)
+	print(transcript)
+
+	segment = transcript.segments[0]
+	print(f'text 구간 {segment.start} ~ {segment.end} : {segment}')
+
+
+5. 실시간 음성 변환 (마이크 입력 처리)
+
+- sounddevice 및 scipy 라이브러리 : 마이크 입력 녹음 및 WAV 파일 저장
+	- sounddevice.rec / sd.wait : 5초간 음성 녹음 대기 처리
+	- scipy.io.wavfile.write : 녹음 데이터의 WAV 파일 기록
+	- os.remove : 임시 WAV 파일 삭제 및 예외 처리
+
+	ex)
+	import sounddevice as sd
+	from scipy.io.wavfile import write
+
+	sf = 16000 # 샘플레이트 16kHz
+	second = 5 # 음성 녹음길이
+	print('지금부터 5초간 녹음 시작')
+
+	recording = sd.rec(second*sf, samplerate=sf, channels=1, dtype='int16')
+	sd.wait() # 녹음 종료까지 코드 일시정지
+
+	file_name = 'data/ch6_live_input.wav'
+
+	write(file_name, sf, recording) # 파일 저장
+
+	# Audio(file_name, autoplay=True)
+
+	# 저장한 녹음본을 whisper API에 전송하여 text 출력
+	with open('data/ch6_live_input.wav', 'rb') as audio_file:
+		live_transcript = client.audio.transcriptions.create(
+			model='whisper-1',
+			file=audio_file,
+			response_format='text',
+			language='ko'
+		)
+
+	print('실시간 음성 텍스트 :', live_transcript)
+
+	# wav 파일 삭제
+	import os
+	try:
+		os.remove('data/ch6_live_input.wav')
+		print('텍스트 생성 후 wav 파일 삭제 완료')
+	except Exception as e:
+		print('이미 삭제된 파일입니다.', e)
+		
+	# 번역
+	print('오디오 해석 진행 중')
+	translation = client.chat.completions.create(
+		model='gpt-4.1-nano',
+		messages=[{'role':'user','content':f'이 문장을 영어로 번역해줘 : {live_transcript}'}]
+	)
+
+	print(translation.choices[0].message.content)
