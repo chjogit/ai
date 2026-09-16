@@ -1,0 +1,8 @@
+7장. OpenAI Responses API
+
+- 환경 설정 : dotenv; OpenAI client 객체 생성
+- 단발성 응답 : client.responses.create(); response.id, response.output_text 추출
+- 멀티턴 대화 : previous_response_id 활용 -> 서버 측 히스토리 자동 참조
+- 챗봇 구현 : exit 종료 처리; try-except 예외 처리; usage 토큰 확인; open() 파일 저장
+- 코드 인터프리터 : client.files.create() 파일 업로드 -> tools: code_interpreter, container 지정
+- RAG 구현 : client.vector_stores.create() 생성 -> upload_and_poll() 인덱싱 -> tools: file_search 연동

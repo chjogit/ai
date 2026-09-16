@@ -45,6 +45,8 @@ pip install nltk==3.7 konlpy python-mecab-ko gensim wordcloud
 # 시계열 분석 및 연관 분석
 pip install apyori statsmodels==0.13.5 prophet plotly
 
+# 머신러닝 데이터 가속화
+pip install dataprep
 
 # 4. 커널 삭제 및 가상환경 제거 (초기화 필요 시)
 

@@ -1,0 +1,101 @@
+8장. OpenAI function calling
+
+1. OpenAI 클라이언트 및 파이썬 환경 설정
+
+	ex)
+	from dotenv import load_dotenv
+	from openai import OpenAI
+	
+	load_dotenv()
+	client = OpenAI()
+
+
+2. 외부 날씨 정보 조회 함수 정의
+- 위도 및 경도 좌표값을 전달받아 오픈 메테오 API 요청 수행
+
+	ex)
+	import requests
+	import json
+	
+	def get_weather(latitude=37.484859, longitude=126.930086):
+		url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&current=temperature_2m"
+		response = requests.get(url)
+		data = response.json()
+		current = data.get('current')
+		if current is not None:
+			return current.get("temperature_2m")
+		else:
+			return None
+		
+	get_weather()
+
+3. 도구(Tools) 정의 및 1차 모델 요청
+
+- 사용자 질의 메시지 생성 및 대화 내역 목록 구성
+
+- JSON 스키마 규격 기반의 함수 도구 정보 세부 정의
+	- function 식별 정보 및 좌표 파라미터 타입 명시
+	- strict 옵션을 통한 파라미터 스키마 준수 강제
+
+- 도구 파라미터를 포함한 Chat Completion API 호출
+	- parallel_tool_calls 옵션을 통한 단일 함수 호출 설정
+
+	ex)
+	messages = [{'role':'user','content':'오늘 제주 날씨 어때요?'}]
+	tools = [{
+		'type':'function',
+		'function':{
+			'name':'get_weather',
+			'description':'지정된 좌표(위도, 경도)의 현재 온도를 섭씨 단위로 반환합니다',
+			'parameters':{
+				'type':'object',
+				'properties':{
+					'latitude':{'type':'number'},
+					'longitude':{'type':'number'}
+				},
+				'required':['latitude','longitude'],
+				'additionalProperties':False
+			},
+			'strict':True
+		}
+	}]
+	
+	completion = client.chat.completions.create(
+		model='gpt-4o-mini',
+		messages=messages,
+		tools=tools,
+		parallel_tool_calls=False
+	)
+
+
+4. 모델의 함수 호출 요청 확인 및 실행
+- 모델 반환 메시지 내 tool_calls 속성 추출
+- JSON 형태의 인자값을 파이썬 딕셔너리로 변환 처리
+
+	ex)
+	for tool_call in completion.choices[0].message.tool_calls:
+		name = tool_call.function.name
+		arg = tool_call.function.arguments
+		arg = json.loads(arg)
+		latitude = arg.get('latitude')
+		longitude = arg.get('longitude')
+		if name == 'get_weather':
+			result = get_weather(latitude, longitude)
+			print(result)
+
+5. 실행 결과 반영 및 최종 응답 생성
+
+- 모델의 함수 호출 메시지를 대화 내역 목록에 추가
+- tool 역할 메시지 추가 및 tool_call_id 매핑을 통한 결과값 전달
+- 누적된 대화 내역 기반의 최종 자연어 응답 재요청 및 출력
+
+	ex)
+	messages.append(completion.choices[0].message)
+	messages.append({'role':'tool','tool_call_id':tool_call.id, 'content':str(result)})
+	
+	response = client.chat.completions.create(
+		model='gpt-4o-mini',
+		messages=messages,
+		tools=tools
+	)
+	print(response.choices[0].message.content)

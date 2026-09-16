@@ -1,0 +1,163 @@
+7장. OpenAI Responses API
+
+1. OpenAI Responses API 개요 및 클라이언트 설정
+
+- dotenv 패키지를 통한 환경 변수 로드
+- OpenAI 클라이언트 객체 생성
+
+	ex)
+	from dotenv import load_dotenv
+	from openai import OpenAI
+
+	load_dotenv()
+	client = OpenAI()
+
+
+2. 단발성 응답 생성
+
+- client.responses.create 메서드 호출
+- 지정된 모델 및 프롬프트 기반 답변 생성
+- 생성된 응답 식별자(response.id) 확인
+- 텍스트 결과값(response.output_text) 추출
+
+	ex)
+	response = client.responses.create(
+	    model='gpt-4.1-nano',
+	    instructions='당신은 유능하고 친절한 도움말 어시스턴트입니다. 질문에 20자 내로 친절하게 답변하세요',
+	    input='오늘 서울 날씨는 몇 도까지 올라가나요?',
+	)
+
+	print("response's id : ", response.id[:5])
+	print("Assistant : ", response.output_text)
+
+
+3. 대화 맥락 유지 (멀티턴)
+
+- previous_response_id 파라미터에 이전 response.id 전달
+- 서버 측 대화 히스토리 자동 참조
+- 맥락을 유지한 추가 질문 처리
+
+	ex)
+	follow_up = client.responses.create(
+	    model='gpt-4.1-nano',
+	    input='진짜 정확한걸까?',
+	    previous_response_id=response.id
+	)
+
+
+4. 대화형 챗봇 구현 및 로그 백업
+
+- 사용자 입력 수신 및 exit 명령 처리 : 종료 로직 구현
+- 예외 처리(try-except) : API 호출 에러 방지
+- 대화 턴마다 previous_id 업데이트를 통한 문맥 유지
+- 토큰 사용량(input_tokens, output_tokens) 출력
+- 대화 이력 리스트 생성 및 텍스트 파일 저장
+
+	ex)
+	from openai import OpenAI, OpenAIError
+	import time
+
+	cs_instructions = '당신은 고객 지원 챗봇 입니다. 사용자 문의에 친절하고 간략히, 정확하게 답하세요'
+
+	print('챗봇 시작 (exit 입력 시 종료)')
+	conv_log = []
+	previous_id = None
+
+	while True:
+	    user_input = input('User : ').strip()
+	    if user_input.lower() in ('exit',):
+	        print('Assistant : 이용해주셔서 감사합니다.')
+	        break
+	    if user_input.strip() == '':
+	        continue
+	        
+	    now = time.time()
+	    conv_log.append(('user', user_input, now))
+	    
+	    try:
+	        response = client.responses.create(
+	            model='gpt-4.1-nano',
+	            instructions=cs_instructions,
+	            input=user_input,
+	            previous_response_id=previous_id
+	        )
+	    except OpenAIError as e:
+	        print('오류가 발생했습니다.', e)
+	        continue
+	        
+	    previous_id = response.id
+	    reply_text = response.output_text
+	    print('Assistant :', reply_text)
+	    conv_log.append(('assistant', reply_text, time.time()))
+	    
+	    print('입력 토큰 :', response.usage.input_tokens)
+	    print('출력 토큰 :', response.usage.output_tokens)
+
+	file_name = 'data/ch7_chat_log.txt'
+	print(f'대화 로그를 저장합니다. 파일명 : ({file_name})')
+
+	with open(file_name, 'w', encoding='utf-8') as f:
+	    for role, text, create_at in conv_log:
+	        dateStyle_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(create_at))
+	        row = f'{role:9}({dateStyle_str}) : {text}\n'
+	        f.write(row)
+	        print(row, end='')
+
+
+5. 파일 업로드 및 코드 인터프리터 연동
+
+- client.files.create : 파일 서버 업로드
+- 업로드된 file_id 추출
+- tools 옵션 내 code_interpreter 도구 지정
+- container : 파일 접근 권한 부여 및 질문 수행
+
+	ex)
+	file_obj = client.files.create(
+	    file = open('data/data.csv', 'rb'),
+	    purpose='assistants'
+	)
+
+	print('uploaded file ID :', file_obj.id[:4])
+
+	question = '첨부된 파일을 읽고, 수치 데이터의 요약본을 출력해줘'
+
+	response = client.responses.create(
+	    model='gpt-4o-mini',
+	    instructions='당신은 데이터 분석을 돕는 어시스턴트 입니다. 필요 시 python 코드를 작성하고 결과를 요약해주세요.',
+	    input=question,
+	    tools=[{
+	        'type':'code_interpreter',
+	        'container':{'type':'auto','file_ids':[file_obj.id]}
+	    }]
+	)
+
+	print('Assistant :', response.output_text)
+
+
+6. File Search 기반 RAG 구현
+
+- client.vector_stores.create : 검색 전용 저장소 생성
+- upload_and_poll : 파일 임베딩 및 인덱싱 완료 대기
+- tools 옵션 내 file_search 도구 연결
+- 지정된 Vector Store 기반 문맥 탐색 및 응답 생성
+
+	ex)
+	vector_store = client.vector_stores.create(name='quiz_store')
+	print("vector store's id", vector_store.id[:4])
+
+	with open('data/ch06_quiz.txt', 'rb') as f:
+	    client.vector_stores.files.upload_and_poll(
+	        vector_store_id=vector_store.id,
+	        file=f
+	    )
+
+	search_response = client.responses.create(
+	    model='gpt-4o-mini',
+	    instructions='첨부된 문서를 근거로 답하세요',
+	    input='커피는 무슨 맛이야',
+	    tools=[{
+	        'type':'file_search',
+	        'vector_store_ids':[vector_store.id]
+	    }]
+	)
+	print(search_response.output_text)

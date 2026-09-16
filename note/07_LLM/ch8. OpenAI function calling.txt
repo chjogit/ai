@@ -1,0 +1,7 @@
+8장. OpenAI function calling
+
+- 환경 설정 : dotenv; OpenAI client 객체 생성
+- 외부 함수 정의 : requests 사용 -> 오픈 메테오 API 기반 날씨 데이터 반환
+- 도구 정의 및 1차 요청 : JSON 스키마 규격 작성; strict, parallel_tool_calls 설정; chat.completions.create()
+- 함수 호출 실행 : message.tool_calls 속성 확인; json.loads() 파싱 -> 파이썬 함수 실행
+- 2차 요청 및 최종 응답 : assistant 메시지 및 tool 메시지(tool_call_id 매핑) 추가 -> 재요청 후 최종 자연어 출력
