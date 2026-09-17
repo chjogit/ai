@@ -1,3 +1,0 @@
-ch08.txt
-Hello World
-더 출력하고 싶어
