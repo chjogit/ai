@@ -1,0 +1,6 @@
+#wrap .content {
+    background-color: rgb(28, 88, 41);
+    color: aliceblue;
+    padding: 20px;
+    text-align: justify;
+}

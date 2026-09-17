@@ -1,0 +1,51 @@
+1. 가상환경 만들기
+
+- 현재 존재하는 가상환경 목록 확인
+conda env list
+conda info --envs
+
+- 가상환경 생성
+conda create -n ml-dl-nlp python=3.10
+
+- 생성한 가상환경으로 전환하기
+conda activate ml-dl-nlp
+
+- 가상환경 나오기
+conda deactivate
+
+- 가상환경 지우기
+conda env remove --name 가상환경이름
+
+
+2. 라이브러리 설치
+
+- pip 버전 확인
+pip -V
+
+- pip 업데이트
+python -m pip install --upgrade pip
+
+- 필요 라이브러리 설치
+pip install jupyter numpy==1.23.5 pandas==1.5.3 matplotlib==3.7.0 seaborn==0.12.2 scikit-learn==1.2.1
+pip install tensorflow==2.10.0 
+pip install openpyxl
+
+
+3. 가상환경 커널 등록
+
+가상환경에 들어가서 jupyter 설치
+conda install ipykernel
+
+Jupyter 에서 선택가능한 커널로 등록
+python -m ipykernel install --user --name ml-dl-nlp --display-name "ml-dl-nlp(ipykernel)"
+
+Jupyter 커널 목록 확인
+jupyter kernelspec list
+
+Jupter 커널 목록에서 삭제
+jupyter kernelspec remove "ml-dl-nlp(ipykernel)"
+
+Jupyter lab 실행
+Jupyter lab -notebook-dir=C:\ai\source\05_DeepLeaning
+
+

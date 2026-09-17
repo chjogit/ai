@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <title>선택자 활용</title>
+    <script>
+        onload =() => {
+            const header1 = document.querySelector('h1.header'); // 해당 선택자 태그 단일 객체
+            header1.textContent = '첫번째';
+            
+            const head = document.querySelectorAll('h1'); // 해당 선택자 태그 전체를 배열로 return
+            head.forEach(element => {
+                element.style.backgroundColor = 'yellow';
+            });
+
+            const header3 = document.querySelector('div#header > h1'); // div#header 내부의 h1 태그를 선택
+            header3.textContent = '세번째';
+
+            const param = document.querySelectorAll('input[type="text"]')[0];
+            param.value = '문서 객체 가져오기 완료';
+        };
+    </script>
+</head>
+<body>
+    <h1 class="header">HEADER1</h1>
+    <h1 class="header">HEADER2</h1>
+    <div id="header">
+        <h1>HEADER3</h1>
+    </div>
+    <input type="text" name="param">
+</body>
+</html>

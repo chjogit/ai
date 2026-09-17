@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <script>
+        let child
+        const openLarge = () => {
+            // 새로운 창 열기
+            child = open('5_child.html','','width=500, height=610, left=100');
+            if (!child) {
+                alert('팝업 차단 해체');
+            }
+        };
+    </script>
+</head>
+<body>
+    <h2>작은 그림의 parent 창</h2>
+    <img src="ch09_img/small.jpg" alt="작은 그림" onmouseover="openLarge()" onmouseout="child.close();">
+</body>
+</html>

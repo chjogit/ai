@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <title>Name 활용</title>
+    <script>
+        const loginChk = () => {
+            var id = document.getElementsByName('id')[0]; // 유사 배열 객체 return
+            var pw = document.getElementsByName('pw')[0];
+            var gender = document.getElementsByName('gender');
+            if(!id.value) {
+                alert('아이디를 입력하세요');
+                id.focus();
+            } else if (!pw.value) {
+                alert('비밀번호를 입력하세요');
+                pw.focus();
+            } else if(!gender[0].checked && !gender[1].checked) {
+                alert('성별을 선택하세요');
+            }
+            return false;
+        };
+    </script>
+</head>
+<body>
+    <form action="" method="get" onsubmit="return loginChk()">
+        <p> I D <input type="text" name="id"></p>
+        <p> P W <input type="password" name="pw"></p>
+        <p> 
+        성별 
+        <input type="radio" name="gender" value="m">남자
+        <input type="radio" name="gender" value="f">여자 
+        </p>
+        <p><input type="submit" value="login"></p>
+    </form>
+</body>
+</html>

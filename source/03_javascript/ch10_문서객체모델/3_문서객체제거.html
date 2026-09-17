@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <script>
+        const append = () => {
+            // h1 태그 추가
+            var h1 = document.createElement('h1');
+            var textNode = document.createTextNode('HEADER');
+            h1.appendChild(textNode);
+            document.body.appendChild(h1);
+        };
+        const remove = () => {
+            // h1 태그 제거
+            // var h1 = document.getElementsByTagName('h1'); // 유사 배열 객체 (없을 경우 빈 객체 반환)
+            // h1 = document.querySelector('h1'); // 엘리먼트 하나 (없을 경우 null 반환) 
+            h1 = document.querySelectorAll('h1'); // 유사 배열 객체 (없을 경우 null 반환)
+            if(h1.length>0){
+                document.body.removeChild(h1[0]);
+            } else {
+                alert('h1 태그가 없습니다.')
+            }
+        };
+    </script>
+</head>
+<body>
+    <input type="button" value="태그 추가" onclick="append()">
+    <button onclick="remove()">태그 제거</button>
+    <h1>HEADER</h1>
+    <h1>HEADER</h1>
+</body>
+</html>

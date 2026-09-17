@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+    <script src = "dateGetNumberOfDays.js"></script>
+    <script>
+        let now = new Date();
+        document.write(now + '<br>');
+        document.write('날짜와 시간 : ' + now.toLocaleString() + '<br>');
+        document.write('날짜 : ' + now.toLocaleDateString() + '<br>');
+        document.write('시간 : ' + now.toLocaleTimeString() + '<br>');
+        document.write('월 : ' + (now.getMonth()+1) + '<br>'); // getMonth는 0~11을 return함
+        document.write('일 : ' + now.getDate() + '<br>');
+
+        let openday = new Date(2026, 5, 22, 9, 30, 0); // 개강일의 날짜와 시간 (2026.06.22 am 09:30)
+        document.write('개강 시각 : ' + openday.toLocaleString() + '<br>')
+        day = now.getNumberOfDays(openday); // now와 openday 사이의 날짜 간격을 return
+        day = openday.getNumberOfDays(now); // openday와 now 사이의 날짜 간격을 return
+        document.write(day + '일 경과');
+    </script>
+</head>
+<body>
+    
+</body>
+</html>

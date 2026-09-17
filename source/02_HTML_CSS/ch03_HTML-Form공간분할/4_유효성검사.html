@@ -1,0 +1,55 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        table {
+            margin: 100px auto;
+        }
+    </style>
+    <script>
+        function chk() {
+            if (frm.id.value.trim().length < 4) {
+                alert("아이디는 4자리 이상 입력하세요.");
+                frm.id.focus();
+                return false;
+            } else if (frm.pw.value.trim().length < 4) {
+                alert("비밀번호는 4자리 이상 입력하세요.");
+                frm.pw.value = '';
+                frm.pw.focus();
+                return false;
+            } else if (frm.pw.value != frm.pwchk.value) {
+                alert("비밀번호를 확인하세요");
+                frm.pw.value = '';
+                frm.pwchk.value = '';
+                frm.pw.focus();
+                return false;
+            }
+            return true;
+         }
+    </script>
+</head>
+<body>
+    <form name="frm" onsubmit="return chk()">
+        <table>
+            <tr>
+                <td><label for="id">아이디</label></td>
+                <td><input type="text" name="id" id="id" placeholder="4자리 이상" autocomplete="off"/></td>
+            </tr>
+            <tr>
+                <td><label for="pw">비밀번호</label></td>
+                <td><input type="password" name="pw" id="pw" placeholder="4자리 이상"/></td>
+            </tr>
+            <tr>
+                <td><label for="pwchk">비밀번호</label></td>
+                <td><input type="password" name="pwchk" id="pwchk" placeholder="비밀번호 확인"/></td>
+            </tr>
+            <tr>
+                <th colspan="2"><input type="submit" value="가입" /></th>
+            </tr>
+        </table>
+    </form>
+</body>
+</html>

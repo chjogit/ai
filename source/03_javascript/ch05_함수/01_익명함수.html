@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+    <title></title>
+    <script>
+        let i = 10;
+        document.write(i+'<br>');
+        i = 20;
+        document.write(i+'<br>');
+        let functionVar = function(i, j) { // 변수에 할당한 함수표현식 익명함수 ; 함수 정의 상단(전)에서 사용 불가
+            // alert('함수 표현식 test I ='+ i +', j=' + j);
+            alert(`함수 표현식 test i=${i}, j=${j}`);
+        }; 
+        functionVar(10, 20); // 변수로 익명함수 호출 가능
+        functionVar = (i, j) => { // 화살표 함수를 활용한 익명 함수
+            alert(i + j);
+        };
+    </script>
+</head>
+<body>
+    
+</body>
+</html>

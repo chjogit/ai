@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+    <title>요일에 따른 배경색 지정</title>
+    <style>
+        h1, p{ text-align: center;}
+    </style>
+    <script>
+        document.write('<h1>요일에 따른 배경색 지정</h1>');
+        var daily = new Date().getDay(); // 0~6 ; 일~토
+        switch(daily) {
+            case 0 : document.body.style = 'background-color: red;'; 
+                document.write('<p>일요일</p>');
+                break;
+            case 1 : document.body.style = 'background-color: orange;'; 
+                document.write('<p>월요일</p>');
+                break;
+            case 2 : document.body.style = 'background-color: yellow;'; 
+                document.write('<p>화요일</p>');
+                break;
+            case 3 : document.body.style = 'background-color: green;'; 
+                document.write('<p>수요일</p>');
+                break;
+            case 4 : document.body.style = 'background-color: blue;'; 
+                document.write('<p>목요일</p>');
+                break;
+            case 5 : document.body.style = 'background-color: navy;'; 
+                document.write('<p>금요일</p>');
+                break;
+            case 6 : document.bgColor = 'purple';
+                document.write('<p>토요일</p>');
+        }
+        </script>
+</head>
+<body>
+    
+</body>
+</html>
