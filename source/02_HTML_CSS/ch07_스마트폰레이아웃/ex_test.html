@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0,
+    maximum-scale=2.0, minimum-scale=0.7, user-scalable=yes" />
+  <title></title>
+  <style>
+    /*** 페이지 초기화 ***/
+    *{
+      margin: 0; padding: 0;
+    }
+    body{ background-color: #ea8f00;}
+    #showHide{
+      width:200px; height: 100px;
+      background-color: red;
+      display: none;
+    }
+    #toggle:checked ~ #showHide {display: block;}
+    #toggle{display: none;}
+  </style>
+</head>
+<body>
+  <input type="checkbox" id="toggle">
+  <p>Where does it come from?</p> <!-- shift+alt+화살표:복사/alt+화살표:이동-->
+  <label for="toggle">
+    <img src="ch07/menu.png" alt="메뉴">
+  </label>
+  <p>Where does it come from?</p>
+  <div id="showHide">toggle part</div>
+</body>
+</html>

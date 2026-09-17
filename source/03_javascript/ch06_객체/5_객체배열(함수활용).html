@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+    <title></title>
+    <style></style>
+    <script>
+        // 객체를 반환하는 일반 함수
+        function makeStudent(name, kor, mat, eng) {
+            let resultObj = {
+                'name' : name,
+                'kor' : kor,
+                'mat' : mat,
+                'eng' : eng,
+                getSum : function(){
+                    return this.kor + this.mat + this.eng;
+                },
+                getAvg : function(){
+                    return (this.getSum() / 3).toFixed(1);
+                },
+                toString : function(){
+                    let output = '';
+                    for(let key in this){
+                        if (key!='getSum' && key!='getAvg' && key!='toString'){
+                            output += key + ' : ' + this[key] + ' &nbsp; ';
+                        } else if(key=="getAvg" || key=="getSum"){
+                            output += key.substring(3).toUpperCase() + ' : ' + this[key]() + ' &nbsp; ';
+                        } // if
+                    } // for
+                    return output;
+                }, // toString func
+            }; // resultObj obj
+            return resultObj;
+        } // makeStudent func
+
+        let students = [];
+        students.push(makeStudent('홍길동', 99, 98 , 90));
+        students.push(makeStudent('마길동', 98, 90 , 93));
+        students.push(makeStudent('김길동', 96, 92 , 92));
+        students.push(makeStudent('이길동', 92, 95 , 94));
+        students.push(makeStudent('박길동', 90, 99 , 91));
+        students.push(makeStudent('최길동', 91, 90 , 90));
+
+        students.forEach(element => document.write(element + '<hr>'));
+    </script>
+</head>
+<body>
+    
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+    <title></title>
+    <style>
+        #wrap {width : 450px; margin : 0 auto;}
+        #wrap input[type="text"] {width : 150px; height : 20px; display : inline-block; 
+        border : 1px solid gray; text-align : center; margin: 0 10px;}
+        #wrap p {text-align : center;}
+        #wrap span {display : inline-block; padding: 2px; background-color: lightgray;
+            border : 1px solid gray; text-align : center; cursor:default;}
+    </style>
+    <script>
+        onload = () => {
+            var openerID = opener.document.querySelector('#id').value;
+
+            var modifyId = document.querySelector('input[type=text]');
+
+            modifyId.value = openerID;
+
+            var idCfm = document.querySelector('#idCfm');
+            idCfm.onclick =() => {alert('중복 확인');}
+        };
+
+        // 클릭 이벤트 함수 추가
+        const sendData = () => {
+            var modifyName = document.querySelector('input[type=text]').value;
+            opener.document.querySelector('#id').value = modifyId.value;
+            close();
+        }
+    </script>
+</head>
+<body>
+    <div id="wrap">
+        <p>I D<input type="text" name="name" id="modifyId" /><button id="idCfm">체크</button></p>
+        <p><span onclick="javascript:sendData()">아이디사용</span></p>
+    </div>
+</body>
+</html>

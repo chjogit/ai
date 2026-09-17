@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <script>
+        // let obj = {name:'홍', age:20, call:null};
+        // obj.call = function(){ alert(this.name+'님')};
+        var cnt = 0;
+        // alert, confirm 등의 함수는 window 객체의 메서드임을 확인
+        for(let key in window){ 
+            if(key.startsWith('on') || key =='cnt' || key=='chk') { 
+                // 전위 증감 연산자(++cnt): 먼저 1을 증가시킨 후 출력
+                document.write(`${++cnt}. ${key} : ${window[key]} <br>`); 
+            }
+        }
+        document.write('<hr>');
+        window.onload = () => { // onload(이벤트 속성 변수) - 문서 및 리소스 로드 완료 시 실행
+            alert('윈도우 로드');
+        };
+        window.onclick = () => { // onclick(이벤트 속성 변수) - 문서 클릭 시 실행
+            alert('클릭 감지');
+        };
+        
+        var chk = function(){}; // 전역 스코프에서 var 선언 시 window.chk로 등록됨
+
+        for(let key in window){ // alert, confirm 등의 함수는 window 객체의 메서드
+            if(key.startsWith('on') || key =='cnt' || key=='chk') { 
+                // ++ 위치에 따라 출력과 증감의 서순이 다름
+                document.write(`${++cnt}. ${key} : ${window[key]} <br>`); 
+            }
+        }
+    </script>
+</head>
+<body>
+    
+</body>
+</html>

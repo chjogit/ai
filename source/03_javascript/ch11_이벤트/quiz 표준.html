@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+    <title></title>
+    <style>
+        
+    </style>
+    <script>
+        // 기본 이벤트 모델
+        // onload = () => {
+        //     const img = document.querySelector('img');
+        //     img.onmousedown = function () {
+        //         this.src="ch11_img/but2.gif";
+        //         // this.setAttribute('src','ch11_img/but2.gif');
+        //         // this.setAttribute('alt','mouse down');
+        //     };
+        //     img.onmouseup = function () {
+        //         this.src="ch11_img/but1.gif";
+        //         // this.setAttribute('src', 'ch11_img/but1.gif');
+        //         // this.setAttribute('alt','mouse up');
+        //     };
+        // };
+
+        // 표준 이벤트 모델
+        document.addEventListener('DOMContentLoaded', function(){
+            let img = document.querySelector('img');
+            img.addEventListener('mousedown', function(){
+                this.src="ch11_img/but2.gif";
+            });
+            img.addEventListener('mouseup', function(){
+                this.src="ch11_img/but1.gif";
+            });
+        });
+    </script>
+</head>
+<body>
+    <img src="ch11_img/but1.gif" alt="mouse up"/>
+</body>
+</html>

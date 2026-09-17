@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>child</title>
+    <style>
+    #wrap {width : 450px; margin : 0 auto;}
+    #wrap h1{color : red; margin-top : 50px; text-align : center;}
+    #wrap h3{
+        padding : 20px; margin : 10px; border : 1px solid red;
+        text-align : center; border-radius : 10px;
+        font-size : .9em;
+        cursor : pointer;
+    }
+    </style>
+    <script>
+        onload = () => {
+            // parent와 child 간의 데이터 통신
+            // opener : 해당 화면을 호출한 부모 창
+            var openerName = opener.document.querySelector('#name').value;
+            var openerDate = opener.document.querySelector('#date').value;
+
+            // 문서객체 가져오기
+            let showName = document.querySelector('div#wrap > h2#showName');
+            var modifyName = document.querySelector('input[type=text]');
+
+            // 부모 창에서 받은 데이터 출력
+            showName.textContent = '넘어온 이름 : ' + openerName;
+            if(openerDate){
+                showName.textContent += ' 날짜 : ' + openerDate;
+            } else {
+                showName.textContent += ' 날짜 데이터 없음';
+            }
+
+            modifyName.value = openerName;
+        };
+
+        // 클릭 이벤트 함수 추가
+        function sendData(part) {
+            var modifyName = document.querySelector('input[type=text]').value;
+            opener.document.querySelector('#name').value = modifyName;
+            opener.document.querySelector('#part').textContent = part;
+            close();
+        }
+    </script>
+</head>
+<body>
+    <div id="wrap">
+        <h1>인사정보 시스템</h1>
+        <hr color="black" />
+        <h2 id="showName"></h2>
+        <h2>이름 수정 가능 : <input type="text" id="modifyName"/></h2>
+        <hr />
+        <h3 onclick="javascript:sendData('인사')">인사</h3>
+        <h3 onclick="javascript:sendData('재무')">재무</h3>
+        <h3 onclick="javascript:sendData('총무')">총무</h3>
+        <h3 onclick="javascript:sendData('개발')">개발</h3>
+    </div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <script>
+        const openWin = () => {
+            // childWin 이름의 새로운 창 열기
+            var child = open('','childWin','width=1200, height=800');
+            if(!child){
+                alert('팝업 해체 요청');
+            }
+            return child;
+        };
+    </script>
+</head>
+<body>
+    <button onclick="openWin()">새 창 열기</button>
+    <br>
+    <a href="http://www.daum.net" target = "childWin">childWin으로 다음 접속</a>
+</body>
+</html>

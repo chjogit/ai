@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+    <title></title>
+    <style>
+        h1 {cursor: pointer;}
+        span:nth-child(1){color:red;}
+        span:nth-child(2){color:orange;}
+        span:nth-child(3){color:yellow;}
+        span:nth-child(4){color:green;}
+        span:nth-child(5){color:blue;}
+        span:nth-child(6){color:navy;}
+        span:nth-child(7){color:purple;}
+    </style>
+    <script>
+        onload = () => {
+            let n = 0;
+            const h1 = document.querySelector('h1');
+            h1.onclick = () => {
+                h1.innerHTML += `<span>♥</span>`
+                n++;
+                if(n>=7) {
+                    h1.onclick = "null";
+                }
+            };
+        };
+    </script>
+</head>
+<body>
+    <h1>좋아요</h1>
+</body>
+</html>

@@ -1,0 +1,7 @@
+/* print용 css */
+#wrap .content {
+    border: 1px solid rgb(28, 88, 41);
+    color: #003300;
+    padding: 20px;
+    text-align: justify;
+}

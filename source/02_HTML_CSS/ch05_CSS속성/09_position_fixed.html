@@ -1,0 +1,56 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        * {margin:0; padding:0;}
+        div {width:200px; height:200px; opacity:0.5; border:1px solid red;}
+        #div1 {
+            position:absolute; /* 절대 좌표 ; 기본값 : static*/
+            top:0; left:0;
+            background-color:red;
+        }
+        #div2{
+            position:absolute;
+            top:100px; left:100px;
+            background-color:blue;
+            z-index:1; /*z-index의 값이 큰 개체가 위로 올라옴*/
+        }
+        #div3{
+            position:fixed;
+            bottom:350px; right:350px;
+            width:300px; height:300px;
+            background-color:green;
+            opacity:1;
+            z-index:0;
+        }
+        #div4{ /* 부모의 포지션이 고정될 경우, 부모의 포지션 좌표가 기준이 됨*/
+            position:absolute;
+            top:50px; left:50px;
+            background-color:yellow;
+        }
+
+        #div4 a{
+           border:1px solid red;
+           font-size:1.5em;
+           display:block; /*<a> 내부에 img가 없을 때 자주 사용됨*/
+           height:100%;
+           width:100%;
+        }
+        #div4 img {
+           width: 200px;
+           height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div id="div1">div1</div>
+    <div id="div2">div2</div>
+    <div id="div3">
+        div3
+        <div id="div4"><a href="#1"><img src="https://img.danuri.io/catalog-image/062/336/036/0b69625df39141fcb38d998f278481b8.jpg?shrink=360:360"/></a></div>
+    </div>
+</body>
+</html>

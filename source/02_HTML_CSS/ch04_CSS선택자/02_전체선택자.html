@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+    * { /*전체선택자 : 전체 페이지 디자인 초기화 용도*/
+        margin:0;
+        padding:0;
+        color:saddlebrown;
+    }
+    header, nav, section, footer {
+        border:1px solid gray;
+        width: 500px;
+        margin: 5px auto;
+        padding: 5px;
+    }
+    nav ul {overflow:hidden;} /*hidden은 리스트 태그의 부모단에 적용*/
+    nav ul li { /*블록형 태그를 수직선 방향 나열으로 변경*/
+        float:left;
+        list-style:none;
+        width:25%;
+        text-align:center;
+    }
+    section{
+        clear:both; /*지정 단부터 float 속성 초기화*/
+    }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>oo주식회사</h1>
+    </header>
+    <nav>
+        <ul>
+            <li>회사소개</li>
+            <li>서비스소개</li>
+            <li>고객센터</li>
+            <li>공지사항</li>
+        </ul>
+    </nav>
+    <section>
+        <p>선택자 : 특정 요소(HTML)를 지목해서, 스타일(CSS)이나 동작(JavaScript)을 적용 및 변경하는 목적으로 사용</p>
+        <p>군사법원의 조직·권한 및 재판관의 자격은 법률로 정한다. 국가의 세입·세출의 결산, 국가 및 법률이 정한 단체의 회계검사와 행정기관 및 공무원의 직무에 관한 감찰을 하기 위하여 대통령 소속하에 감사원을 둔다.</p>
+    </section>
+    <footer>
+        <p>서울시 ㅇㅇ구 ㅇㅇ로</p>
+    </footer>
+</body>
+</html>

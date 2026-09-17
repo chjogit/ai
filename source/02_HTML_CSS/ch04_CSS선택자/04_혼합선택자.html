@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        div {
+            border: 1px solid gray;
+        }
+        #header,#footer { /*#ID선택자*/
+            width:600px; margin: 0 auto;
+            background-color:lightyellow;
+            text-align:center;
+        }
+        div#wrap { /*혼합선택자 ; div#id*/
+            width: 600px;
+            margin: 0 auto;
+            overflow: hidden;
+            background-color:lightcyan;
+        }
+        #side_banner img {
+            width: 200px;
+        }
+        #content {
+            width: 388px;
+            height:250px;
+            text-align: center;
+            float: left;
+        }
+        #side_banner {
+            width: 208px;
+            height: 250px;
+            text-align: center;
+            float: right;
+        }
+        #wrap #content .odd { /*.class선택자*/
+            font-size:1.5em;
+        }
+        #wrap #content .menu2 {
+            font-weight:bold;
+        }
+        #footer {
+            clear:both;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>HEADER</h1>
+    </div>
+    <div id="wrap">
+        <div id="content">
+            <h2>CONTENT</h2>
+            <ul>
+                <li class="menu1 odd">menu1</li>
+                <li class="menu2">menu2</li>
+                <li class="menu3 odd">menu3</li>
+                <li class="menu2">menu4</li>
+                <li class="menu1 odd">menu5</li>
+            </ul>
+        </div>
+        <div id="side_banner">
+            <h2>BANNER</h2>
+            <br />
+            <a href="http://www.daum.net" target="_blank">
+                <img src="https://i.namu.wiki/i/CETldn7zB8RCvkaEWxidxJLkrh6ZGY7dIevJuIVEWV8t-S2j9oSGHU31uy_cA1z00qDANZRi7__qdxr0ISSHQIbzeIVdHuxwteZ2zToTvDetxOEX7-FcFhs4A8ls0I_ximprDE9gQBR6TYLsOVoOZA.svg"
+                     alt="다음로고" />
+            </a>
+        </div>
+    </div>
+    <div id="footer">
+        <h1>FOOTER</h1>
+    </div>
+</body>
+</html>
