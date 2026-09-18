@@ -1,0 +1,346 @@
+ch2. 군집 분석
+
+1. 군집모델(클러스터링)
+
+- 독립변수의 특성이 유사한 데이터 그룹인 클러스터로 주어진 데이터를 구분하는 알고리즘
+	- 중심 기반 클러스터링 : K-Means 등
+	- 연결 기반 클러스터링 : 계층적 군집화 등
+	- 밀도 기반 클러스터링 : DBSCAN, OPTICS 등
+
+2. K-Means 클러스터링
+
+- 연산 구조가 단순하고 처리 속도가 뛰어난 대표적 비지도 학습 알고리즘
+- 각 클러스터 중심점(Centroid) 설정 및 소속 할당을 반복하여 내부 분산과 거리 제곱합을 최소화하는 최적화 구조
+- 주요 한계점
+	- 군집 간 크기, 밀도 불균형 존재 시 성능 저하 발생
+	- 비구형(Non-spherical) 구조의 복잡한 군집 인식 불가
+	- 평균 기반 중심점 계산으로 인한 이상치 민감성 존재
+
+- make_classification : 분류 학습용 가상 데이터셋 생성 함수
+	- n_samples : 생성할 전체 데이터 개수
+	- n_features : 전체 독립변수 개수
+	- n_informative : 예측에 유의미한 실제 정보 변수 개수
+	- n_redundant : 선형 결합으로 생성된 중복 변수 개수
+	- n_classes : 종속변수의 범주 개수
+	- n_clusters_per_class : 클래스당 형성할 군집 개수
+
+	ex) 가상 데이터셋 생성 및 분포 확인
+	from sklearn.datasets import make_classification
+	import numpy as np
+	import matplotlib.pyplot as plt
+
+	X, y = make_classification(
+		n_samples=20,
+		n_features=2,
+		n_informative=2,
+		n_redundant=0,
+		n_classes=2,
+		n_clusters_per_class=1,
+		random_state=123
+	)
+
+	value, count = np.unique(y, return_counts=True)
+	{v:c for v,c in zip(value, count)}
+	np.column_stack([X, y])
+	plt.scatter(X[:,0], X[:,1], c=y, s=100, edgecolors='k')
+
+
+- K-Means 모델 생성 및 군집화 수행
+
+	- n_clusters : 형성할 군집 및 중심점 개수
+	- init : 중심점 초기화 알고리즘 지정
+	- n_init : 서로 다른 초기 중심점으로 반복 실행하는 횟수
+	- max_iter : 단일 실행당 수렴을 위한 최대 반복 횟수
+	- tol : 중심점 이동 거리 합에 대한 수렴 허용 오차 한계값
+	- algorithm : 최적화 구동 알고리즘 지정
+
+	ex)
+	from sklearn.cluster import KMeans
+
+	model = KMeans(
+		n_clusters=2,
+		init='k-means++',
+		n_init='auto',
+		max_iter=300,
+		tol=0.0001,
+		algorithm='lloyd',
+		verbose=0
+	)
+	model.fit(X)
+	
+	c0, c1 = model.cluster_centers_
+	pred = model.predict(X)
+	labels = model.labels_
+
+	plt.scatter(X[:,0], X[:,1], c=y, s=100, edgecolors='k')
+	plt.scatter(X[labels==0, 0], X[labels==0, 1], marker='x', c='w')
+	plt.scatter(X[labels==1, 0], X[labels==1, 1], marker='x', c='b')
+
+	ex) Normalizer를 활용한 데이터 정규화 및 비교
+	import pandas as pd
+	from sklearn.preprocessing import Normalizer
+
+	scaler = Normalizer()
+	Xnor = scaler.fit_transform(X)
+
+	plt.scatter(X[y==0, 0], X[y==0, 1], s=100, marker='^', c='g')
+	plt.scatter(X[y==1, 0], X[y==1, 1], s=100, marker='^', c='y')
+	plt.scatter(Xnor[y==0, 0], Xnor[y==0, 1], s=100, marker='x', c='b')
+	plt.scatter(Xnor[y==1, 0], Xnor[y==1, 1], s=100, marker='x', c='r')
+	
+	ex) 군집 수를 세분화하여 군집 간 크기 차이로 인한 정확도 저하 완화
+	model = KMeans(n_clusters=3, n_init='auto')
+	model.fit(data[:,:2])
+	centers = model.cluster_centers_
+	labels = model.labels_
+
+	plt.scatter(data[:,0], data[:,1], c=labels, edgecolors='k')
+	plt.scatter(centers[:,0], centers[:,1], c='r', marker='x')
+
+	model = KMeans(n_clusters=6, n_init='auto')
+	model.fit(data[:,:2])
+	centers = model.cluster_centers_
+	labels = model.labels_
+
+	colors = ['r','g','b','c','m','y']
+	markers = ['>','s','v','^','x','<']
+	for i,c in enumerate(centers):
+		plt.scatter(
+			x = data[labels==i, 0],
+			y = data[labels==i, 1],
+			c = colors[i],
+			marker = markers[i]
+		)
+		plt.scatter(c[0], c[1], s=100, c=colors[i], edgecolors='k', linewidths=2)
+
+
+3. 계층적 클러스터링 (Hierarchical Clustering)
+
+- 개별 데이터에서 시작해 유사한 군집끼리 단계적으로 결합하여 단일 군집을 형성하는 알고리즘
+- 데이터 및 군집 간 거리에 기반한 계층 구조 형성
+- 사전 군집 수(K) 지정 불필요
+- 덴드로그램(Dendrogram) 트리를 통한 결합 과정 시각화 지원
+
+- scipy 기반 계층적 군집화 및 덴드로그램 생성
+	- linkage : 지정된 거리 계산 방식(method)으로 계층적 군집 생성
+	- dendrogram : 계층적 군집 결과를 트리 구조로 시각화
+	- fcluster : 임계값(distance) 또는 목표 군집 수(maxclust) 기준으로 클러스터 할당
+
+	ex)
+	from seaborn import load_dataset
+	from sklearn.preprocessing import LabelEncoder
+	from scipy.cluster.hierarchy import linkage, dendrogram, fcluster
+	import pandas as pd
+	import numpy as np
+	import seaborn as sns
+
+	iris = load_dataset('iris')
+	le = LabelEncoder()
+	iris['species'] = le.fit_transform(iris['species'])
+
+	cluster_model = linkage(iris, method='complete')
+	dendrogram(cluster_model, labels=iris.index)
+
+	pred = fcluster(cluster_model, 4, criterion='distance')
+	adjusted_pred = np.choose(pred, [9, 0, 2, 1])
+	pred_name = le.inverse_transform(adjusted_pred)
+	original_name = le.inverse_transform(iris['species'])
+
+	pd.crosstab(original_name, pred_name, rownames=['실제값'], colnames=['예측값'], margins=True)
+
+	sns.scatterplot(
+		data=iris,
+		x='petal_length',
+		y='petal_width',
+		hue=pred_name,
+		style=original_name
+	)
+
+
+4. DBSCAN 클러스터링
+
+- 이웃 반경(eps)과 최소 포인트 수(min_samples)를 활용하는 밀도 기반 군집화 알고리즘
+- 군집 미포함 데이터를 노이즈(-1)로 처리하는 자동 감지 기능 제공
+- 사전 군집 개수 지정 없이 복잡한 비선형 형태 군집 형성 가능
+- 데이터 포인트를 코어(Core), 경계(Border), 노이즈(Noise) 유형으로 분류
+- 영역별 밀도 차이가 크거나 고차원 데이터셋 적용 시 성능 저하 가능성 존재
+
+	ex) 비구형 데이터 생성 및 K-Means 한계 확인
+	import numpy as np
+	import matplotlib.pyplot as plt
+	from sklearn.cluster import KMeans
+
+	X1 = np.random.rand(200)*3
+	noise = np.random.normal(0, 0.2, X1.shape)
+	Y1 = np.sin(X1) + noise
+	group1 = np.c_[X1, Y1, np.full(X1.shape[0], 0)]
+
+	X2 = X1 + 1.5
+	noise = np.random.normal(0, 0.2, X1.shape)
+	Y2 = np.cos(X2) + noise
+	group2 = np.c_[X2, Y2, np.ones(X1.shape[0])]
+
+	data = np.r_[group1, group2]
+
+	model = KMeans(n_clusters=2, n_init='auto')
+	model.fit(data[:,:2])
+	labels = model.labels_
+	plt.scatter(data[:,0], data[:,1], c=labels, edgecolors='k')
+
+	model = KMeans(n_clusters=7, n_init='auto')
+	model.fit(data[:,:2])
+	labels = model.labels_
+	centers = model.cluster_centers_
+
+	colors = ['r','g','b','c','m','y','k']
+	markers = ['>','s','v','^','x','<','o']
+	for i,c in enumerate(centers):
+		plt.scatter(
+			x = data[labels==i, 0],
+			y = data[labels==i, 1],
+			c = colors[i],
+			marker = markers[i]
+		)
+		plt.scatter(c[0], c[1], s=100, c=colors[i], edgecolors='k', linewidths=2)
+	
+	ex) DBSCAN 모델 학습 및 비선형 군집 분할
+		from sklearn.cluster import DBSCAN
+
+		db_model = DBSCAN(eps=0.3, min_samples=10)
+		db_model.fit(data[:,:2])
+
+		labels = db_model.labels_
+		n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+
+		colors = ['r','g']
+		for i in range(n_clusters):
+			plt.scatter(
+				x = data[labels==i, 0],
+				y = data[labels==i, 1],
+				c = colors[i]
+			)
+
+
+5. 군집모델 성능 평가
+
+- 예측 모형 score 메서드
+	- K-Means score : 음수로 표기되는 Inertia 값(중심과의 거리 제곱합, 0에 가까울수록 우수)
+	- 기타 모델 : DBSCAN 및 계층적 군집 모델은 score 메서드 미지공
+
+- 평가 지표(metrics) 함수
+	- 실루엣 계수(silhouette_score): 응집도와 분리도를 통합 측정한 지표(-1 ~ 1, 1에 가까울수록 우수)
+	- Calinski-Harabasz 지수 : 군집 간 분산과 군집 내 분산 비율(높을수록 우수)
+	- Davies-Bouldin 지수 : 군집 간 유사도 측정 지표(낮을수록 우수)
+	- 정답 레이블 보유 시 지표 : ARI, NMI 등 활용
+
+- scoring 매개변수
+	- 하이퍼파라미터 튜닝(GridSearchCV, cross_val_score) 시 자동 평가 기준 옵션으로 활용
+	- make_scorer 함수를 통한 사용자 정의 스코어러 적용 가능
+
+	ex)
+	from seaborn import load_dataset
+	from sklearn.cluster import KMeans
+	from sklearn.preprocessing import LabelEncoder
+	import pandas as pd
+	import numpy as np
+
+	iris = load_dataset('iris')
+	iris_X = iris.iloc[:,:-1]
+	iris_y = iris.iloc[:,-1]
+
+	iris_3cluster_model = KMeans(n_clusters=3, random_state=1, n_init=10)
+	iris_3cluster_model.fit(iris_X)
+
+	pred3 = iris_3cluster_model.predict(iris_X)
+	pred3_str = np.choose(pred3, ['versicolor','setosa','virginica'])
+
+	le = LabelEncoder()
+	iris_y3 = le.fit_transform(iris_y)
+	pred3 = np.choose(pred3, [1, 0, 2])
+
+	pd.crosstab(iris_y3, pred3)
+
+	iris_2cluster_model = KMeans(n_clusters=2, random_state=1, n_init=10)
+	iris_2cluster_model.fit(iris_X)
+
+	pred2 = iris_2cluster_model.predict(iris_X)
+	iris_y2 = np.array([0]*50 + [1]*100)
+
+	pred2_str = np.choose(pred2, ['setosa','vir'])
+	iris_y2_str = np.choose(iris_y2, ['setosa','vir'])
+	pd.crosstab(iris_y2_str, pred2_str)
+
+
+- 조정 랜드 지수 (Adjusted Rand Index, ARI)
+	- 군집화 결과와 실제 정답 레이블 간 유사도를 측정하는 비지도학습 평가 지표
+
+	ex)
+	from sklearn.metrics import adjusted_rand_score
+
+	adjusted_rand_score(labels_true=iris_y, labels_pred=pred3_str)
+	adjusted_rand_score(labels_true=iris_y2, labels_pred=pred2)
+	
+
+- 상호 정보량 (Mutual Information, MI)
+	- 실제 정답 레이블과 군집화 예측 결과 간 공유되는 정보량을 측정하는 평가지표
+	- normalized_mutual_info_score : 상호 정보량을 0~1 범위로 정규화한 지표
+
+	ex)
+	from sklearn.metrics import mutual_info_score, normalized_mutual_info_score
+
+	mutual_info_score(iris_y, pred3_str)
+	mutual_info_score(iris_y2, pred2)
+
+	normalized_mutual_info_score(iris_y, pred3_str)
+	normalized_mutual_info_score(iris_y2, pred2)
+
+
+- 기타 정답 레이블 기반 성능 평가 지표
+	- homogeneity_score : 각 군집이 단일 클래스의 데이터로만 구성되었는지 측정하는 동질성 지표
+	- completeness_score : 동일 클래스의 모든 데이터가 같은 군집에 할당되었는지 측정하는 완전성 지표
+	- v_measure_score : 동질성과 완전성의 조화평균 지표
+
+	ex)
+	from sklearn.metrics import homogeneity_score, completeness_score, v_measure_score
+
+	homogeneity_score(iris_y, pred3_str)
+	homogeneity_score(iris_y2, pred2)
+
+	completeness_score(iris_y, pred3_str)
+	completeness_score(iris_y2, pred2)
+
+	v_measure_score(iris_y, pred3_str)
+	v_measure_score(iris_y2, pred2)
+
+- 실루엣 계수 (Silhouette Score)
+	- 데이터 간 거리에 기반하여 응집도와 분리도를 종합 측정하는 평가 지표
+	- 실제 정답 레이블 없이 데이터 자체의 거리 정보만으로 평가 가능
+
+	ex)
+	import numpy as np
+	import matplotlib.pyplot as plt
+	from sklearn.metrics import silhouette_score
+	from sklearn.cluster import KMeans
+
+	X1 = np.random.rand(200)*3
+	noise = np.random.normal(0, 0.2, X1.shape)
+	Y1 = np.sin(X1) + noise
+	group1 = np.c_[X1, Y1, np.zeros(X1.shape[0])]
+
+	X2 = X1 + 1.5
+	noise = np.random.normal(0, 0.2, X1.shape)
+	Y2 = np.cos(X2) + noise
+	group2 = np.c_[X2, Y2, np.ones(X2.shape[0])]
+
+	data = np.r_[group1, group2]
+
+	range_n_clusters = [2,3,4,5,6,7,8,9,10]
+	for n_clusters in range_n_clusters:
+		model = KMeans(n_clusters=n_clusters, n_init=10, random_state=3)
+		model.fit(data[:,:-1])
+		cluster_labels = model.labels_
+		score = silhouette_score(
+			data[:,:-1],
+			cluster_labels
+		)
+		print(f'클러스터 : {n_clusters:2}, 실루엣 계수 : {score:.6}')

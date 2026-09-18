@@ -48,6 +48,15 @@ pip install apyori statsmodels==0.13.5 prophet plotly
 # 머신러닝 데이터 가속화
 pip install dataprep
 
+# 의사 결정 나무 구조 시각화 (가상환경)
+conda install -c conda-forge graphviz
+pip install pydot
+dot -V
+
+# 의사 결정 나무 구조 시각화 (base)
+conda install graphviz
+pip install pydot
+
 # 4. 커널 삭제 및 가상환경 제거 (초기화 필요 시)
 
 # Jupyter 커널 삭제 (--name으로 지정했던 실제 커널명 입력)

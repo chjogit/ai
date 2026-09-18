@@ -1,0 +1,10 @@
+1장. 머신러닝 기초
+
+-  머신러닝 개요 : 지도학습(SVM, Decision Tree 등); 비지도학습(K-means, PCA)
+-  데이터 탐색 & 통계 : 기술통계량(describe); 비대칭 분포(skewnorm); EDA 도구(dataprep.eda: plot, plot_correlation)
+-  상관분석 & 검정 : 피어슨/스피어만(pearsonr, spearmanr); 독립성 검정(fisher_exact, mcnemar)
+-  데이터 스케일링 : StandardScaler(Z-score); MinMaxScaler(0~1); RobustScaler(IQR); Normalizer(벡터 1)
+-  범주형 인코딩 : LabelEncoder; OneHotEncoder; LabelBinarizer; Target Encoding(mean)
+-  결측치 대체 : SimpleImputer(strategy: mean, median, most_frequent)
+-  데이터 분할 : train_test_split(stratify 지원); sample(비율 추출)
+-  모델링 & 저장 : 분류기(DecisionTreeClassifier, MLPClassifier); 모델 저장(pickle: .pkl; joblib: .joblib)

@@ -1,0 +1,401 @@
+1장. 머신러닝 기초
+
+1. 머신러닝 개요 및 변수 분류
+
+- 머신러닝의 정의 및 분석 목적
+	- Insight : EDA 중심의 데이터 파악 및 Pandas, Numpy, Matplotlib, Seaborn 활용
+	- Optimization : scikit-learn, statsmodels, scipy 활용 ML/DL 중심 최적화 실행
+	- 머신러닝 : 지속적 학습 과정을 통한 측정 작업 성능 향상 메커니즘
+		- 지도학습: SVM, Decision Tree, Random Forest, Logistic Regression 등
+		- 비지도학습: K-means, PCA 등
+
+- 데이터 속성 및 형태에 따른 변수 분류
+	- 명목척도 : 범주 구분을 위한 척도 (예: 남, 여)
+	- 순서척도 : 서열 관계가 존재하는 척도 (예: 상, 중, 하)
+	- 구간척도 : 순서 간 간격 분석의 의미를 갖는 척도
+	- 비율척도 : 절대 영점 및 연속성을 보유한 척도
+	- 변수 타입 : 범주형, 이산형, 연속형 변수로 구분
+	- 데이터 품질 : 특이값(이상치) 및 결측값 존재 유무에 따른 구분
+
+2. 기초 통계량 및 데이터 분포 분석
+
+	- 통계적 요약 측도의 분류
+		- 중심 위치 측도 : 데이터 분포의 대표 중심값을 나타내는 평균값, 중앙값, 최빈값
+		- 산포 측도 : 데이터 분포의 치우침 및 비대칭성을 나타내는 왜도, 첨도
+
+	- 데이터 요약 통계량 및 비대칭 분포 생성
+		- numpy, scipy.stats 라이브러리를 활용한 평균, 중위수, 분산, 표준편차, 왜도, 첨도 산출
+		- 왜도와 첨도가 모두 0인 상태는 정규분포를 의미
+		- skewnorm을 활용한 오른쪽으로 길게 늘어진 비대칭 분포(양의 왜도) 생성 및 히스토그램 시각화
+
+	ex)
+	import numpy as np
+	from scipy.stats import skew, kurtosis, skewnorm
+	import matplotlib.pyplot as plt
+
+	data = np.random.normal(
+		loc=0.0,
+		scale=1.0,
+		size=10000000
+	)
+
+	print('평균 :', np.mean(data))
+	print('중위수 :', np.median(data))
+	print('분산 :', np.var(data))
+	print('표준편차 :', np.std(data))
+	print('왜도 :', skew(data))
+	print('첨도 :', kurtosis(data))
+
+	data = skewnorm(
+		a=5,
+		loc=0,
+		scale=1
+	).rvs(size=10000000)
+
+	plt.figure(figsize=(5,1))
+	plt.hist(data, bins=300)
+	plt.show()
+
+
+- describe 함수를 활용한 기술통계량 산출
+	- 수치형 변수 : 최소값, 최대값, 사분위수(25%, 50%, 75%), 평균값, 표준편차 등의 요약 통계량 산출
+	- 범주형 변수 : 고유값 개수(unique), 최빈 데이터(top), 최빈 데이터 빈도수(freq) 등의 요약 정보 산출
+
+	ex)
+	from seaborn import load_dataset
+
+	iris = load_dataset('iris')
+	iris.describe(include='all')
+
+
+3. EDA 가속화
+
+- dataprep.eda 모듈의 주요 기능
+	- plot() : 데이터 분포 및 시각화 그래프 자동 표기 기능
+	- plot_correlation() : 변수 간 상관계수 데이터의 히트맵 형태 시각화
+	- plot_missing() : 결측값 분포 상태 확인 및 시각화 기능
+	- plot_diff() : 두 데이터프레임 간 특정 컬럼 데이터 분포 비교 분석 시각화
+
+	ex)
+	from dataprep.eda import plot, plot_correlation, plot_missing, plot_diff
+	from seaborn import load_dataset
+
+	iris = load_dataset('iris')
+
+	plot(iris)
+	plot(iris, 'species')
+	plot(iris, 'petal_length', config={'hist.bins':100, 'box.color':'skyblue'})
+	plot_correlation(iris)
+	plot_correlation(iris[['petal_length', 'petal_width']])
+	plot_missing(iris)
+	plot_diff([iris, iris])
+
+
+4. 상관 분석 및 독립성 검정
+
+- 공분산 : 두 변수의 직선적 관련성 방향을 측정하나 단위의 영향을 받음
+- 상관계수 : corr()로 전체 상관계수 행렬을 출력하고 pearsonr()로 피어슨 상관계수 및 p-value 산출
+	- p-value > 유의수준 : 귀무가설 기각 불가, 통계적으로 유의미한 차이 없음
+	- p-value <= 유의수준 : 귀무가설 기각 및 대립가설 채택, 통계적으로 유의미함
+		* 귀무가설(H0) : 기존의 입장, 변화 없음, 차이 없음을 나타내며 기각을 목적으로 수립
+		* 대립가설(H1) : 입증하고자 하는 새로운 주장, 차이 있음, 변화 있음을 나타냄
+
+- 피어슨 상관계수 : 정규성 충족 및 선형 관계 존재 시 적용, 공분산을 각 변수의 표준편차 곱으로 나누어 -1부터 +1 사이로 표준화	
+- 스피어만 상관계수 : 이상치 포함, 순위/순서 데이터, 비선형 단조 관계 형성 시 적용되는 비모수 방식
+	- 모수적 방법 : 정규분포 가정을 바탕으로 평균, 표준편차 등의 모수를 활용하여 분석
+	- 비모수적 방법 : 정규분포를 따르지 않거나 표본이 적을 때 순위, 중앙값 등을 활용하여 분석
+
+	ex)
+	import pandas as pd
+	from scipy.stats import pearsonr, spearmanr
+	from seaborn import load_dataset
+
+	iris = load_dataset('iris')
+
+	iris.corr(numeric_only=True, method='pearson')
+	corr, p_value = pearsonr(iris.petal_length, iris.petal_width)
+
+	score = pd.DataFrame({
+		'kor': [50, 60, 70],
+		'eng': [40, 55, 90]
+	})
+	result = pd.crosstab(score.kor, score.eng)
+
+	iris.corr(numeric_only=True, method='spearman')
+	corr, p_value = spearmanr(iris.petal_length, iris.petal_width)
+
+- 범주형 데이터 독립성 검정
+	- 피셔의 정확 검정 : 범주형 데이터 간 독립성 분석 시 표본 크기가 작은 경우 적용
+	- 맥니마 검정 : 대응표본 또는 종속 관계에 있는 두 범주형 데이터 간 사전-사후 변화 검정
+
+	ex)
+	import pandas as pd
+	from scipy.stats import fisher_exact
+	from statsmodels.stats.contingency_tables import mcnemar
+
+	data_fisher = pd.DataFrame({
+		'대서양': [8, 2],
+		'인도양': [1, 5]
+	}, index=['고래', '상어'])
+
+	ratio, p_value = fisher_exact(data_fisher)
+
+	data_mcnemar = pd.DataFrame({
+		'치료 후 양성': [59, 16, 75],
+		'치료 후 음성': [6, 80, 86]
+	}, index=['치료 전 양성', '치료 전 음성', '계'])
+
+	data_mcnemar['계'] = data_mcnemar['치료 후 양성'] + data_mcnemar['치료 후 음성']
+	table = data_mcnemar.iloc[:-1, :-1].to_numpy()
+
+	result = mcnemar(table, exact=True)
+	p_val = result.pvalue
+
+
+5. 데이터 스케일링
+
+- StandardScaler : Z-score 정규화 적용, 평균 0, 표준편차 1로 변환, 이상치에 민감하며 정규분포 가정 모델에 활용
+- MinMaxScaler : 최소-최대 정규화 적용, 결과를 [0, 1] 범위로 변환, 이상치에 매우 민감
+- MaxAbsScaler : 절댓값 최대 정규화 적용, 결과를 [-1, 1] 범위로 변환, 희소행렬 및 음수 포함 데이터에 적합
+- RobustScaler : 중앙값과 IQR 기준 스케일링 적용, 이상치 영향이 적음
+- Normalizer : 샘플 단위 L1/L2 벡터 정규화 적용, 각 샘플의 크기를 1로 변환, 거리 기반 모델 및 NLP에 활용
+
+	ex)
+	from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler, Normalizer
+	import pandas as pd
+
+	df = pd.DataFrame({
+		'x1': range(11),
+		'x2': [-100, -80, -60, -40, -20, 0, 20, 40, 60, 80, 500]
+	})
+
+	scaler_std = StandardScaler()
+	array_std = scaler_std.fit_transform(df)
+	df_std = pd.DataFrame(array_std, columns=['x1_std', 'x2_std'])
+	result = pd.concat([df, df_std], axis=1)
+
+	scaler_min = MinMaxScaler()
+	array_min = scaler_min.fit_transform(df)
+	df_min = pd.DataFrame(array_min, columns=['x1_min', 'x2_min'])
+	result = pd.concat([result, df_min], axis=1)
+
+	scaler_abs = MaxAbsScaler()
+	array_abs = scaler_abs.fit_transform(df)
+	df_abs = pd.DataFrame(array_abs, columns=['x1_abs', 'x2_abs'])
+	result = pd.concat([result, df_abs], axis=1)
+
+	scaler_rob = RobustScaler()
+	array_rob = scaler_rob.fit_transform(df)
+	df_rob = pd.DataFrame(array_rob, columns=['x1_rob', 'x2_rob'])
+	result = pd.concat([result, df_rob], axis=1)
+
+	scaler_nor = Normalizer()
+	array_nor = scaler_nor.fit_transform(df)
+	df_nor = pd.DataFrame(array_nor, columns=['x1_nor', 'x2_nor'])
+	result = pd.concat([result, df_nor], axis=1)
+
+
+6. 범주형 데이터 인코딩
+
+- 라벨 인코딩
+	- 범주형 문자열 데이터를 알파벳 또는 가나다 순서에 따라 0부터 k-1까지의 정수 값으로 변환
+	- 메모리 효율성이 높으나 임의의 수치 부여로 인해 불필요한 서열 관계가 형성될 위험 존재
+	- 순서형 데이터 및 트리 기반 모델 적용 시 유용
+
+	ex)
+	from sklearn.preprocessing import LabelEncoder
+	from seaborn import load_dataset
+
+	iris = load_dataset('iris')
+
+	labelEncoder = LabelEncoder()
+	labelEncoder.fit(iris.species)
+	iris['enc_species'] = labelEncoder.transform(iris.species)
+	decoded = labelEncoder.inverse_transform(iris['enc_species'])
+
+
+- 원-핫 인코딩
+	- 범주를 이진 벡터로 변환하여 독립성 보장 및 수치적 편향 차단
+	- 범주 수가 많을 경우 차원의 폭발적 확장 및 희소 행렬 형성 문제 발생
+	- 명목형 데이터, 선형 모델, 신경망, 거리 기반 모델에 활용
+
+	from sklearn.preprocessing import OneHotEncoder, LabelBinarizer
+
+	species = iris['enc_species'].to_numpy()
+
+	enc = OneHotEncoder()
+	species_one_enc = enc.fit_transform(species.reshape(-1, 1)).toarray()
+
+	lb = LabelBinarizer()
+	species_one_lb = lb.fit_transform(iris['species'])
+
+
+- 평균값(타깃) 인코딩
+	- 각 범주가 타깃 레이블에 미치는 영향(평균값)으로 인코딩하여 차원 확장 방지
+	- 타깃 누수(Target Leakage) 및 과적합 위험이 존재하므로 K-Fold 등의 기법 적용 필요
+	- 고수준 범주형 데이터(High-Cardinality)에 적용
+
+	from seaborn import load_dataset
+
+	titanic = load_dataset('titanic')
+
+	sex_mean = titanic.groupby('sex')['survived'].mean()
+	titanic.insert(3, 'sex_mean', titanic['sex'].map(sex_mean))
+
+	titanic_pivot = titanic.pivot_table(
+		columns='survived',
+		index=titanic.index,
+		values='sex_mean'
+	)
+
+
+7. 결측치 처리
+
+- SimpleImputer를 활용한 결측치 대체
+	- 평균값(mean), 중앙값(median), 최빈값(most_frequent)
+
+	ex)
+	import numpy as np
+	import pandas as pd
+	import random
+	from sklearn.impute import SimpleImputer
+	from seaborn import load_dataset
+
+	iris = load_dataset('iris')
+	iris_X = iris.iloc[:, :-1].copy()
+
+	for col in range(4):
+		idxs = random.sample(range(150), 20)
+		iris_X.iloc[idxs, col] = np.nan
+
+	imp_mean = SimpleImputer(strategy='mean')
+	iris_imp_mean = imp_mean.fit_transform(iris_X)
+	df_mean = iris_X.fillna(iris_X.mean(axis=0))
+
+	imp_median = SimpleImputer(strategy='median')
+	iris_imp_median = imp_median.fit_transform(iris_X)
+	df_median = iris_X.fillna(iris_X.median(axis=0))
+
+	imp_freq = SimpleImputer(strategy='most_frequent')
+	iris_imp_freq = imp_freq.fit_transform(iris_X)
+	df_freq = iris_X.fillna(iris_X.mode().iloc[0])
+
+
+8. 데이터셋 분할
+
+- 학습용 및 테스트용 데이터 분할 기법
+	- random.sample : 비복원 추출 기반 분할
+	- pandas.DataFrame.sample : 비율 기반 분할
+	- train_test_split : Layered Stratified Sampling 기반 분할
+
+	ex)
+	import random
+	import pandas as pd
+	from sklearn.model_selection import train_test_split
+	from seaborn import load_dataset
+
+	iris = load_dataset('iris')
+
+	iris_len = len(iris)
+	inds = random.sample(range(iris_len), int(iris_len * 0.7))
+	inds.sort()
+	train1 = iris.loc[inds]
+	test1 = iris[~iris.index.isin(train1.index)]
+
+	train2 = iris.sample(frac=0.7)
+	train2 = train2.sort_index()
+	test2 = iris[~iris.index.isin(train2.index)]
+
+	X = iris.iloc[:, :-1].to_numpy()
+	y = iris.iloc[:, -1].values
+
+	train_X, test_X, train_y, test_y = train_test_split(
+		X, y,
+		test_size=0.3,
+		shuffle=True,
+		stratify=y
+	)
+
+
+9. 머신러닝 모형 생성 및 성능 평가
+
+- 의사결정나무 분류 모델 : DecisionTreeClassifier
+
+- 다층신경망 분류 모델 : MLPClassifier
+
+	ex)
+	import pandas as pd
+	from sklearn.model_selection import train_test_split
+	from sklearn.tree import DecisionTreeClassifier
+	from sklearn.neural_network import MLPClassifier
+	from seaborn import load_dataset
+
+	iris = load_dataset('iris')
+	X = iris.iloc[:, :-1].to_numpy()
+	y = iris.iloc[:, -1].values
+
+	train_X, test_X, train_y, test_y = train_test_split(
+		X, y,
+		test_size=0.3,
+		shuffle=True,
+		stratify=y
+	)
+
+	dt_model = DecisionTreeClassifier(random_state=1)
+	dt_model.fit(train_X, train_y)
+	pred_dt = dt_model.predict(test_X)
+	cross_dt = pd.crosstab(test_y, pred_dt, rownames=['실제값'], colnames=['예측값'])
+	score_dt = dt_model.score(test_X, test_y)
+
+	mlp_model = MLPClassifier(
+		hidden_layer_sizes=(50, 64, 16),
+		max_iter=500,
+		random_state=1
+	)
+	mlp_model.fit(train_X, train_y)
+	pred_mlp = mlp_model.predict(test_X)
+	cross_mlp = pd.crosstab(test_y, pred_mlp)
+	score_mlp = mlp_model.score(test_X, test_y)
+
+
+10. 머신러닝 모형 저장 및 직렬화
+
+- 머신러닝 모형 파일 확장자: .pkl, .joblib
+- 딥러닝 모형 파일 확장자: .h5, .keras
+
+- pickle : Python 객체 직렬화를 통한 저장 방식
+- joblib : Scikit-learn 권장 저장 방식으로 대용량 멀티코어 병렬 압축 지원
+
+	ex)
+	import pickle
+	import joblib
+	import time
+	import os
+	import pandas as pd
+
+	if not os.path.exists('data'):
+		os.makedirs('data')
+
+	start = time.time()
+	with open('data/ch1_mlp_model.pkl', 'wb') as f:
+		pickle.dump(mlp_model, f)
+	pickle_time = time.time() - start
+	pickle_size = os.path.getsize('data/ch1_mlp_model.pkl') / 1024
+	print(f'모형 저장 시간 : {pickle_time}초, 모형 파일 크기 : {pickle_size}KB')
+
+	with open('data/ch1_mlp_model.pkl', 'rb') as f:
+		loaded_pickle_model = pickle.load(f)
+	pred_pickle = loaded_pickle_model.predict(test_X)
+
+	start = time.time()
+	joblib.dump(
+		mlp_model,
+		'data/ch1_mlp_model.joblib',
+		compress=3
+	)
+	joblib_time = time.time() - start
+	joblib_size = os.path.getsize('data/ch1_mlp_model.joblib') / 1024
+	print(f'모형 저장 시간 : {joblib_time}초, 모형 파일 크기 : {joblib_size}KB')
+
+	loaded_joblib_model = joblib.load('data/ch1_mlp_model.joblib')
+	pred_joblib = loaded_joblib_model.predict(test_X)

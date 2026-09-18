@@ -1,0 +1,7 @@
+2장. 군집 분석
+
+- 군집모델 : 중심 기반(K-Means); 연결 기반(계층적 군집화); 밀도 기반(DBSCAN, OPTICS)
+- K-Means : 중심점(Centroid) 이동 반복; 한계(크기/밀도 불균형, 비구형 구조, 이상치 민감); 데이터 생성(make_classification); 모델(KMeans); 스케일링(Normalizer)
+- 계층적 클러스터링 : 계층 구조 형성(K 지정 불필요); 시각화(dendrogram); 모델 및 클러스터링(scipy: linkage, fcluster)
+- DBSCAN : 밀도 기반(eps, min_samples); 이상치 자동 감지(노이즈 -1); 비구형 군집 형성; 포인트 구분(Core, Border, Noise); 모델(DBSCAN)
+- 군집 성능 평가 : 내장 점수(K-Means score: Inertia); 외부 지표(adjusted_rand_score, mutual_info_score, normalized_mutual_info_score, homogeneity_score, completeness_score, v_measure_score); 내부 지표(silhouette_score, Calinski-Harabasz, Davies-Bouldin)
