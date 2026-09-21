@@ -14,6 +14,6 @@
 	- TN (True Negative), FP (False Positive), FN (False Negative), TP (True Positive)
 	- 정확도 (Accuracy), 정밀도 (Precision), 재현율 (Recall), F1-Score
 
-		예측: 0 			예측: 1
+		        예측 : 0 			예측 : 1
 실제: 0  	TN (True Negative) 	FP (False Positive)
 실제: 1  	FN (False Negative) 	TP (True Positive)

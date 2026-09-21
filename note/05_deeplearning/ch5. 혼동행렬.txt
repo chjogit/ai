@@ -1,0 +1,46 @@
+- confusion matrix(혼동행렬, 성능평가지표)
+
+		예측0			예측1
+──────────────────
+실제0		 TN			  FP (1종 오류)
+──────────────────
+실제1		 FN (2종 오류)	  TP
+
+
+
+- T / F (결과 판정)
+
+T (True) : 모델의 예측값과 실제값이 일치함 (맞춤)
+F (False) : 모델의 예측값과 실제값이 불일치함 (틀림)
+
+- P / N (모델의 예측)
+
+P (Positive) : 모델이 1(양성)로 예측함
+N (Negative) : 모델이 0(음성)으로 예측함
+
+
+- 핵심 성능 평가 지표
+
+Accuracy (정확도) = (TN + TP) / (TN + FP + FN + TP)
+Precision (정밀도) = TP / (FP + TP)
+Recall (재현율, 민감도) = TP / (FN + TP)
+Specificity (특이도) = TN / (TN + FP)
+FP rate (위양성율) = 1 - TN / (TN + FP)
+F1 Score = 2 * (Precision * Recall) / (Precision + Recall)
+Fbeta Score = (1 + β²) * (Precision * Recall) / (β² * Precision + Recall)
+
+
+- Precision과 Recall의 트레이드오프(Trade-off) 관계
+
+* Precision 중심 분류 (1일 확률이 매우 높은 데이터만 1로 예측)
+
+- FP(False Positive) 감소 -> Precision 상승
+- FN(False Negative) 증가 -> Recall 하락 및 회사 측 비용/손실 증가 (예 : 암 환자나 사기 거래 누락)
+- 불필요한 비용 지출을 줄일 수 있으나, 주요 탐지 누락 위험 존재
+
+* Recall 중심 분류 (조금이라도 1일 가능성이 있으면 1로 예측)
+
+- FN(False Negative) 감소 -> Recall 상승
+- FP(False Positive) 증가 -> Precision 하락 및 고객 불만 증가 (예 : 정상 이메일 스팸 처리, 정상 거래 차단)
+- 과도한 알림 및 오탐으로 인한 서비스 사용자 불편 초래
+
