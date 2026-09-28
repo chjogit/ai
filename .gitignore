@@ -7,4 +7,5 @@ __pycache__/
 .env
 .metadata
 .ipynb_checkpoints/
-*.ipynb_checkpoints
+*.ipynb_checkpoints*.zip 
+*.xlsx 
