@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERROR</title>
+    <!-- 
+    jinja2 문법 
+    경고창 팝업 후 이전 화면으로
+    -->
+    {% if error %}
+        <script>
+            alert('{{error}}');
+            history.back();
+        </script>
+    {% endif %} 
+</head>
+<body>
+    <h1>공사 중</h1>
+</body>
+</html>

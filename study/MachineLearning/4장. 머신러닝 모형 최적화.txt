@@ -1,0 +1,176 @@
+ch4. 머신러닝 모형 최적화
+
+1. 변수 선택과 차원 축소
+
+- 종속변수에 영향을 미치는 주요 변수를 선별하여 학습에 사용할 독립변수의 수를 줄이고 모델의 성능(score) 향상
+- 과적합 방지 및 변수 간 다중공선성(높은 상관관계) 문제 완화
+- 모델의 학습 및 계산 시간 단축 효과 제공
+
+- 다중공선성 발생 시 문제점
+	- 모델의 예측 성능이 우수하더라도 회귀계수 해석이 어려워짐
+	- 주요 영향 변수 파악 및 p-value 기반 유의성 검정 왜곡 발생 가능
+
+- 주요 기법 및 속성
+	- 주성분분석(PCA), 상관분석
+	- 분류 모델의 feature_importances_ 속성, 회귀 모델의 coef_ 속성
+	- SelectKBest : 평가 점수(score)가 가장 높은 상위 K개의 핵심 변수를 자동으로 선택하는 함수
+
+2. 주성분분석 (PCA, Principal Component Analysis)
+
+- 기존 변수들의 선형 결합을 통해 새로운 변수(주성분)를 생성하는 대표적인 변수 선택 및 차원 축소 기법
+- 상관관계가 있는 변수들을 선형결합하여 분산이 극대화된 상관관계가 없는 새로운 변수(주성분)들로 축약하는 방식
+
+- 주요 활용 분야
+	- 영상 인식, 통계 데이터 분석(주성분 탐색), 데이터 압축, 데이터 노이즈 제거 등
+	- 영상 처리 시 복수의 영상 데이터 중 대표 이미지를 추출할 때 주로 활용
+- 주요 속성
+	- n_components : 생성할 주성분의 개수 지정
+	- explained_variance_ : 각 주성분이 보존하는 원본 데이터의 절대적인 변동량(값이 클수록 더 중요한 주성분)
+	- explained_variance_ratio_ : 각 주성분이 전체 데이터 정보량에서 차지하는 상대적인 설명 비율(0~1)
+
+	ex)
+	import seaborn as sns
+	from sklearn.decomposition import PCA
+	import pandas as pd
+	import numpy as np
+
+	iris = sns.load_dataset('iris')
+	iris_X, iris_y = iris.iloc[:,:-1], iris.iloc[:,-1]
+	iris_X.shape, iris_y.shape
+
+	# 다중공선성이 있는 독립변수 4개 -> 다중공선성이 없는 새로운 독립변수 2개로 차원 축소
+	pca = PCA(n_components=2) # n_components : 주성분 개수
+	pca.fit(iris_X)
+	iris_pca = pca.transform(iris_X)
+	iris_pca[:3]
+
+	df = pd.DataFrame(iris_pca, columns=['pca1','pca2'])
+
+	df.corr()
+
+	pd.concat([iris_X, df], axis=1)
+
+	# 설명 분산 확인
+	pca.explained_variance_
+
+	# 설명 분산 비율 확인
+	pca.explained_variance_ratio_
+
+	# 누적 설명 분산 비율 확인 (2개의 주성분으로 전체 데이터의 97.768% 설명)
+	np.cumsum(pca.explained_variance_ratio_)
+
+	pca.components_
+
+
+3. 상관 관계 확인
+
+- 타겟 변수와 상관 관계가 높은 독립 변수들만 선택하는 과정
+- 상관관계 히트맵 시각화를 통해 변수 간 관련성 파악
+
+	ex)
+	import pandas as pd
+	import seaborn as sns
+	import matplotlib.pyplot as plt
+	import numpy as np
+
+	redwine = pd.read_csv('data/winequality-red.csv', delimiter=';')
+	redwine.head()
+
+	plt.rcParams['figure.figsize'] = (15, 4)
+
+	corr = redwine.corr()
+
+	sns.heatmap(
+	    corr, # 표기할 데이터
+	    annot=True, # 수치 표기
+	    vmin=-1, # 수치 범위
+	    vmax=1,
+	    cmap="coolwarm_r"
+	)
+	plt.show()
+
+	mask = np.triu(np.ones_like(corr, dtype=bool))
+
+	sns.heatmap(
+	    corr,
+	    mask=mask,
+	    annot=True,
+	    fmt='.3f',
+	    vmin=-1,
+	    vmax=1,
+	    cmap="coolwarm_r"
+	)
+	plt.show()
+
+
+4. 분류 모델 feature importance
+
+- feature_importances_
+	- 독립 변수가 종속 변수에 영향을 주는 정도를 저장하는 속성
+	- 지원 모델 : DecisionTreeClassifier, RandomForestClassifier, GradientBoostingClassifier, XGBClassifier, LGBMClassifier, CatBoostClassifier 등
+	- 미지원 모델 : LogisticRegression, SVC, MLPClassifier, MultinomialNB 등
+
+- RFE (Recursive Feature Elimination)
+	- 모델 기반 특성 중요도(Feature Importance) 평가를 바탕으로 하위 특성을 단계적으로 제거해 지정한 개수의 최적 변수 집합을 도출하는 후진 단계적 특성 선택 기법
+
+	ex)
+	import pandas as pd
+	import numpy as np
+	import matplotlib.pyplot as plt
+	from sklearn.model_selection import train_test_split
+	from sklearn.ensemble import RandomForestClassifier
+	from sklearn.feature_selection import RFE
+
+	X = redwine.iloc[:, :-1].to_numpy()
+	y = redwine.iloc[:, -1].values
+
+	train_X, test_X, train_y, test_y = train_test_split(
+	    X, y,
+	    test_size=0.3,
+	    stratify=y
+	)
+	train_X.shape, train_y.shape, test_X.shape, test_y.shape, type(train_X)
+
+	rf_model = RandomForestClassifier(
+	    n_estimators=10,
+	    random_state=10
+	)
+	rf_model.fit(train_X, train_y)
+
+	features = pd.DataFrame(
+	    np.c_[redwine.columns[:-1],
+	    rf_model.feature_importances_],
+	    columns=['feature','importance']
+	)
+
+	features
+
+	features.sort_values(by='importance', ascending=False, inplace=True)
+	features.set_index(drop=True, keys='feature')
+
+	# 변수 중요도 시각화
+	plt.bar(features.feature, features.importance)
+	plt.tick_params(axis='x', labelsize=8)
+	plt.show()
+
+	# 누적합을 이용한 시각화
+	y_stack = np.cumsum(features.importance)
+	plt.bar(features.feature, y_stack)
+	plt.plot(features.feature, y_stack, c='r')
+	plt.tick_params(axis='x', labelsize=8)
+	plt.show()
+
+	# RFE 모델 적합 및 특성 선택
+	rfe_model = RFE(
+	    rf_model,
+	    n_features_to_select=5
+	)
+	rfe_model.fit(train_X, train_y)
+
+	features_rfe = pd.DataFrame(
+	    np.c_[redwine.columns[:-1],
+	          rfe_model.get_support()],
+	    columns=['feature', 'selected']
+	)
+
+	features_rfe.sort_values(by='selected', ascending=False)

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{{ url_for('static', filename='file.css') }}"
+        rel="stylesheet"
+        type="text/css">
+    <link href="{{ url_for('static', filename='flask.png') }}"
+        rel="icon">
+    <title>회원가입</title>
+        <script>
+        function chk() {
+            if (frm.pw.value != frm.pwchk.value) {
+                alert("비밀번호를 확인하세요");
+                frm.pw.value = '';
+                frm.pwchk.value = '';
+                frm.pw.focus();
+                return false;
+            }
+            return true;
+        }
+    </script>
+</head>
+<body>
+    <h2>회원가입(GET)</h2>
+    <form action="/join" method="get" name="frm" onsubmit="return chk()">
+        <table>
+            <tr>
+                <td><label for="name">이 름<span>*</span></label></td>
+                <td><input type="text" name="name" id="name" required="required"></td>
+            </tr>
+            <tr>
+                <td><label for="id">아이디<span>*</span></label></td>
+                <td><input type="text" name="id" id="id" required="required"></td>
+            </tr>
+            <tr>
+                <td><label for="pw">비밀번호<span>*</span></label></td>
+                <td><input type="password" name="pw" id="pw" required="required"></td>
+            </tr>
+            <tr>
+                <td><label for="pwchk">비번확인<span>*</span></label></td>
+                <td><input type="password" name="pwchk" id="pwchk" required="required"></td>
+            </tr>
+            <tr>
+                <td><label for="addr">주 소<span>*</span></label></td>
+                <td><input type="text" name="addr" id="addr" required="required"></td>
+            </tr>
+        </table>
+        <p>
+            <input type="submit" value="가입" />
+            <input type="reset" value="취소" />
+        </p>
+    </form>
+</body>
+</html>

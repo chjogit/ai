@@ -1,0 +1,8 @@
+3장. 분류 분석
+
+- 데이터 제공 방식 : Load(내장); Fetch(다운로드); Make(가상 생성)
+- 확률적 생성 모델 : QDA(차 quadratic 경계); NB(MultinomialNB, 조건부 독립 가정)
+- 확률적 판별 모델 : LogisticRegression; DecisionTreeClassifier(과적합 방지 가지치기)
+- 판별 함수 모델 : Perceptron; SVC(C, kernel, gamma); MLPClassifier
+- 평가 지표 : accuracy; recall; precision; f1-score; fbeta_score; ROC-AUC(roc_curve, auc)
+

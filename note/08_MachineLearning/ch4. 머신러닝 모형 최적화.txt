@@ -1,0 +1,5 @@
+4장. 머신러닝 모형 최적화
+
+- 변수 선택/차원 축소 : 다중공선성 해소; 과적합 방지; 계산 시간 단축
+- PCA : 분산 극대화 선형 결합; PCA(n_components); explained_variance_ratio_
+- 상관관계 및 중요도 : corr(); feature_importances_; RFE(후진 단계적 특성 선택)

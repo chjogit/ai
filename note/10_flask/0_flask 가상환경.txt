@@ -1,0 +1,17 @@
+- PowerShell 실행 및 권한 설정
+PowerShell을 관리자 권한으로 실행
+Get-ExecutionPolicy (RemoteSigned 상태 확인)
+Set-ExecutionPolicy RemoteSigned
+
+- 가상환경 생성 및 활성화
+python -m venv .venv
+.venv\Scripts\activate
+
+- 패키지 관리자 및 라이브러리 설치
+python -m pip install --upgrade pip
+pip install flask
+
+- requirements.txt 생성 및 동기화
+pip freeze > requirements.txt
+notepad requirements.txt
+pip install -r requirements.txt
