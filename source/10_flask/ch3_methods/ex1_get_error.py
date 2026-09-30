@@ -11,8 +11,15 @@
 '''
 from flask import Flask, render_template, request, abort
 from models import Member
+from filters import mask_comma, masked_id, masked_password
 
 app = Flask(__name__)
+
+app.template_filter('mask_pw')(masked_password)
+
+app.template_filter('mask_id')(masked_id)
+
+app.template_filter('comma')(mask_comma)
 
 @app.route('/')
 def index():
@@ -46,6 +53,9 @@ def join():
     except Exception as e:
         return render_template('error_page.html', error="입력 오류"), 500
     return render_template('1_get/result.html', member=member)
+
+
+
 
 if __name__=='__main__':
     app.run(debug=True, port=80)

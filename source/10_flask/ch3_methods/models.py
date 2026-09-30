@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 class Member(BaseModel):
     name:str = Field(min_length=2, max_length=10, description='이름')
-    id:int = Field(gt=0, description='아이디')
+    id:str = Field(min_length=2, description='아이디')
     pw:str
     pwchk:str
     addr:str = Field(default='서울', description='주소')

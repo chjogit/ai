@@ -11,9 +11,9 @@
     <title>Document</title>
 </head>
 <body>
-    <h2>이름 : {{member.name.upper()}}</h2>
-    <h2>아이디 : {{member.id}}</h2>
-    <h2>비밀번호 : {{member.pw}}</h2>
+    <h2>이름 : {{member.name | upper() }}</h2>
+    <h2>아이디 : {{member.id | mask_id}}</h2>
+    <h2>비밀번호 : {{member.pw | mask_pw}}</h2>
     <h2>주소 : {{member.addr.title()}}</h2>
 </body>
 </html>
