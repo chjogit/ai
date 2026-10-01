@@ -1,5 +1,0 @@
-*.zip 
-*.xlsx 
-.env
-etc/
-data/*.csv

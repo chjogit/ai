@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{%block title%}Jinja2{%endblock%}
+
+{% block content %}
+<div class="p-5 mb-4 bg-body-tertiary rounded-3"> 
+    <h2 class="container-fluid py-5">
+        {% if name and cnt%2==0 %}
+            짝수( {{cnt}}명 ) - {{name|upper}} ( {{name|length}}글자 ) 님
+        {% elif name and cnt%2==1 %}
+            홀수( {{cnt}}명 ) - {{name|upper}} ( {{name|length}}글자 ) 님
+        {% else %}
+            총 ( {{cnt}} 명 ) 
+        {% endif %}
+    </h2> 
+    <br>
+    <form action="{{url_for('index')}}" method="post">
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="이름을 추가하세요" name="name" aria-label="Recipient’s username" aria-describedby="button-addon2">
+            <button class="btn btn-outline-secondary" type="button" id="button-addon2">이름 추가</button>
+        </div>
+    </form>
+    <br>
+    {% if names %}
+        {% for name in names %}
+            {% if loop.last %}
+                <p><b>{{loop.index}}/{{names|length}} . {{name|title}}</b></p>
+            {% else %}
+                <p>{{loop.index}}/{{names|length}} . {{name|title}}</p>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <p class="text-danger">추가된 이름이 없습니다.</p>
+    {% endif %}
+</div>
+{% endblock %}

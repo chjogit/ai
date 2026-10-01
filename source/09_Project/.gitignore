@@ -1,0 +1,6 @@
+*.zip 
+*.xlsx 
+.env
+etc/
+data/*.csv
+cheolhyeon_jo/data/*.csv
