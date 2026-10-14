@@ -87,6 +87,31 @@ pip install langchain-openai
 pip install sounddevice scipy
 
 
+** UpStage **
+
+- LangChain 응용 도구
+pip install langchain-upstage 
+
+
+** Pinecone **
+
+- Pinecone, LangChain 응용 도구
+pip install pinecone langchain-pinecone
+
+
+** RAG **
+
+- Docx 편집, LangChain 서드파티, Docx 텍스트 추출
+pip install python-docx langchain-community docx2txt
+
+- Chunk 생성 도구
+pip install langchain-chroma
+pip install langchain-text-splitters
+
+- LangChain
+pip install langchain
+
+
 4. 커널 삭제 및 가상환경 제거 (필요 시)
 
 - Jupyter 커널 목록에서 삭제
