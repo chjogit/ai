@@ -38,6 +38,15 @@ jupyter kernelspec list
 - Matplotlib 라이브러리
 pip install matplotlib
 
+- Pandas 라이브러리
+pip install pandas==2.2.3
+
+- sklearn 라이브러리
+pip install scikit-learn
+
+- streamlit 라이브러리
+pip install streamlit
+
 
 ** 허깅페이스 **
 
@@ -111,6 +120,11 @@ pip install langchain-text-splitters
 - LangChain
 pip install langchain
 
+
+** Cohere **
+
+- cohere
+pip install cohere
 
 4. 커널 삭제 및 가상환경 제거 (필요 시)
 
