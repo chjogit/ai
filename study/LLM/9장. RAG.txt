@@ -1,169 +1,543 @@
 9장. RAG
 
-1. RAG의 의미와 구성 요소
+1. 임베딩과 유사도 계산
 
-- 검색 증강 생성 방식의 정의 및 필요성 확인
-	- LLM 어플리케이션 개발에서의 핵심 개념 파악
-	- 사전 학습된 언어 모델의 한계 극복을 위한 외부 정보 활용
+- 문장을 1차원 숫자 배열인 임베딩 벡터로 변환하는 작업 처리
 
-- Retrieval 단계의 데이터 취득 처리
-	- 컴퓨터 시스템에 저장된 외부 자료 획득
-	- 언어 모델이 보유하지 않은 보안 사내 자료 및 최신 정보 제공
+- 사용 모델
+	- OpenAI text-embedding-3-small : 1536차원
+	- OpenAI text-embedding-3-large : 3072차원
+	- Upstage embedding-query : 4096차원, 한국어 환경에서 성능 우수
+	- Upstage solar-embedding-1-large-query, solar-embedding-2-query
 
-- Augmented 단계의 문맥 결합 처리
-	- 검색된 데이터를 언어 모델에게 전달하여 마치 해당 정보를 인지하고 있는 상태로 전환
+- 유사도 계산 방식
+	- 유클리드 : 두 벡터 사이의 최단 직선 거리 계산
+	- 코사인 유사도 : 두 벡터가 이루는 각도(방향) 기준 계산
+	- dot product : 성분별 곱의 합으로 크기와 방향을 함께 고려한 계산
 
-- Generation 단계의 답변 생성 처리
-	- 제공된 데이터를 기반으로 최적의 응답 결과물 생성
-
-
-2. 벡터 데이터베이스와 유사도 검색
-
-- 사용자의 질문과 관련 있는 데이터 판단 처리
-	- 토큰을 1차원 배열인 벡터 값으로 변환하여 유사도 측정 수행
-
-- 코사인 유사도 계산 구현
-	- 두 벡터 사이의 각도를 이용한 유사도 측정 함수 정의
+- 의미가 가까운 문장일수록 코사인 유사도가 높게 출력되며 한국어 문장은 Upstage 모델이 더 적합
 
 	ex)
 	import numpy as np
-	def cosine_similarity(vec1, vec2):
-		"""두 백터 사이의 코사인 유사도 계산"""
-		dot_product = np.dot(vec1, vec2)
-		norm_vec1 = np.linalg.norm(vec1) 
-		norm_vec2 = np.linalg.norm(vec2)
-		if norm_vec1==0 or norm_vec2==0:
-			return 0.0
-		return dot_product / (norm_vec1*norm_vec2)
+	from openai import OpenAI
+
+	def cosine_similarity(v1, v2):
+		'두 벡터의 코사인 유사도를 반환'
+		dot_product = np.dot(v1, v2)
+		norm_v1 = np.linalg.norm(v1)
+		norm_v2 = np.linalg.norm(v2)
+		if norm_v1 == 0 or norm_v2 == 0:
+			return 0
+		return dot_product / (norm_v1 * norm_v2)
+
+	# OpenAI 임베딩
+	openai_client = OpenAI()
+	response = openai_client.embeddings.create(
+		input = "The king is the prince's father",
+		model = "text-embedding-3-large"
+	)
+	king_vector = np.array(response.data[0].embedding)
+	print(response.usage)
+	print(king_vector.shape)
+
+	# Upstage 임베딩 (OpenAI SDK 호환 : api_key와 base_url만 교체)
+	upstage_client = OpenAI(
+		api_key = upstage_key,
+		base_url="https://api.upstage.ai/v1"
+	)
+	response = upstage_client.embeddings.create(
+		input = "왕은 왕자의 아버지다",
+		model="embedding-query"
+	)
+	up_kor_king_vector = np.array(response.data[0].embedding)
+
+	print(cosine_similarity(king_vector, up_kor_king_vector))
+
+
+2. LLM 답변 생성
+
+2.1 OpenAI SDK 방식
+
+- chat.completions.create로 답변 생성 요청
+- messages의 system 역할은 모델의 행동 지침, user 역할은 사용자 질문 전달
+- temperature로 응답의 무작위성 조절
+- 응답 본문은 choices 첫 번째 항목의 message.content에서 추출
+
+- Upstage와 Ollama도 base_url만 바꾸면 동일한 방식으로 호출 가능
+	- Upstage : base_url은 https://api.upstage.ai/v1, 모델은 solar-pro4
+	- Ollama : base_url은 http://localhost:11434/v1, api_key는 생략 불가라 임의 문자열 지정
+
+	ex)
+	from dotenv import load_dotenv
+	from openai import OpenAI
+	load_dotenv()
+
+	client = OpenAI()
+	response = client.chat.completions.create(
+		model="gpt-4o-mini",
+		messages=[
+			{"role": "system", "content": "You are a helpful assistant."},
+			{"role": "user", "content": "2020년 월드 시리즈 누가 우승했어?"}
+		],
+		temperature=0.5
+	)
+	print(response.choices[0].message.content)
+
+	# Ollama (로컬 LLM)
+	client = OpenAI(
+		api_key = "localllm", # 생략 불가
+		base_url="http://localhost:11434/v1"
+	)
+
+
+2.2 LangChain 방식
+
+- 모델별 클래스 : ChatOpenAI, ChatUpstage, ChatOllama
+- invoke 메서드에 문자열 또는 SystemMessage와 HumanMessage 리스트 전달
+- 응답 객체의 content 속성으로 답변, usage_metadata 속성으로 토큰 사용량 확인
+- UPSTAGE_API_KEY 이름으로 키를 저장하면 별도 설정 없이 ChatUpstage 사용 가능
+
+	ex)
+	from langchain_openai import ChatOpenAI
+	from langchain_upstage import ChatUpstage
+	from langchain_ollama import ChatOllama
+	from langchain_core.messages import SystemMessage, HumanMessage
+
+	llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.5)
+	# llm = ChatUpstage(model="solar-pro4")
+	# llm = ChatOllama(model="exaone3.5:2.4b")
+
+	message = [
+		SystemMessage(content="You are a helpful assistant."),
+		HumanMessage(content="2020년 월드 시리즈 누가 우승했어?")
+	]
+
+	ai_message = llm.invoke(message)
+	print(ai_message.content)
+	print(ai_message.usage_metadata)
 
 
 3. RAG 구현 절차
 
-- 문서 로드 처리
-	- document loader를 활용한 문서 내용 읽기 수행
-
-- 문서 분할 처리
-	- 입력 및 출력 토큰 수 제한을 극복하기 위한 청킹 작업 진행
-
-- 벡터 저장소 구축 처리
-	- 임베딩 모델을 활용한 벡터 생성 및 저장소 적재
-
-- 유사도 검색 및 답변 생성 처리
-	- 질문을 이용한 유사도 검색 수행 후 프롬프트를 결합하여 언어 모델 전달
+- docx 문서 로드
+- 문서 분할
+	- 모델의 context window와 token 비용 확인 필요
+	- chunk가 클수록 비용과 시간 증가
+- 분할된 문서 임베딩 후 vector Store(DB)에 저장
+	- Chroma(local), Pinecone(cloud)
+- 입력받은 질문과 vector Store에 저장된 문서의 유사도 검색
+- 유사도 상위 n개의 문서를 질문과 함께 LLM에 전달하여 답변 생성
 
 
-4. RAG chain
+4. 문서 로드 및 분할
 
-4.1 임베딩 및 대형 언어 모델 초기화
+4.1 문서 로드
 
-- 환경 변수 로드 및 임베딩 모델 설정 처리
-	* 오픈에이아이 임베딩 모델을 활용한 벡터화 도구 정의
-	* 챗 오픈에이아이 모델을 이용한 대형 언어 모델 인스턴스 생성
-
-- 파인콘 벡터 저장소 연동 처리
-	* 지정된 인덱스 이름을 기반으로 기존 벡터 데이터베이스 연결 수행
+- Docx2txtLoader : 줄바꿈 문자를 포함하여 문서 전체를 하나의 Document로 로드
+- python-docx의 Document : 문단 단위 로드, 줄바꿈 문자 제외
+- 필요 패키지 : python-docx, langchain-community, docx2txt
 
 	ex)
-	# 임베딩 & LLM 초기화
-	load_dotenv()
-	embedding = OpenAIEmbeddings(model = 'text-embedding-3-large')
-	llm = ChatOpenAI(model = 'gpt-4.1-nano')
+	from langchain_community.document_loaders import Docx2txtLoader
+	loader = Docx2txtLoader('./tax/소득세법(법률)(제21221호)(20260701).docx')
+	document = loader.load()
+	len(document)
 
-	index_name = 'tax-index-openai'
+	# 문단 단위 로드 (줄바꿈 제거된 전체 텍스트 생성)
+	from docx import Document
+	doc = Document('./tax/소득세법(법률)(제21221호)(20260701).docx')
+	full_text = ""
+	for paragraph in doc.paragraphs:
+		full_text += paragraph.text + " "
+
+
+4.2 tiktoken 직접 분할
+
+- tiktoken은 OpenAI 공식 tokenizer 라이브러리
+- 변환 흐름 : 문자 → 토큰 정수 리스트 → 문자 복원
+- 글자 수와 토큰 수는 서로 다른 값
+- 토큰 리스트를 chunk_size 간격으로 슬라이싱하여 분할
+
+	ex)
+	import tiktoken
+
+	def split_text(full_text, chunk_size=1500):
+		'full_text를 chunk_size로 분할하여 chunk_list로 반환'
+		encoder = tiktoken.encoding_for_model('gpt-4o-mini')
+		total_encoding = encoder.encode(full_text)
+		total_token_count = len(total_encoding)
+
+		chunk_list = []
+		for i in range(0, total_token_count, chunk_size):
+			chunk_encoding = total_encoding[i : i+chunk_size]
+			chunk_decoded = encoder.decode(chunk_encoding)
+			chunk_list.append(chunk_decoded)
+		return chunk_list
+
+4.3 TokenTextSplitter
+
+- token 단위로 chunk_overlap만큼 겹쳐서 분할
+- overlap : 인접 chunk 간 문맥 단절 방지 목적
+
+- encoding_name 종류
+	- o200k_base : gpt-4o, gpt-4o-mini 등 최신 세대 모델용
+	- cl100k_base : gpt-4, gpt-3.5-turbo, text-embedding-3 등에서 쓰이는 표준 인코딩
+	- p50k_base : text-davinci-003, Codex 등 구버전 모델용
+	- r50k_base (또는 gpt2) : GPT-2, 구버전 GPT-3 호환용 레거시 인코딩
+
+	ex)
+	from langchain_text_splitters import TokenTextSplitter
+	text_splitter = TokenTextSplitter(
+		encoding_name="cl100k_base",
+		chunk_size=1500,
+		chunk_overlap=200
+	)
+	documents = loader.load_and_split(text_splitter=text_splitter)
+
+
+4.4 RecursiveCharacterTextSplitter
+
+- 글자 수 기준 분할
+- separators 리스트 순서대로 분할 기준 우선순위 적용
+	- 큰 구분자부터 시도하여 문단 단위 의미 유지
+- load_and_split 또는 load 후 split_documents로 사용
+
+	ex)
+	from langchain_text_splitters import RecursiveCharacterTextSplitter
+	text_splitter = RecursiveCharacterTextSplitter(
+		chunk_size=1500,
+		chunk_overlap=200,
+		separators=["\n\n\n\n", "\n\n", "\n", " "] # 분할 기준 우선순위
+	)
+	documents = loader.load_and_split(text_splitter=text_splitter)
+
+	# 각 chunk의 글자 수 확인
+	print(np.array([len(d.page_content) for d in documents]).mean())
+	print(min([len(d.page_content) for d in documents]))
+	print(max([len(d.page_content) for d in documents]))
+
+
+5. 임베딩 및 vector DB 저장
+
+5.1 chromadb 직접 사용 (인메모리)
+
+- collection : RDB의 TABLE 역할
+- embedding_function으로 임베딩 객체 지정
+- 입력 id는 chunk 개수만큼 문자열로 생성
+- query의 n_results로 유사도 상위 n개 반환 (기본값 10)
+
+	ex)
+	import chromadb
+	from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
+
+	chroma_client = chromadb.Client()
+	openai_embedding = OpenAIEmbeddingFunction(
+		api_key = os.getenv('OPENAI_API_KEY'),
+		model_name='text-embedding-3-large'
+	)
+	ids = [str(id) for id in range(len(chunk_list))]
+
+	tax_collection = chroma_client.get_or_create_collection(
+		name = 'tax_collection',
+		embedding_function=openai_embedding
+	)
+	tax_collection.add(documents=chunk_list, ids=ids)
+
+	retrieved_doc = tax_collection.query(
+		query_texts="연봉 5천만원인 직장인의 소득세는 얼마인가요?",
+		n_results=3
+	)
+
+
+5.2 LangChain Chroma (local 파일 저장)
+
+- 임베딩 객체
+	- embed_query : 질문 하나를 벡터로 변환
+	- embed_documents : 문서 리스트를 벡터 리스트로 변환
+
+- 최초 저장은 from_documents, 이후에는 Chroma 생성자로 로드
+	- collection_name 생략 시 랜덤 생성
+	- persist_directory 생략 시 local file 저장 불가 (인메모리 처리)
+
+- 임베딩 차원이 다른 모델은 persist_directory를 분리하여 혼용 방지
+- 저장 시와 로드 시의 collection_name 일치 필요
+
+	ex)
+	from langchain_openai import OpenAIEmbeddings
+	from langchain_upstage import UpstageEmbeddings
+	from langchain_chroma import Chroma
+
+	embedding = OpenAIEmbeddings(model='text-embedding-3-large')
+	# embedding = UpstageEmbeddings(model='solar-embedding-2-query')
+
+	# 데이터 최초 저장 시
+	database = Chroma.from_documents(
+		documents=documents,
+		embedding=embedding,
+		collection_name='tax_collection',
+		persist_directory='./chroma'
+	)
+
+	# 데이터 로드 시
+	database = Chroma(
+		embedding_function=embedding,
+		collection_name='tax_collection',
+		persist_directory='./chroma'
+	)
+
+	results = database.get(include=['metadatas', 'embeddings', 'documents'])
+	print(f'데이터 수 : {len(results["ids"])}')
+	print(f'문서 임베딩 차원 수 : {len(results["embeddings"][0])}')
+
+5.3 Pinecone (cloud)
+
+- index_name 단위로 관리
+
+- 인덱스 생성 조건 : name, dimension, metric, spec(ServerlessSpec의 cloud, region)
+	- dimension은 임베딩 벡터 길이와 일치 필요
+	- 임베딩 모델별로 인덱스 분리 관리
+
+- 기존 인덱스를 확인하여 없을 경우에만 생성하고 ready 상태가 될 때까지 대기
+
+- 첫 저장은 from_documents, 이후에는 생성자로 로드
+	- 첫 저장 코드는 재실행 시 중복 저장되므로 저장 후 주석 처리
+
+- 인덱스 데이터 전체 삭제는 delete(delete_all=True), 인덱스 삭제는 delete_index
+	- 비어 있는 인덱스에서 삭제 시 에러가 발생할 수 있어 chunk 하나를 먼저 저장
+
+	ex)
+	import time
+	from pinecone import Pinecone, ServerlessSpec
+	from langchain_pinecone import PineconeVectorStore
+
+	pc = Pinecone()
+	index_name = 'tax-index'
+	dimension = len(embedding.embed_query("차원 확인용"))
+
+	if not pc.has_index(index_name):
+		pc.create_index(
+			name=index_name,
+			dimension=dimension,
+			metric="cosine",
+			spec=ServerlessSpec(cloud='aws', region='us-east-1')
+		)
+		while not pc.describe_index(index_name).status['ready']:
+			time.sleep(1)
+
+	# 데이터 첫 저장 시
+	database = PineconeVectorStore.from_documents(
+		documents=documents,
+		embedding=embedding,
+		index_name=index_name
+	)
+
+	# vectorDB 로드 시
 	database = PineconeVectorStore(
 		embedding=embedding,
 		index_name=index_name
 	)
 
-4.2 검색기 및 프롬프트 템플릿 구성
+	# 인덱스 정보 확인
+	index = pc.Index(index_name)
+	print(index.describe_index_stats())
 
-- 유사도 기반 검색기 생성 처리
-	* 벡터 저장소를 활용하여 상위 세 개의 유사 문서를 추출하는 리트리버 구성
 
-- 소득세법 전문가 프롬프트 템플릿 정의
-	* 문맥과 질문을 동적으로 주입하기 위한 문자열 포맷 템플릿 생성
+6. 유사도 검색과 답변 생성
+
+6.1 similarity_search
+
+- k 인자로 상위 k개 문서 검색 (기본값 4)
+- 검색 결과의 줄바꿈을 정리해 하나의 문자열로 결합하여 context로 사용
 
 	ex)
-	# Retriever 생성
+	query = "연봉 5천만원인 직장인의 소득세는 얼마인가요?"
+	retrieved_docs = database.similarity_search(query=query, k=2)
+	retrieved_doc = "\n--\n".join([doc.page_content.replace('\n\n', ' ') for doc in retrieved_docs])
+
+	prompt = f"""[identity]
+	- 당신은 최고의 한국 소득세법 전문가 입니다
+	- 다음의 [context]를 참조하여 사용자의 질문에 답변하세요
+	[context]
+	{retrieved_doc}
+	질문 : {query}"""
+
+	ai_msg = llm.invoke(prompt)
+
+6.2 retriever의 search_type
+
+- similarity : 유사도 상위 k개 추출
+
+- mmr : 유사도 상위 fetch_k개 중 내용이 겹치지 않는 k개 추출
+	- lambda_mult로 유사도와 다양성의 비중 조절
+
+- similarity_score_threshold : score_threshold 이상의 유사도를 가진 상위 k개 추출
+
+	ex)
 	retriever = database.as_retriever(
 		search_type='similarity',
 		search_kwargs={'k':3}
 	)
+	# retriever = database.as_retriever(
+	#     search_type='mmr',
+	#     search_kwargs={'k':3, 'fetch_k':10, 'lambda_mult':0.5}
+	# )
+	# retriever = database.as_retriever(
+	#     search_type='similarity_score_threshold',
+	#     search_kwargs={'k':3, 'score_threshold':0.4}
+	# )
+	retrieved_docs = retriever.invoke(query)
 
-	# 프롬프트 템플릿
+
+7. RAG chain 구성 (LCEL)
+
+- ChatPromptTemplate : 템플릿 변수 query, context에 값을 동적으로 주입
+	- f-string 내에서 템플릿 변수는 이중 중괄호로 이스케이프 처리
+
+- StrOutputParser : AI 응답 객체를 문자열로 변환
+- format_documents : 검색된 Document 리스트를 하나의 문자열로 변환
+
+- 체인 구성
+	- 딕셔너리로 context와 query를 병렬 전달
+	- RunnablePassthrough는 입력 질문을 그대로 전달
+	- prompt, llm, StrOutputParser를 파이프 연산자로 순차 연결
+
+	ex)
+	from langchain_core.prompts import ChatPromptTemplate
+	from langchain_core.output_parsers import StrOutputParser
+	from langchain_core.runnables import RunnablePassthrough
+
 	template = f'''당신은 최고의 한국 소득세법 전문가입니다. 다음 문맥을 참고하여 질문에 최대 5문장으로 답하세요. 답을 모르면 모른다고 답하세요.
 	질문 : {{query}}
 	문맥 : {{context}}
 	답변 : '''
 	prompt = ChatPromptTemplate.from_template(template)
 
-
-4.3 문서 포맷팅 함수 및 랭체인 파이프라인 구축
-
-- 검색된 문서 텍스트 변환 처리
-	* 검색 결과로 얻은 문서 객체들의 본문을 추출하고 줄바꿈 문자를 정제하여 연결
-
-- 체인 파이프라인 결합 처리
-	* 컨텍스트와 쿼리를 병렬로 전달하는 딕셔너리 구조 정의
-	* 프롬프트, 언어 모델, 출력 파서 단계를 순차적으로 연결하여 실행 가능한 체인 완성
-
-	ex)
-	# 검색한 문서 텍스트 변환
 	def format_documents(retrieved_docs):
 		return "\n--\n".join([doc.page_content.replace('\n\n', ' ') for doc in retrieved_docs])
 
-	# RAG chain
 	rag_chain = (
 		{
 			"context":retriever | format_documents,
 			"query":RunnablePassthrough() # 질문만 그대로 전달
 		}
-		|prompt
-		|llm
-		|StrOutputParser()
+		| prompt
+		| llm
+		| StrOutputParser()
 	)
 
-
-4.4 체인 실행
-- 사용자 질문에 대한 최종 응답 생성 요청 처리
-	 연봉과 관련된 질문을 입력하여 소득세법 기반의 답변 도출 수행
-
-	ex)
-	rag_chain.invoke('연봉 5천만원인 직장인의 소득세는 얼만가요?')
+	rag_chain.invoke('연봉 5천만원인 직장인의 소득세는 얼마인가요?')
 
 
-5. 메타데이터 및 키워드 사전을 활용한 성능 개선
+8. 문서 구조 개선 (표, 마크다운)
 
-- 소득세법 지식 베이스 구축을 위한 카테고리 정의
-	- 납세의무, 세율계산, 근로소득 등 주요 항목별 메타데이터 구조화
+- 표가 포함된 소득세법_with_table.docx, 마크다운 형식의 소득세법_with_markdown.docx로 knowledge base 재구성
+- 분할 설정 : chunk_size=1500, chunk_overlap=20
+- 표 데이터가 검색 결과에 포함되는지 55조 문구의 포함 여부로 확인
+- reasoning_effort='low' 옵션으로 Upstage 모델의 추론 비용 절감
+- load_dotenv(override=True)로 커널 재시작 없이 .env 값 덮어쓰기
 
 	ex)
-	categories = {
-		'납세의무': ['납세의무', '거주자', '비거주자', '원천징수', '공동사업자', '상속인', '증여자', '신탁재산'],
-		'세율계산': ['세율', '과세표준', '산출세액', '결정세액', '종합소득', '퇴직소득'],
-		'근로소득': ['근로소득', '총급여', '급여', '연봉', '임금', '퇴직소득'],
-		'사업소득': ['사업소득', '공동사업', '주택임대소득', '부업소득'],
-		'이자배당': ['이자소득', '배당소득', '예금이자', '채권', '의제배당'],
-		'양도소득': ['양도소득', '자산양도', '부동산양도', '주식양도'],
-		'연금소득': ['연금소득', '공적연금', '사적연금', '연금보험'],
-		'기타소득': ['기타소득', '상금', '보상금', '발명보상금', '종교인소득'],
-		'공제감면': ['공제', '소득공제', '세액공제', '기본공제', '감면'],
-		'비과세': ['비과세', '면제', '복무급여', '실업급여', '출산휴가급여', '장학금'],
-		'신고납부': ['신고', '납부', '납세지', '신고기한', '원천징수'],
-		'과세기간': ['과세기간', '과세연도', '사업연도'],
-		'과세소득구분': ['종합소득', '퇴직소득', '양도소득', '금융투자소득'],
-	}
+	loader = Docx2txtLoader("tax/소득세법_with_markdown.docx")
+	text_splitter = RecursiveCharacterTextSplitter(
+		chunk_size=1500,
+		chunk_overlap=20
+	)
+	documents = loader.load_and_split(text_splitter=text_splitter)
+
+	retriever = database.as_retriever(
+		search_type='similarity',
+		search_kwargs={'k':2}
+	)
+	retrieved_docs = retriever.invoke("연봉이 5천만원인 직장인의 소득세는 얼마인가요?")
+	retrieved_doc = "\n--\n".join([doc.page_content for doc in retrieved_docs])
+	'55조' in retrieved_doc
+
+	llm = ChatUpstage(model='solar-pro4', reasoning_effort='low')
 
 
-- 카테고리별 가중치 조회 함수 구현
-	- 세부 항목별 중요도를 반영한 가중치 데이터 반환 처리
+9. 키워드 사전을 이용한 질문 표준화
+
+- 일반 사용자 표현과 법률 용어 사이의 임베딩 유사도가 낮으면 검색 정확도 저하
+	- 직장인과 거주자, 연봉과 종합소득, 5천과 5,000 등
+
+- 사전 형식 : 일반사용자 단어 -> 소득세법 용어
+- LLM이 사전을 참고하여 질문을 법률 용어로 변환, 변환이 불필요하면 원문 유지
+
+- keyword_chain을 rag_chain 앞에 연결하여 하나의 파이프라인 구성
+	- 입력 질문 → 질문 수정 → 개선된 질문 → retriever → format_documents → prompt와 llm → 문자열 출력
+
+	ex)
+	keyword_dict  = [
+		"사람을 나타내는 표현 -> 거주자",
+		"직장인 -> 근로소득이 있는 거주자",
+		"월급쟁이 -> 근로소득이 있는 거주자",
+		"회사원 -> 근로소득이 있는 거주자",
+		"연봉 -> 종합소득",
+		"월급 -> 근로소득",
+		"세금 -> 소득세",
+		"공제받다 -> 공제를 적용받다",
+		"얼마나 내야하나 -> 세액은 얼마인가",
+		"계산해줘 -> 계산하면 얼마인가"
+	]
+
+	prompt = ChatPromptTemplate.from_template(f"""사용자의 질문을 보고, 우리의 사전을 참고해서 사용자 질문을
+	변경해 주세요. 만약 변경할 필요가 없을 경우, 사용자의 질문을 변경하지 않아도 됩니다. 오직 질문만 리턴해 주세요.
+	사전 : {keyword_dict}
+	질문 : {{question}}""")
+
+	keyword_chain = prompt | llm | StrOutputParser()
+	final_chain = keyword_chain | rag_chain
+	final_chain.invoke("연봉 5천만원인 직장인의 소득세는 얼마인가요?")
+
+
+10. metadata 추가
+- chunk 내용의 title, category, 조항을 metadata로 추가
+- 필터링 검색과 reranking 작업에 활용
+
+10.1 특수문자 제거 및 제목 추출
+
+- 한글, 영문, 숫자, 공백, 마침표, 쉼표, 콜론, 세로선, 하이픈만 유지
+
+- LLM으로 조문의 핵심 제목 추출
+	- temperature=0.1로 일관된 결과 유도
+	- 로컬 LLM(ChatOllama, exaone3.5:2.4b)도 사용 가능하며 사전에 ollama pull 필요
+
+	ex)
+	import re
+	def remove_special_chars(text:str) -> str:
+		"특수문자 및 \n제거 (:, .는 그대로)"
+		text = text.replace("\n", " ")
+		cleaned = re.sub(r"[^가-힣a-zA-Z0-9\s\.,:|\-]", "", text).strip()
+		cleaned = re.sub(r"\s+", " ", cleaned)
+		return cleaned
+
+	def extract_title_with_llm(content):
+		"content의 제목을 반환"
+		title_extractor_llm = ChatUpstage(
+			model = UPSTAGE_LLM_MODEL,
+			temperature=0.1
+		)
+		prompt = f"""다음 소득세법 조문의 핵심 제목을 100토큰 이내로 완벽하게 말이 되도록 추출해 주세요.
+		문장이 끊기지 않도록 해주세요.
+		조문 : {content}"""
+		ai_message = title_extractor_llm.invoke(prompt)
+		return remove_special_chars(ai_message.content.strip())
+
+10.2 카테고리 분류
+
+- 기본 방식 : 카테고리별 키워드가 하나라도 포함되면 해당 카테고리 추가
+
+- 개선 방식 : 키워드 중요도에 따른 가중치 부여
+	- 키워드 출현 횟수에 가중치를 곱해 카테고리별 점수 합산
+	- 점수가 높은 순으로 카테고리 반환
+	- top_k로 반환 개수 제한, 매칭되는 카테고리가 없으면 기타 반환
 
 	ex)
 	def get_category():
 		return {
 			'납세의무': {
-				'납세의무': 3, '거주자': 3, '비거주자': 3, '납세의무자': 3, 
-				'원천징수': 2, '원천징수의무자': 2, '공동사업자': 2, 
+				'납세의무': 3, '거주자': 3, '비거주자': 3, '납세의무자': 3,
+				'원천징수': 2, '원천징수의무자': 2, '공동사업자': 2,
 				'상속인': 2, '증여자': 2, '신탁재산': 2
 			},
 			'세율계산': {
@@ -208,21 +582,21 @@
 			},
 			'비과세': {
 				'비과세': 3, '비과세소득': 3, '면제': 2, '세액감면': 2,
-				'소득세면제': 2, '복무급여': 1, '실업급여': 1, 
+				'소득세면제': 2, '복무급여': 1, '실업급여': 1,
 				'출산휴가급여': 1, '장학금': 1
 			},
 			'신고납부': {
-				'신고': 3, '확정신고': 3, '과세표준확정신고': 3, 
+				'신고': 3, '확정신고': 3, '과세표준확정신고': 3,
 				'납부': 3, '중간예납': 2, '가산세': 2,
 				'신고기한': 2, '납부기한': 2, '납세지': 2
 			},
 			'과세기간': {
-				'과세기간': 3, '과세연도': 3, '사업연도': 2, 
+				'과세기간': 3, '과세연도': 3, '사업연도': 2,
 				'과세기간종료일': 2
 			},
 			'과세방식': {
-				'종합과세': 3, '분리과세': 3, '합산과세': 2, 
-				'종합소득과세표준': 2, '분리과세소득': 2, 
+				'종합과세': 3, '분리과세': 3, '합산과세': 2,
+				'종합소득과세표준': 2, '분리과세소득': 2,
 				'금융투자소득': 2
 			},
 			'장부기장': {
@@ -231,20 +605,307 @@
 			}
 		}
 
+	def categorize_content(content, top_k=None):
+		"""
+		content의 카테고리를 점수순으로 list 반환 (top_k만큼, None이면 전체)
+		"""
+		category_keywords = get_category()
+		category_scores = {}
+		for category, weighted_keywords in category_keywords.items():
+			score = 0
+			for keyword, weight in weighted_keywords.items():
+				count = content.count(keyword) # content에 keyword가 나오는 횟수
+				score += count * weight
+			if score>0:
+				category_scores[category] = score
+		sorted_categories = sorted(category_scores.items(), key=lambda item:item[1], reverse=True)
+		all_categories = [category[0] for category in sorted_categories]
+		if not all_categories:
+			all_categories = ["기타"]
+		if top_k is not None:
+			return all_categories[:top_k]
+		return all_categories
 
-- 키워드 사전 정의 및 매핑 처리
-	- 사용자 친화적 표현을 전문 용어로 변환하기 위한 사전 리스트 구성
+10.3 조항 추출
+
+- 정규식으로 제N조 형태에서 조 번호 추출
+
+- set으로 중복 제거 후 조 글자를 제외한 숫자 기준으로 오름차순 정렬
+	- 문자열 정렬 시 순서가 어긋나므로 숫자 변환 필요
+- 결과를 「9조, 60조」 형태의 문자열로 반환
 
 	ex)
-	keyword_dict = [
-		"사람을 나타내는 표현 -> 거주자",
-		"직장인 -> 근로소득이 있는 거주자", 
-		"월급쟁이 -> 근로소득이 있는 거주자",
-		"회사원 -> 근로소득이 있는 거주자",
-		"연봉 -> 종합소득",
-		"월급 -> 근로소득",
-		"세금 -> 소득세",
-		"공제받다 -> 공제를 적용받다",
-		"얼마나 내야하나 -> 세액은 얼마인가",
-		"계산해줘 -> 계산하면 얼마인가"
-	]
+	def get_article(content):
+		"""
+		content내에 등장된 조항들을 문자로 반환 ex."「9조, 60조」"
+		"""
+		article_match = re.findall(r"제(\d{1,3}조)", content)
+		article_list = list(set(article_match))
+		article_list.sort(key=lambda x : int(x[:-1]))
+		if article_list:
+			return "「" + ", ".join(article_list) + "」"
+		return ""
+
+10.4 metadata를 포함한 Document 생성
+
+- metadata 항목 : source, title, category, chunk_id, article
+- article은 추출된 조항이 있을 경우에만 추가
+- LLM 호출 비용이 크므로 일부만 먼저 테스트 후 전체 처리
+
+	ex)
+	from langchain_core.documents import Document
+
+	enhanced_chunks = []
+	for i, chunk in enumerate(documents):
+		content = chunk.page_content
+		metadata = chunk.metadata.copy()
+		metadata['title'] = extract_title_with_llm(remove_special_chars(content))
+		metadata['category'] = categorize_content(content)
+		metadata['chunk_id'] = f'chunk_{i:03d}'
+		article = get_article(content)
+		if article:
+			metadata['article'] = article
+		enhanced_chunks.append(Document(page_content=content, metadata=metadata))
+
+10.5 csv 백업 및 복원
+
+- 전처리 시간과 비용 절감을 위해 DataFrame으로 변환하여 csv 백업
+- csv로 읽은 category는 문자열이므로 ast.literal_eval로 리스트 변환 필요
+- article은 결측치가 아닐 때만 metadata에 추가
+
+	ex)
+	import pandas as pd
+	import ast
+
+	data = []
+	for chunk in enhanced_chunks:
+		row = {"page_content":chunk.page_content}
+		row.update(chunk.metadata)
+		data.append(row)
+	df = pd.DataFrame(data)
+	df.to_csv("./tax/소득세법enhanced_chunks.csv", index=False, encoding='cp949')
+
+	df = pd.read_csv("./tax/소득세법enhanced_chunks.csv", encoding='cp949')
+	df['category'] = df['category'].apply(ast.literal_eval)
+
+	enhanced_chunks = []
+	for i, row in df.iterrows():
+		metadata = {
+			'source': row['source'],
+			'title':row['title'],
+			'category':row['category'],
+			'chunk_id' : row['chunk_id'],
+		}
+		if pd.notna(row['article']):
+			metadata['article'] = row['article']
+		enhanced_chunks.append(Document(page_content=row['page_content'], metadata=metadata))
+
+
+11. metadata 필터 검색
+
+- 질문에서 추출한 카테고리를 filter 조건으로 지정하여 해당 카테고리 문서 안에서만 유사도 검색
+- $in : 질문의 카테고리 중 하나라도 포함된 문서 검색
+- $and와 $eq 조합 : 질문의 모든 카테고리를 가진 문서만 검색
+	- 조건이 엄격하여 검색 결과가 줄어들 수 있음
+
+	ex)
+	PINECONE_INDEX_NAME = "better-rag-index"
+	vector_database = PineconeVectorStore.from_documents(
+		documents = enhanced_chunks,
+		embedding = embedding,
+		index_name = PINECONE_INDEX_NAME
+	)
+
+	query = "종합소득 5000만원인 근로소득이 있는 거주자의 소득세는 얼마예요?"
+
+	retriever = vector_database.as_retriever(
+		search_type="similarity",
+		search_kwargs = {
+			"k":4,
+			"filter":{"category" : {'$in':categorize_content(query)}}
+		}
+	)
+
+	filter_condition = {
+		'$and':[{'category':{'$eq':cat}} for cat in categorize_content(query)]
+	}
+	retriever = vector_database.as_retriever(
+		search_type="similarity",
+		search_kwargs = {'k':4, 'filter':filter_condition}
+	)
+
+	docs = retriever.invoke(query)
+	for i, doc in enumerate(docs):
+		chunk_id = doc.metadata['chunk_id']
+		category = doc.metadata['category']
+		article  = doc.metadata.get('article', '조항없음')
+		title = doc.metadata.get('title')
+		print(f'{i+1}. {chunk_id} : {article} {category} : {title}')
+
+
+12. 참조 조항 추출
+
+- 검색된 문서 metadata의 article 정보를 모아 참고 조항으로 제시
+	- 「」 기호 제거 후 콤마 기준 분리
+	- 중복 제거 및 숫자 기준 정렬
+	- 소득세법 제4조, 제60조 형태의 문자열로 반환
+
+	ex)
+	def extract_articles_from_docs(documents):
+		"""
+		검색된 문서의 article 정보를 중복 제거하여 문자로 반환
+		(ex. '소득세법 제4조, 제60조')
+		"""
+		articles = []
+		for doc in documents:
+			article = doc.metadata.get('article', '조항없음')
+			article = article.replace('「', '').replace('」', '')
+			articles.extend(article.split(', '))
+		unique_article = list(set(articles))
+		unique_article = [a for a in unique_article if a != '조항없음']
+		unique_article.sort(key=lambda x : int(x[:-1]))
+		final_article = ['제'+article for article in unique_article]
+		return '소득세법 ' + ', '.join(final_article)
+
+
+13. rerank (재정렬)
+- 벡터 유사도 검색으로 후보를 넉넉히 확보(k=10)한 뒤 질문과의 관련도 기준으로 다시 정렬하여 상위 top_k개만 사용
+- 재정렬 대상 텍스트는 title과 page_content
+
+13.1 cohere rerank API
+
+- rerank-multilingual-v3.0 모델 사용, .env에 COHERE_API_KEY 필요
+- 결과의 index 값으로 원본 Document 객체 복원
+- top_n 인자로 반환 문서 개수 지정
+- 의미 기반 재정렬이 가능하나 API 호출 비용과 지연 시간 발생
+
+	ex)
+	import cohere
+
+	def rerank_by_title(query:str, documents:list, top_k:int=3) -> list:
+		'''
+		cohere의 rerank API를 사용한 documents 재정렬
+		'''
+		docs_text = [doc.metadata.get('title')+' '+doc.page_content for doc in documents]
+		co = cohere.Client()
+		results = co.rerank(
+			model = 'rerank-multilingual-v3.0',
+			query = query,
+			documents=docs_text,
+			top_n=top_k
+		)
+		return [documents[r.index] for r in results.results]
+
+
+13.2 TfidfVectorizer 방식
+
+- 외부 API 없이 scikit-learn으로 로컬 계산
+- analyzer='char' : 한국어는 띄어쓰기 단위 분리가 부정확하므로 글자 단위 분석
+- ngram_range=(2, 3) : 2~3글자 조합 사용
+
+- 처리 흐름
+	- query와 title을 하나의 리스트로 결합하여 fit_transform
+	- 0번째 행은 query 벡터, 나머지 행은 title 벡터로 분리
+	- 코사인 유사도 계산 후 내림차순 정렬하여 top_k개 반환
+
+- 비용과 지연 시간이 없으나 글자 중복 기반이라 의미 파악 능력은 cohere보다 제한적
+
+	ex)
+	from sklearn.feature_extraction.text import TfidfVectorizer
+	from sklearn.metrics.pairwise import cosine_similarity
+
+	def rerank_by_title(query:str, documents:list, top_k:int=3) -> list:
+		'''
+		sklearn의 TfidfVectorizer를 사용한 documents 재정렬
+		'''
+		titles = [doc.metadata.get('title')+' ' for doc in documents]
+
+		vectorizer = TfidfVectorizer(
+			analyzer='char',
+			ngram_range=(2, 3)
+		)
+
+		all_texts = [query] + titles
+		tfidf_matrix = vectorizer.fit_transform(all_texts)
+		query_vector = tfidf_matrix[0:1]
+		title_vector = tfidf_matrix[1:]
+		similarities = cosine_similarity(query_vector, title_vector)[0]
+
+		score_docs = list(zip(similarities, documents))
+		score_docs.sort(key=lambda x : x[0], reverse=True)
+		rerank_docs = [score_doc[1] for score_doc in score_docs]
+		if top_k:
+			return rerank_docs[:top_k]
+		return rerank_docs
+
+
+14. 최종 통합 함수 (ask_with_reference)
+
+- 처리 순서
+	- 질문 표준화 : keyword_chain
+	- 카테고리 필터 검색 : k개
+	- rerank : top_k개
+	- 참고 조항 추출
+	- LLM 답변 생성
+
+- 원본 질문, 표준화 질문, 답변, 참고 조항, 주의 문구 출력
+- rerank 없이 k개만 사용하면 11번 항목의 단순 필터 검색 방식과 동일
+
+	ex)
+	def ask_with_reference(query:str, k:int=10, top_k:int=3):
+		"""
+		query의 수정된 query, 답변, 참고조항을 출력하는 함수
+		Args:
+		- query : 질문
+		- k : 검색할 문서 개수 (기본값 : 10)
+		- top_k : 재정렬 후 사용할 문서 개수 (기본값 : 3)
+		"""
+		# query 표준화
+		normalized_query = keyword_chain.invoke({"question":query})
+
+		# retriever 생성
+		retriever = vectorStore.as_retriever(
+			search_type = 'similarity',
+			search_kwargs ={
+				'k':k,
+				'filter':{
+					'category':{'$in':categorize_content(normalized_query)}
+				}
+			}
+		)
+
+		# 검색된 문서
+		retrieved_docs = retriever.invoke(normalized_query)
+
+		# rerank 처리
+		reranked_docs = rerank_by_title(
+			query=normalized_query,
+			documents=retrieved_docs,
+			top_k=top_k
+		)
+
+		# 참고 조항 추출
+		referenced_articles = extract_articles_from_docs(reranked_docs)
+
+		# LLM 답변 생성
+		template = f"""당신은 최고의 한국 소득세법 전문가입니다. 다음 문맥을 참고하여 질문에 답하세요. 답을 모르면 모른다고 답하세요.
+		질문 : {{query}}
+		문맥 : {{context}}
+		답변 :"""
+		prompt = ChatPromptTemplate.from_template(template)
+		prompt_chain = prompt | llm | StrOutputParser()
+		answer = prompt_chain.invoke({
+			'query':normalized_query,
+			'context':format_documents(reranked_docs)
+		})
+
+		print('='*60)
+		print(f'☑️ 원본 질문 : {query}')
+		print(f'☑️ 질문 표준화 : {normalized_query}')
+		print('='*60)
+		print(f'📝 답변 : {answer}\n')
+		print(f'📢 참고 조항 : {referenced_articles}')
+		print('**위 답변은 AI에 의해 작성된 답변이므로 근소한 차액이 발생할 수 있습니다**')
+
+	ask_with_reference('연봉 5000만원인 직장인의 소득세는 얼마예요?')
+	ask_with_reference('사업소득이 있는 경우 필요경비는 어떻게 계산하나요?')

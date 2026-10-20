@@ -1,0 +1,22 @@
+9장. RAG
+
+- 임베딩 : text-embedding-3-small (1536) ; text-embedding-3-large (3072) ; Upstage embedding-query (4096 ; 한국어 우수)
+- 유사도 : 유클리드 ; 코사인 ; dot product
+- LLM 호출 : chat.completions.create() ; ChatOpenAI / ChatUpstage (solar-pro4) / ChatOllama ; Upstage, Ollama는 base_url 교체 (Ollama api_key 임의 문자열)
+- RAG 절차 : 문서 로드 -> 분할 -> 임베딩 -> vector Store 저장 -> 유사도 검색 -> LLM 답변
+- 문서 로드 : Docx2txtLoader ; python-docx Document
+- 문서 분할 : tiktoken ; TokenTextSplitter (encoding_name, chunk_size, chunk_overlap) ; RecursiveCharacterTextSplitter (separators)
+- vector DB
+	- chromadb : collection ; add() ; query(n_results)
+	- LangChain Chroma : from_documents() ; persist_directory ; collection_name
+	- Pinecone : create_index (dimension, metric, ServerlessSpec) ; PineconeVectorStore ; delete(delete_all=True)
+- 검색 : similarity_search(k) ; retriever search_type (similarity ; mmr ; similarity_score_threshold)
+- RAG chain (LCEL) : {context: retriever | format_documents, query: RunnablePassthrough()} | prompt | llm | StrOutputParser()
+- 키워드 사전 : 일반 표현 -> 법률 용어 ; keyword_chain | rag_chain
+- metadata : title (LLM 추출) ; category (키워드 가중치 점수) ; article (정규식 제N조) ; chunk_id ; csv 백업 (ast.literal_eval)
+- 필터 검색 : filter ; $in (하나라도 포함) ; $and + $eq (모두 포함)
+- 참조 조항 추출 : article 수집 -> 중복 제거 -> 숫자 정렬
+- rerank : k=10 검색 -> top_k 선별
+	- cohere : rerank-multilingual-v3.0 ; COHERE_API_KEY
+	- TfidfVectorizer : analyzer='char' ; ngram_range=(2, 3) ; cosine_similarity
+- 통합 함수 : ask_with_reference ; 질문 표준화 -> 필터 검색 -> rerank -> 참고 조항 -> 답변

@@ -1,0 +1,308 @@
+1장. PyTorch - DNN을 활용한 심장병 발병 예측
+
+0. 환경 설정
+
+- 구글 코랩(Colab) T4 GPU 환경 활용
+- koreanize-matplotlib 설치를 통한 그래프 한글 폰트 깨짐 방지
+- tensorflow(2.21.0) 및 torch(2.11.0+cu130) 버전 확인
+
+	ex)
+	!pip install -q koreanize-matplotlib
+	import koreanize_matplotlib
+
+	import tensorflow as tf
+	print('tf version :', tf.__version__)
+
+	import torch
+	print('torch version :', torch.__version__)
+
+
+1. 데이터 불러오기
+
+1.1 라이브러리 및 데이터 로드
+
+- torch.nn 모듈 : Sequential(), Dropout(), ReLU(), Linear() 등 신경망 구성 요소 제공
+- torch.optim 모듈 : 옵티마이저 및 학습률 스케줄러 제공
+- pd.read_csv()를 통한 GitHub 원격 CSV 파일 로드
+- 데이터 구성 : 303행 14열, 전체 컬럼 결측치 없음 (non-null 303개)
+	* age, sex, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, thal, target
+	* oldpeak만 float64, 나머지 13개 컬럼은 int64
+
+	ex)
+	import pandas as pd
+	import numpy as np
+	import torch
+	import torch.nn as nn # Sequential(), Dropout(), ReLU(), Linear()
+	import torch.optim as optim
+
+	url = 'https://raw.githubusercontent.com/4aix/data/master/heart.csv'
+	df = pd.read_csv(url)
+	df.info()
+
+
+1.2 데이터 전처리
+
+- categorical 변수 : 원-핫 인코딩 수행
+	* 대상 컬럼 : cp, restecg, slope, thal
+	* pd.get_dummies(df, columns=categorical_cols) 활용
+	* 인코딩 후 컬럼 수 14개 → 24개로 증가 (shape : 303, 24)
+	* 인코딩 결과는 True/False의 bool 타입으로 생성
+
+- numeric(lineal) 변수 : MinMaxScaler 정규화 수행
+	* 대상 컬럼 : age, trestbps, chol, thalach, oldpeak, ca
+	* 모든 값을 0 ~ 1 범위로 변환하여 feature 간 scale 차이 조정
+	* 그 외 선택 가능한 스케일러 : StandardScaler, RobustScaler
+
+- 전처리 완료 데이터의 CSV 백업 (구글 드라이브 저장, index=False)
+
+	ex)
+	categorical_cols = ['cp', 'restecg', 'slope', 'thal']
+	df = pd.get_dummies(df, columns=categorical_cols)
+	df.shape # (303, 24)
+
+	# feature의 scale 조정
+	from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
+	minmax_scaler = MinMaxScaler()
+	numeric_cols = ['age', 'trestbps', 'chol', 'thalach', 'oldpeak', 'ca']
+	df[numeric_cols] = minmax_scaler.fit_transform(df[numeric_cols])
+
+	# 전처리 데이터 백업
+	df.to_csv('/content/drive/MyDrive/MBC_AIX/파인튜닝/heart_preprocessed.csv', index=False)
+
+
+2. feature(X)와 target(y) 분리
+
+- target 컬럼을 제외한 나머지를 feature(X)로 지정하고 float32 타입으로 변환
+- target 컬럼을 정답(y)으로 지정
+- X shape : (303, 23), y shape : (303,)
+- 클래스 비율 확인 : 발병(1) 약 54.5%, 정상(0) 약 45.5%로 비교적 균형적인 분포
+
+	ex)
+	X = df.drop(columns=['target']).astype(np.float32)
+	y = df['target']
+	X.shape, y.shape
+
+	y.value_counts(normalize=True)
+
+
+3. train/test 데이터 분할
+
+- train_test_split 활용 8:2 분할
+	* stratify=y : 학습/검증 데이터의 클래스 비율 동일 유지
+	* test_size=0.2 : 테스트 데이터 20% 지정
+	* random_state=7 : 재현성 확보를 위한 시드 고정
+
+- 라벨 y의 tensor 변환 시 dtype=torch.float32 지정 (BCE 계열 손실 함수 사용 목적)
+	* torch.tensor(y, dtype=torch.float32) : 1차원 tensor
+	* .view(-1, 1) 추가 시 2차원 tensor로 변환
+
+	ex)
+	from sklearn.model_selection import train_test_split
+	X_train, X_test, y_train, y_test = train_test_split(
+		X.values,
+		y.to_numpy(),
+		stratify=y,
+		test_size=0.2,
+		random_state=7
+	)
+
+	print(X_train.shape, y_train.shape) # (242, 23) (242,)
+	print(X_test.shape, y_test.shape) # (61, 23) (61,)
+
+
+4. Dataset 클래스, DataLoader 생성
+
+- Dataset 클래스 : 사용자 정의 데이터셋을 PyTorch 형식으로 정의하는 클래스
+	* __init__ : X, y를 tensor 형태로 저장 (y는 view(-1, 1)로 2차원 변환)
+	* __len__ : 데이터셋 전체 길이 반환
+	* __getitem__ : 인덱스를 받아 해당 (X, y) 데이터 쌍 반환
+
+- DataLoader : batch_size 크기 단위로 데이터를 반복 공급하는 객체
+	* batch_size=32 설정
+	* shuffle=True : 매 에포크마다 데이터 순서 섞기
+	* train 데이터 242개 → 32개 배치 7회 + 18개 배치 1회, 총 8회 반복
+
+	ex)
+	from torch.utils.data import Dataset, DataLoader, TensorDataset
+
+	class HeartDataSet(Dataset):
+		# 생성자 : X, y를 tensor 형태로 저장
+		def __init__(self, X, y):
+			self.X = torch.tensor(X, dtype=torch.float32)
+			self.y = torch.tensor(y, dtype=torch.float32).view(-1, 1)
+		# 데이터셋의 전체 길이를 반환
+		def __len__(self):
+			return len(self.y)
+		# 인덱스를 받아 데이터를 반환
+		def __getitem__(self, idx):
+			return self.X[idx], self.y[idx]
+
+	# 데이터셋 객체
+	train_dataset = HeartDataSet(X_train, y_train)
+	test_dataset = HeartDataSet(X_test, y_test)
+
+	# 데이터 로더 생성
+	train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+	test_loader = DataLoader(test_dataset, batch_size=32, shuffle=True)
+
+	# batch_size 단위로 데이터를 반복해서 공급
+	for feature, label in train_loader:
+		print(len(feature), len(label))
+
+
+5. 모델 정의
+
+- nn.Module 상속을 통한 DNN(Deep Neural Network) 클래스 정의
+
+- 모델 구조 : 입력(23) → 128 → 64 → 32 → 출력(1)
+	* nn.Linear : 완전연결층
+	* nn.ReLU : 은닉층 활성화 함수
+	* nn.Dropout(0.2) : 과적합 방지를 위한 20% 뉴런 비활성화
+	* 출력층에 활성화 함수 미적용 (logit 반환) → 손실 함수에서 시그모이드 처리
+
+- input_dim = X.shape[1] : feature 개수 23개
+	* feature, 독립 변수, 입력 변수, 입력 뉴런 수는 동일한 의미 (X, X_train, X_test 모두 23)
+
+	ex)
+	class DNN(nn.Module):
+		def __init__(self, input_dim):
+			super(DNN, self).__init__()
+			self.net = nn.Sequential(
+				nn.Linear(input_dim, 128),
+				nn.ReLU(),
+				nn.Dropout(0.2),
+				nn.Linear(128, 64),
+				nn.ReLU(),
+				nn.Dropout(0.2),
+				nn.Linear(64, 32),
+				nn.ReLU(),
+				nn.Dropout(0.2),
+				nn.Linear(32, 1)
+			)
+		def forward(self, x):
+			return self.net(x)
+
+	model = DNN(input_dim=X.shape[1]) # feature : 23개
+
+
+6. 손실 함수와 옵티마이저
+
+- 손실 함수 : nn.BCEWithLogitsLoss()
+	* 시그모이드 + BCE(Binary Cross Entropy)를 결합하여 수치적으로 안정적
+	* 이진 분류 문제에 적합
+
+- 옵티마이저 : optim.SGD
+	* lr=0.01 (학습률), momentum=0.9 (관성 적용)
+
+- 학습률 스케줄러 : CosineAnnealingLR(T_max=50)
+	* 학습률이 초기값(0.01)에서 시작하여 코사인 함수를 따라 50 에포크 동안 서서히 0 근처까지 감소
+
+	ex)
+	# 손실함수 : 시그모이드 + BCE를 결합해 수치적으로 안정적
+	criterion = nn.BCEWithLogitsLoss()
+
+	# 옵티마이저
+	optimizer = optim.SGD(
+		model.parameters(),
+		lr=0.01,
+		momentum=0.9
+	)
+
+	# 학습률 스케줄러
+	scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50)
+
+
+7. 학습 루프
+
+- 에포크 100회 반복 학습
+- 에포크별 처리 순서
+	* model.train() : 학습 모드 전환 (Dropout 활성화)
+	* optimizer.zero_grad() : 기울기 초기화
+	* outputs = model(X_batch) : 예측값(logit) 계산
+	* loss = criterion(outputs, y_batch) : 손실 계산
+	* loss.backward() : 역전파로 기울기 계산
+	* optimizer.step() : 파라미터 업데이트
+	* running_loss 누적 후 에포크 종료 시 scheduler.step() 호출 및 평균 손실 계산
+
+	ex)
+	epochs = 100
+	for epoch in range(epochs):
+		model.train()
+		running_loss = 0
+		for X_batch, y_batch in train_loader:
+			optimizer.zero_grad()
+			outputs = model(X_batch)
+			loss = criterion(outputs, y_batch)
+			loss.backward()
+			optimizer.step()
+			running_loss += loss.item()
+		scheduler.step()
+		avg_loss = running_loss / len(train_loader)
+		if (epoch+1) % 10 == 0:
+			print(f'{epoch+1}번째 : loss {avg_loss:.4f}')
+
+
+8. 모델 평가
+
+8.1 test 데이터 예측
+
+- model.eval() : 평가 모드 전환 (Dropout 비활성화)
+- torch.no_grad() : 기울기 계산 비활성화를 통한 메모리 및 속도 효율화
+- 예측 과정 : logit → torch.sigmoid()로 확률 변환 → 0.5 초과 시 1(발병)로 분류
+- 예측값과 실제값을 리스트로 저장하여 평가 지표 계산에 활용
+
+	ex)
+	model.eval()
+	y_pred = []
+	y_true = []
+	with torch.no_grad():
+		for X_batch, y_batch in test_loader:
+			outputs = model(X_batch)
+			probs = torch.sigmoid(outputs)
+			preds = (probs > 0.5).float()
+			y_pred.extend(preds.cpu().numpy().flatten())
+			y_true.extend(y_batch.cpu().numpy().flatten())
+
+
+8.2 평가 지표 확인
+
+- sklearn.metrics 활용 분류 성능 평가
+	* accuracy_score : 전체 정확도
+	* precision_score : 정밀도 (발병으로 예측한 것 중 실제 발병 비율)
+	* recall_score : 재현율 (실제 발병 중 발병으로 예측한 비율)
+	* f1_score : 정밀도와 재현율의 조화 평균
+	* confusion_matrix : 혼동 행렬
+	* classification_report : 클래스별 지표 종합 출력
+
+	ex)
+	from sklearn.metrics import accuracy_score, classification_report
+
+	print(accuracy_score(y_true, y_pred))
+	print(classification_report(y_true, y_pred))
+
+	from sklearn.metrics import (accuracy_score, precision_score, f1_score,
+								recall_score, confusion_matrix)
+	print('평가 결과')
+	print('Accuracy : ', accuracy_score(y_true, y_pred))
+	print('recall : ', recall_score(y_true, y_pred))
+	print('precision : ', precision_score(y_true, y_pred))
+	print('f1_score : ', f1_score(y_true, y_pred))
+
+	confusion_matrix(y_true, y_pred)
+
+
+9. 모델 사용(예측)
+
+- 학습된 모델에 단일 샘플 입력 후 발병 여부 예측
+	* 샘플을 tensor로 변환 → model.eval() → logit 계산 → sigmoid 확률 변환
+	* 확률 0.5 초과 시 발병, 이하 시 정상 출력
+	* test 첫 번째 샘플 예측 결과 : 발병
+
+	ex)
+	sample = X_test[0]
+	x = torch.tensor(sample, dtype=torch.float32)
+	model.eval()
+	with torch.no_grad():
+		logit = model(x)
+		prob = torch.sigmoid(logit).item()
+	print('발병' if prob > 0.5 else '정상')

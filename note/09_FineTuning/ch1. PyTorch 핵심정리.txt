@@ -1,0 +1,12 @@
+1장. PyTorch - DNN 심장병 예측
+
+- 환경 : Colab T4 GPU ; koreanize-matplotlib
+- 데이터 : heart.csv (303행 14열) ; pd.read_csv()
+- 전처리 : pd.get_dummies() (cp, restecg, slope, thal) ; MinMaxScaler (age, trestbps, chol, thalach, oldpeak, ca)
+- 분리 : X (float32) / y (target) ; train_test_split (test_size=0.2 ; stratify=y ; random_state=7)
+- 데이터 공급 : Dataset (__init__ ; __len__ ; __getitem__) ; DataLoader (batch_size=32 ; shuffle=True)
+- 모델 : nn.Module ; Linear 23 -> 128 -> 64 -> 32 -> 1 ; ReLU ; Dropout(0.2)
+- 손실 : BCEWithLogitsLoss
+- 옵티마이저 : SGD (lr=0.01 ; momentum=0.9) ; CosineAnnealingLR (T_max=50)
+- 학습 : model.train() ; zero_grad() ; backward() ; step() ; scheduler.step()
+- 평가 : model.eval() ; torch.no_grad() ; sigmoid > 0.5 ; accuracy ; precision ; recall ; f1_score ; confusion_matrix

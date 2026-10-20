@@ -1,0 +1,291 @@
+2장. BERT 파인튜닝 - DistilBERT 기반 IMDB 영화 리뷰 감정 분류
+
+- 사용 모델 정보 : distilbert-base-uncased
+	- 모델 타입 : Encoder (BERT 계열)
+	- 사전학습 목적 : 마스킹된 언어 모델 (Masked LM)
+	- 파라미터 수 : 약 66M
+	- 레이어 수 6개, 히든 크기 768, 어텐션 헤드 수 12개
+	- 최대 시퀀스 길이 : 512 tokens
+	- 토크나이저 타입 : WordPiece (BERT형)
+	- 생성 능력 없음 (비생성형, 분류에 적합)
+	- 사용 예시 : 텍스트 분류, 감정 분석 등
+	- 연산 효율성 : BERT의 경량화 버전으로 빠른 처리
+
+1. 환경 설정
+
+1.1 라이브러리 설치 및 버전 확인
+
+- PC 환경 설치 시 torch, torchvision, torchaudio, transformers 등을 pip으로 별도 설치
+- 코랩 환경에서는 설치 후 세션 다시 시작 필요
+
+- Hugging Face 라이브러리 구성
+	* transformers : 사전학습된 NLP 모델을 쉽게 사용할 수 있게 해주는 라이브러리
+	* datasets : 다양한 자연어처리용 데이터셋을 손쉽게 불러올 수 있는 라이브러리
+
+- torch 2.11.0+cu130, GPU 사용 가능 상태 확인
+- transformers 5.20.1, datasets 4.8.5, huggingface_hub 1.33.0, fsspec 2025.12.0 버전 확인
+
+	ex)
+	## PC
+	# pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu126
+	# pip install transformers datasets huggingface_hub
+	# pip install scikit-learn==1.6.1 accelerate>=1.1.0
+	# pip install transformers[torch]
+
+	##세션 다시 시작 필요
+	!pip install -q transformers datasets huggingface_hub
+
+	import torch
+	print(torch.__version__)
+	print("GPU" if torch.cuda.is_available() else "CPU")
+
+	import transformers
+	import datasets
+	import huggingface_hub
+	import fsspec
+
+	print("transformers:", transformers.__version__)
+	print("datasets:", datasets.__version__)
+	print("huggingface_hub:", huggingface_hub.__version__)
+	print("fsspec:", fsspec.__version__)
+
+
+1.2 IMDB 데이터셋 불러오기
+
+- load_dataset으로 stanfordnlp/imdb 데이터셋 로드
+	* 전체 기본값 : train 25000개, test 25000개
+	* split="train[:500]" 지정을 통한 앞쪽 500개 샘플만 사용
+
+- train_test_split(test_size=0.2)로 학습 400개, 테스트 100개 분할
+- 데이터 구조 : text(리뷰 본문), label(0=부정, 1=긍정)
+- 인덱스로 개별 샘플 조회 후 리뷰 내용과 라벨 확인
+
+	ex)
+	# from tensorflow.keras.datasets import imdb
+	# (X_train, y_train), (X_test, y_test) = imdb.load_data(num_words=10000)
+
+	from datasets import load_dataset
+
+	dataset = load_dataset(
+		'stanfordnlp/imdb',
+		split="train[:500]" # 기본값 : train - 25000, test - 25000
+	)
+	dataset = dataset.train_test_split(test_size=0.2)
+	dataset
+
+	sample = dataset['train'][7]
+	print(f"리뷰 내용:\n{sample['text']}\n")
+	print(f"라벨 (0=부정, 1=긍정): {sample['label']}")
+
+
+2. 모델 및 토크나이저 준비
+
+- distilbert-base-uncased : BERT를 경량화한 모델
+- AutoTokenizer : 모델에 맞는 토크나이저 자동 로드
+- AutoModelForSequenceClassification : 문장 분류용 모델 로드
+	* num_labels=2 : 긍정/부정 이진 분류용 출력 2개 지정
+
+- 모델 로드 리포트 확인
+	* UNEXPECTED(vocab_transform 등) : 다른 태스크용 가중치로 무시 가능
+	* MISSING(classifier, pre_classifier) : 체크포인트에 없어 새로 초기화된 분류 층이며 파인튜닝 학습 대상
+
+	ex)
+	from transformers import AutoTokenizer, AutoModelForSequenceClassification
+	tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+	model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=2)
+
+
+3. 데이터 전처리
+
+- 토크나이징 함수 정의 후 dataset.map으로 전체 데이터에 적용
+	* truncation=True : 모델이 처리할 최대 길이보다 긴 문장 자르기
+	* padding=True : 짧은 문장을 0으로 채워 최대 길이에 맞추기
+	* batched=True : 여러 데이터를 동시에 처리하여 속도 향상
+
+- 토크나이저 출력 구성 요소
+	* input_ids : 모델이 실제로 읽는 입력 (101부터 102까지가 문장의 처음부터 끝, 101은 문장 시작 토큰, 102는 문장 종료 토큰)
+	* token_type_ids : 문장 구분 값 (전부 0이므로 첫 번째 문장)
+	* attention_mask : 실제 토큰 위치는 1, 패딩 위치는 0 (패딩이 없는 샘플은 전부 1)
+
+- 배치 내 최대 길이에 맞춰 패딩된 샘플은 input_ids 끝부분에 0이 채워짐
+
+	ex)
+	def tokenize(batch):
+		return tokenizer(batch['text'],
+						truncation=True, # 모델이 처리할 최대 길이보다 길면 자르기
+						padding=True) # 짧은 문장은 0으로 채워 최대 길이에 맞추기
+
+	dataset = dataset.map(
+		tokenize,
+		batched=True # 여러 데이터를 동시에 처리해서 속도 향상
+	)
+
+	tokenizer(dataset['train'][7]['text'], padding=True, truncation=True)
+	# input_ids : 모델이 실제로 읽는 입력(101부터 102까지 문장 첫부분부터 끝부분)
+	# token_type_ids : 첫번째 문장
+	# attention_mask : 전부 1(패딩이 없음 → 모든 위치가 실제 토큰)
+
+	print(dataset['train'][1]["input_ids"])
+
+
+4. 훈련 설정 및 Trainer 구성
+
+- compute_metrics 함수 : logits에서 argmax로 예측 클래스를 구하고 accuracy_score로 정확도 계산
+
+- TrainingArguments 주요 파라미터
+	* output_dir : 모델이 저장될 경로
+	* per_device_train_batch_size : 학습 시 배치 크기 (8)
+	* num_train_epochs : 학습 반복 횟수 (15)
+	* report_to="none" : wandb, tensorboard 등 외부 로깅 툴 비활성화
+	* logging_steps : 로그 출력 간격 (50)
+
+- Trainer : 모델, 훈련 설정값, 학습용/검증용 데이터셋, 정확도 계산 함수를 묶어 학습 관리
+
+	ex)
+	from transformers import TrainingArguments, Trainer
+	from sklearn.metrics import accuracy_score
+
+	# 정확도 계산 함수
+	def compute_metrics(eval_pred):
+		logits, labels = eval_pred
+		predictions = logits.argmax(-1)
+		acc = accuracy_score(labels, predictions)
+		return {'accuracy':acc}
+
+	# 파라미터 설정
+	args = TrainingArguments(
+		output_dir="test",    # 모델이 저장될 경로
+		per_device_train_batch_size=8, # 학습 시 배치 크기
+		num_train_epochs=15, # 학습 반복 횟수
+		report_to="none",    # wandb, tensorboard 등 외부 로깅 툴 비활성화
+		logging_steps=50      # 로그 출력 간격
+	)
+
+	trainer = Trainer(
+		model=model,  # 사용할 모델
+		args=args,  # 훈련 설정값
+		train_dataset=dataset["train"],  # 학습용 데이터 셋
+		eval_dataset=dataset["test"],  # 검증용 데이터 셋
+		compute_metrics=compute_metrics,  # 정확도 계산 함수 추가
+	)
+
+
+5. 파인튜닝 실행 (모델 학습)
+
+- trainer.train() 호출을 통한 학습 수행
+	* 총 750 step (400개 / 배치 8 = 50 step × 15 에폭)
+	* 학습 소요 시간 약 324초
+
+- trainer.evaluate()를 통한 검증 데이터 평가
+	* eval_loss 약 1.19e-09, eval_accuracy 1.0
+
+	ex)
+	trainer.train()
+
+	result = trainer.evaluate()
+	print(result)
+
+
+6. 학습된 모델로 실제 예측 수행
+
+- 새 문장을 토크나이징 후 GPU로 전달
+	* return_tensors="pt" : PyTorch 텐서 형식으로 변환
+	* to('cuda') : 입력 데이터를 모델과 같은 GPU 장치로 이동
+
+- 모델 출력(logits) : [부정 점수, 긍정 점수] 형태의 벡터
+- argmax로 가장 높은 점수의 클래스를 선택하여 긍정/부정 판별
+
+- 추론 시 torch.no_grad() 사용을 통한 gradient 계산 생략 및 메모리 절약
+
+	ex)
+	text = "I would put this at the top of my list of films in the category of unwatchable trash!"
+	inputs = tokenizer(
+		text, return_tensors="pt", # PyTorch 텐서 형식으로 변환
+		#truncation=True,
+		#padding=True
+	).to('cuda') # 새 문장을 토큰화한 후, GPU로 보내줌
+
+	# import torch
+	# with torch.no_grad():# 추론할 땐 gradient off (메모리 절약)
+	output = model(**inputs)
+	print(output)
+
+	label = output.logits.argmax(dim=-1).item()
+	# 모델 출력(logits) : [부정 점수, 긍정 점수] 형태의 벡터
+
+	print("긍정" if label == 1 else "부정")
+
+
+7. 모델 저장 및 불러오기
+
+7.1 구글 드라이브 마운트
+
+- 학습 모델의 영구 보관을 위한 구글 드라이브 연동
+
+	ex)
+	from google.colab import drive
+	drive.mount('/content/drive')
+
+
+7.2 모델 저장
+
+- trainer.save_model : 학습된 모델 가중치(model.safetensors)와 설정(config.json) 저장
+- tokenizer.save_pretrained : 토크나이저 파일 직접 저장 (Trainer에 토크나이저를 넘기지 않았으므로 별도 저장 필요)
+
+- os.listdir를 통한 저장 파일 목록 확인
+	* config.json, model.safetensors, training_args.bin, tokenizer_config.json, tokenizer.json
+
+	ex)
+	save_dir = "/content/drive/MyDrive/MBC_AIX/파인튜닝/imdb-distilbert-full"
+	trainer.save_model(save_dir)            # 학습된 모델 가중치(model.safetensors) + 설정(config.json) 저장
+	tokenizer.save_pretrained(save_dir)     # 토크나이저 파일 저장 (Trainer에 안 넘겼으니 직접 저장)
+
+	import os
+	print(os.listdir(save_dir))             # 저장된 파일 목록 확인
+
+
+7.3 저장된 모델 불러와 추론
+	- 저장 폴더 경로로 토크나이저와 모델 로드
+
+- model.to(device) : 사용 가능한 장치(cuda 또는 cpu)로 모델 이동
+- model.eval() : 추론 모드 전환 (Dropout 비활성화)
+- torch.no_grad() 내에서 logits 계산 후 argmax로 예측
+- model.config.id2label : 예측 클래스 번호를 라벨 이름으로 변환
+	* 라벨명을 따로 지정하지 않아 LABEL_0, LABEL_1 형태로 출력
+
+- 불러온 모델에서도 저장 전과 동일한 logits 결과 확인
+
+	ex)
+	from transformers import AutoTokenizer, AutoModelForSequenceClassification
+	import torch
+
+	load_dir = "/content/drive/MyDrive/MBC_AIX/파인튜닝/imdb-distilbert-full"
+
+	tokenizer = AutoTokenizer.from_pretrained(load_dir)  # 저장한 토크나이저 불러오기
+	model = AutoModelForSequenceClassification.from_pretrained(load_dir) # 학습된 모델 불러오기
+
+	device = "cuda" if torch.cuda.is_available() else "cpu"
+	model.to(device)
+	model.eval() # 추론 모드 (Dropout off)
+
+	text = "I would put this at the top of my list of films in the category of unwatchable trash!"
+	inputs = tokenizer(text, return_tensors="pt", truncation=True).to(device)  # 모델과 같은 위치의 device
+
+	with torch.no_grad(): # 추론일 때 기울기 계산 안 함 (메모리 절약)
+		logits = model(**inputs).logits
+
+	pred = logits.argmax(-1).item()
+	print(pred, model.config.id2label[pred])
+
+
+7.4 pipeline을 활용한 간편 추론
+
+- pipeline에 text-classification 태스크와 저장 폴더 경로만 지정하여 간편 추론
+- id2label을 설정한 경우 positive, negative 같은 라벨명 출력 가능
+
+	ex)
+	from transformers import pipeline
+
+	clf = pipeline("text-classification", model=load_dir)   # 폴더 경로만 넣으면 끝
+	print(clf("This movie was absolutely wonderful!"))
+	# [{'label': 'positive', 'score': 0.9...}]  ← id2label을 넣었을 때

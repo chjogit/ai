@@ -1,0 +1,11 @@
+2장. BERT 파인튜닝 - DistilBERT IMDB 감정 분류
+
+- 모델 : distilbert-base-uncased (Encoder ; 66M ; 최대 512 tokens ; 분류용)
+- 라이브러리 : transformers ; datasets
+- 데이터 : load_dataset('stanfordnlp/imdb') ; train_test_split(test_size=0.2) ; text / label
+- 로드 : AutoTokenizer ; AutoModelForSequenceClassification (num_labels=2)
+- 전처리 : map(tokenize, batched=True) ; truncation ; padding ; input_ids ; token_type_ids ; attention_mask
+- 학습 : TrainingArguments (batch 8 ; epochs 15 ; report_to="none") ; Trainer ; compute_metrics ; trainer.train() ; trainer.evaluate()
+- 추론 : return_tensors="pt" ; to('cuda') ; logits.argmax
+- 저장 / 로드 : trainer.save_model() ; tokenizer.save_pretrained() ; from_pretrained() ; id2label
+- pipeline("text-classification")
