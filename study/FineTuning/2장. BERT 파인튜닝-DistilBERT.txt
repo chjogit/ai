@@ -1,5 +1,6 @@
 2장. BERT 파인튜닝 - DistilBERT 기반 IMDB 영화 리뷰 감정 분류
 
+
 - 사용 모델 정보 : distilbert-base-uncased
 	- 모델 타입 : Encoder (BERT 계열)
 	- 사전학습 목적 : 마스킹된 언어 모델 (Masked LM)
