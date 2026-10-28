@@ -1,0 +1,10 @@
+2장. Django App
+
+- Project vs App : 프로젝트 = 웹사이트 ; 앱 = 서비스 단위 ; settings.py INSTALLED_APPS 등록
+- 프로젝트 파일 : settings.py (설정) ; urls.py (URL-View 연결) ; wsgi.py (배포)
+- URLconf : path(), include(), app_name, name ; 컨버터 <int:id>, <str:id> ; 커스텀 컨버터 (register_converter)
+- Model : 내장 ORM ; 모델 = 테이블, 인스턴스 = row ; __str__ ; makemigrations -> migrate ; sqlmigrate
+	- ORM CRUD (manage.py shell) : save(), objects.create/all/get/filter/order_by, delete() ; 조회조건 __lt, __gte, __contains
+	- Admin : createsuperuser ; admin.site.register()
+- View : FBV / CBV (as_view) ; 인자 HttpRequest ; 반환 HttpResponse 필수
+	- 응답 : render (템플릿) ; JsonResponse ; redirect ; Http404, get_object_or_404 ; 파일 다운로드 (Content-Disposition, pandas CSV/Excel)

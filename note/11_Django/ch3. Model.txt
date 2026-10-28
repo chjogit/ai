@@ -1,0 +1,11 @@
+3장. Model
+
+- ORM : SQL 없이 객체로 DB 처리 ; Django는 RDBMS만 지원 (SQLite 기본, MySQL, Oracle)
+- 모델 규칙 : models.Model 상속 ; 클래스명 단수형 ; 테이블명 앱이름_모델명 (소문자) ; id 자동 PK
+- 필드 타입 : CharField, TextField, IntegerField, DateTimeField, BooleanField, FileField, ImageField, EmailField 등
+- 옵션 : null, blank, default, unique, primary_key ; Meta 클래스 (ordering, db_table, verbose_name)
+- Relationship
+	- 1:N ForeignKey ; M:N ManyToManyField ; 1:1 OneToOneField (auth.User 연결)
+	- 역참조 : 1:N 모델명소문자_set ; M:N/1:1 필드명 ; 충돌 시 related_name
+- Migrations : makemigrations ; migrate ; showmigrations ; sqlmigrate ; 롤백 migrate 앱 번호/zero
+- Admin App : admin.site.register ; ModelAdmin 옵션으로 관리화면 커스텀

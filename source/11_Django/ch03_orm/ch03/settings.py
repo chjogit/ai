@@ -26,9 +26,10 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True ; 개발 단계에서 사용
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1','localhost','*']
 
 
 # Application definition

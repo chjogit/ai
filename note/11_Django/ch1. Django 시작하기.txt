@@ -1,0 +1,11 @@
+1장. Django 시작하기
+
+- Django : 파이썬 Full-stack 웹 프레임워크 ; 비교 Flask, FastAPI (micro)
+- 프레임워크 vs 라이브러리 : 프레임워크가 유저 코드 호출/제어 ; 라이브러리는 유저 코드가 호출
+- 구성요소 : View (요청처리) ; Model (DB/ORM) ; Template (UI) ; Form ; Admin ; Static/Media files
+- 개발 환경 : Anaconda/Python, VS Code ; 가상환경 (python -m venv .venv) ; pip install django
+- 프로젝트 시작
+	- 생성/실행 : django-admin startproject ; python manage.py runserver ; startapp
+	- SECRET_KEY 숨기기 : .env + .gitignore ; python-decouple (config)
+- 구조 : MVT 패턴 ; 요청 흐름 urls.py -> views.py -> models.py / templates -> 응답
+- HTTP : GET/POST ; 상태코드 200 (성공), 4xx (클라이언트), 500 (서버) ; 연결유지 x -> 쿠키/세션
