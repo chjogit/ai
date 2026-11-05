@@ -19,31 +19,29 @@
     {% endfor %}
   {% endif %}  
   {% if students %}
-    <table  class="table table-bordered">
+    <table class="table table-warning">
       <thead>
         <tr>
           <th scope="col">ID</th>
-          <th scope="col">Name</th>
-          <th scope="col">Grade</th>
-          <th scope="col">Age</th>
+          <th scope="col">name</th>
+          <th scope="col">major(grade)</th>
+          <th scope="col">age</th>
         </tr>
       </thead>
       <tbody>
-        {% for student in students %}
-          <tr onclick="location='/student/get/{{student.id}}'">
-            <td scope="row">{{ student.id }}</td>
-            <td scope="row">{{ student.name }}</td>
-            <td scope="row">{{ student.grade }}</td>
-            <td scope="row">{{ student.age }}</td>
-          </tr>
+        {% for s in students %}
+        <tr onclick="location='/student/get/{{s.id}}'">
+          <th scope="row">{{s.id}}</th>
+          <td>{{s.name}}</td>
+          <td>{{s.major}} ({{s.grade}})</td>
+          <td>{{s.age}}</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
   {% else %}
-    <table class="table table-warning">
-      <tr>
-        <td>No Students</td>
-      </tr>
-    </table>
+      <table class="table table-secondary">
+        <tr><td>데이터가 없습니다</td></tr>
+      </table>
   {% endif %}
 {% endblock %}

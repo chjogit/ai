@@ -8,36 +8,35 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
-
-1. SECRET KEY 등록
-2. APP 등록
-3. myproject > templates > base.html/header.html/footer.html 생성 및 등록
-4. myproject > static 생성 및 등록
-5. 한국어 등록
+1. SECRET_KEY 등록
+2. 앱 등록
+3. myproject/templates(base.html/header.html/footer.html) 인식하도록 등록
+4. myproject/static 인식하도록 등록
+5. 한국어 등록 (admin 페이지)
 6. 한국 timezone 등록
 """
 
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+import os
 BASE_DIR = Path(__file__).resolve().parent.parent
-print("BASE_DIR : ", BASE_DIR)
-print("base_templates : ", os.path.join(BASE_DIR, 'myproject', 'templates'))
-print("base_static : ", os.path.join(BASE_DIR, 'myproject', 'static'))
+# print("root 폴더명 :",BASE_DIR)
+# print('기본 templates :', os.path.join(BASE_DIR, 'myproject', 'templates'))
+# print('기본 static :', os.path.join(BASE_DIR, 'myproject', 'static'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 from dotenv import load_dotenv
-import os
 load_dotenv()
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY", "secret_key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 
 
 # Application definition
@@ -49,8 +48,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "blog",
-
+    "blog", # 앱 등록
+    "accounts",
 ]
 
 MIDDLEWARE = [
@@ -70,7 +69,7 @@ TEMPLATES = [
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
             os.path.join(BASE_DIR, 'myproject', 'templates'),
-            ],
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -100,15 +99,16 @@ DATABASES = {
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
+    # {   # 입력한 타 개인정보와 유사한 비밀번호 설정 불가
+    #     "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    # },
+    {   
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length":2} # 비밀번호 최소 길이
     },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
+    # {   # 일반적으로 자주 사용되는 비밀번호 설정 불가 (ex: qwer1234 등)
+    #     "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    # },
     {
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
@@ -118,10 +118,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = "ko-kr"
+# LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "ko-kr" # 장고 admin페이지 언어
 
+# TIME_ZONE = "UTC"
 TIME_ZONE = "Asia/Seoul"
-
 USE_I18N = True
 
 USE_TZ = True
@@ -130,9 +131,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-# 개발 환경 setting : global_settings.py 작업 후 setting.py 작업
+# 개발 환경 setting : global_settings.py -> settings.py
 STATIC_URL = "static/"
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'myproject', 'static')]            
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'myproject', 'static')
+]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

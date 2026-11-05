@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}details{% endblock %}
+{% block title %}상세보기{% endblock %}
 {% block content %}
     <table class="table table-warning table-striped">
       <tbody>
@@ -12,7 +12,7 @@
           <td>{{student.name}}</td>
         </tr>
         <tr>
-          <th>major(grade)</th>
+          <th>major</th>
           <td>{{student.major}}({{student.grade}})</td>
         </tr>
         <tr>
@@ -21,10 +21,12 @@
         </tr>
       </tbody>
     </table>
-    <button type="button" class="btn btn-primary" onclick="location='/student'">
-      list
+    <button type="button" class="btn btn-primary"
+      onclick="location='/student'">
+      목록
     </button>
-    <button type="button" class="btn btn-primary" onclick="location='/student/delete/{{student.id}}'">
-      delete
+    <button type="button" class="btn btn-primary"
+      onclick="location='/student/delete/{{student.id}}'">
+      삭제
     </button>
 {% endblock %}
