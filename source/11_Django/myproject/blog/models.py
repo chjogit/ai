@@ -23,17 +23,17 @@ class Post(models.Model): # 테이블명 : blog_post(앱명_클래스명소문�
   # id    = models.AutoField(primary_key=True) PK가 없을 경우 자동 생성
   title = models.CharField(verbose_name="제목", # form 태그의 라벨
                           max_length=100,       # varchar(100) 필드로 생성
-                          help_text="기사 제목 (100자 내외)")
+                          help_text="기사 제목입니다. 100자 내외로 입력하세요")
   content = models.TextField("본문") # CLOB 타입 (oracle), TEXT 타입 (sqlite, mysql)
   region = models.CharField(verbose_name="지역",
                             max_length=100,
                             choices=REGION_CHOICE,
                             default="Asia")
-  lnglat = models.CharField(verbose_name="경/위도",
+  lnglat = models.CharField(verbose_name="경,위도",
                           max_length=100,
                           blank=True,
                           null=True,
-                          help_text="경/위도 포맷 ex128.21,37",
+                          help_text="경도,위도 포맷 ex128.21,37",
                           validators=[lnglat_validator])
   url    = models.URLField(blank=True, null=True)
   tags   = models.ManyToManyField(Tag)
@@ -41,7 +41,7 @@ class Post(models.Model): # 테이블명 : blog_post(앱명_클래스명소문�
   update_at = models.DateTimeField(auto_now=True) # save() 함수 실행 시 자동 저장
   def __str__(self): # 하나의 레코드에 대한 작업 처리
     updated = timezone.localtime(self.update_at).strftime("%Y-%m-%d %H:%M")
-    return f"{self.id}. 제목 : {self.title} - {self.create_at} 등록, {updated} 최종수정"
+    return f"{self.id}.제목:{self.title} - {self.create_at}등록. {updated}최종수정"
   class Meta: # Post의 내부 클래스
     ordering = ['-update_at'] # update_at 기준 내림차순 정렬
     unique_together = [('title', 'content')] # 같은 title과 content는 insert및 update 불가
@@ -50,12 +50,12 @@ class Comment(models.Model): # 테이블명 blog_comment Post:Comment = 1:N 관�
   # id = models.AutoField(primary_key=True)
   post = models.ForeignKey(Post, # post 테이블과 1:다 관계 (필드명 : post_id)
                         on_delete=models.CASCADE) # post의 한행을 delete할 경우 댓글도 자동 삭제
-  author = models.CharField(verbose_name="작성자", max_length=20, null=True, blank=True)
+  author = models.CharField(verbose_name="댓글쓴이", max_length=20, null=True, blank=True)
   message = models.TextField(verbose_name="댓글")
   create_at = models.DateField(auto_now_add=True) # insert 시점
   update_at = models.DateTimeField(auto_now=True) # save() 실행 시점
   def __str__(self):
-    return "{}. {} (by {}, at {})".format(self.post.pk,
+    return "{}번글의 댓글 {} (by {}, at {})".format(self.post.pk,
                                               self.message,
                                               self.author,
                                               self.create_at)

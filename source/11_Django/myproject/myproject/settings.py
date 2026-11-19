@@ -34,10 +34,14 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY", "secret_key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", ".pythonanywhere.com").split(",")
 
+# POST 요청(로그인, 회원가입, 글쓰기)을 허용할 출처
+# 반드시 https:// 를 포함해서 적어야 함 (없으면 기본값 사용)
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS",
+                                "https://*.pythonanywhere.com").split(",")
 
 # Application definition
 
@@ -50,6 +54,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "blog", # 앱 등록
     "accounts",
+    "book",
+    "django.contrib.humanize", # intcomma(세자리마다 , 추가) 필터 사용
+    "article",
 ]
 
 MIDDLEWARE = [
@@ -60,6 +67,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware", # 배포 시 static serving
 ]
 
 ROOT_URLCONF = "myproject.urls"
@@ -109,9 +117,9 @@ AUTH_PASSWORD_VALIDATORS = [
     # {   # 일반적으로 자주 사용되는 비밀번호 설정 불가 (ex: qwer1234 등)
     #     "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     # },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    # {
+    #     "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    # },
 ]
 
 
@@ -119,7 +127,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 # LANGUAGE_CODE = "en-us"
-LANGUAGE_CODE = "ko-kr" # 장고 admin페이지 언어
+LANGUAGE_CODE = "ko-kr" # 장고 admin 페이지 언어 설정
 
 # TIME_ZONE = "UTC"
 TIME_ZONE = "Asia/Seoul"
@@ -133,11 +141,31 @@ USE_TZ = True
 
 # 개발 환경 setting : global_settings.py -> settings.py
 STATIC_URL = "static/"
+
+# 개발 단계에서 사용
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'myproject', 'static')
 ]
+
+# 배포 시 주의사항 : 모든 static 폴더를 STATIC_ROOT로 옮겨야함 ; python manage.py collectstatic
+STATIC_ROOT = os.path.join(BASE_DIR, '_staticfiles')
+
+# 업로드한 파일이 저장될 url과 경로
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, '_media')
+# url과 저장 경로 연결 : myproject/urls.py에서 직접 연결
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False

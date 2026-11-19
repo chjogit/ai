@@ -20,6 +20,17 @@ from django.shortcuts import redirect
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", lambda request : redirect("blog:list")),
-    path("blog/", include("blog.urls")),
-]
+    path("", lambda request : redirect("article:list")),
+    path("blog/", include('blog.urls')),
+    path("book/", include('book.urls')),
+    path("article/", include('article.urls')),
+    path("accounts/", include("accounts.urls")),
+    ]
+
+from django.conf.urls.static import static
+from . import settings
+
+urlpatterns += static(
+    settings.MEDIA_URL, # '/media/'
+    document_root=settings.MEDIA_ROOT # c:/ai/source/~django/my~/_media
+    )

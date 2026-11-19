@@ -18,5 +18,5 @@ def detail(request, post_id:int):
     post = qs[0]
     return render(request, "blog/detail.html", {"post":post})
   else: # post_id가 존재하지 않는 경우
-    messages.error(request, f"{post_id} POST를 찾을 수 없습니다")
+    messages.error(request, f"{post_id}번 post가 존재하지 않습니다")
     return redirect("blog:list")
